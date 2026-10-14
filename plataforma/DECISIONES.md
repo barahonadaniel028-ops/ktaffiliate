@@ -50,6 +50,35 @@ Pedido: el círculo con el score (el "termómetro circular") queda como lo únic
 
 ---
 
+### 10. Crear: rediseño completo como flujo conversacional sobre la nube de Jarvis — **reemplaza el "Crear" de la v1 entero, no es un agregado**
+Daniel pidió esto con mucho detalle; se transcribe cercano a lo textual porque la lógica de ramas importa. **No implementar todavía** — queda documentado para cuando se aborde la tarea #12. El "Crear" de dos modos descrito en `MASTER-PROMPT.md` §3 (Pedir con Claude / Subir videos) queda obsoleto y se reemplaza por esto.
+
+**La pantalla entera es la nube.** No es un formulario con una nube de fondo: es literalmente el mismo componente líquido/mórfico de Jarvis, flotando, con una animación de entrada premium ("bien cool y premium"). Pregunta: **"¿Qué querés crear?"**. Dos caminos.
+
+**Camino A — Nuevo estilo** (se conecta con lo que ya existe en Laboratorio → Referencias):
+1. Pregunta: "¿Tenés referencias, links, videos o ideas sobre este estilo nuevo?"
+   - **No** → mensaje tipo "Para crear un nuevo estilo necesitás tenerlas" (no se puede seguir sin material de referencia).
+   - **Sí** → pantalla minimalista, un espacio en blanco: **"Subilo todo acá"** — zona de carga a la nube (videos, links, o ideas escritas). Texto de ayuda: "Cuanto más específico seas, mejor la calidad."
+2. Estados de carga: "Subiendo…" → "Subido" (mismo tratamiento visual que el resto de la app).
+3. Pregunta: **"¿Qué de estos videos o referencias te gustó?"** — la persona marca/resalta partes específicas que le gustaron (no es solo subir y listo).
+4. Se envía todo.
+5. Si el sistema no tiene ningún video ya subido con el que pueda probar/construir este estilo nuevo, pide que suba **cualquier video que se parezca** a lo que quiere crear.
+6. Mensaje: **"Este proceso puede tomar un rato. En cuanto esté listo te aviso."**
+7. Avisa cuando está listo.
+8. El estilo nuevo **vive dentro de Laboratorio** (no es una sección aparte).
+
+**Camino B — Nuevo video:**
+1. Ventana: **"Elegí tu estilo o estilos preferidos"** — biblioteca completa de estilos para elegir, mismo lenguaje visual premium y consistente que el resto ("super nice looking, siempre mismo estilo").
+2. Puede **combinar estilos**, o pedir **versiones distintas del mismo video, cada una en un estilo diferente** — son dos cosas distintas, ambas válidas.
+3. Al elegir, la pestaña de estilos (la "biblioteca") desaparece y aparece el espacio para subir los videos a editar.
+4. **Qué videos pide depende de los estilos elegidos** (condicional, no siempre lo mismo). Si un estilo necesita un video de intro Y uno de contenido después del hook, pide ambos. En general, lo que puede pedir vive dentro de estas categorías: **intro/hook · video normal (contenido) · B-roll** (si la persona tiene videos para superponer/usar durante ese estilo) **· reacción** (ej. formato "ktteacher": alguien reaccionando/explicando).
+5. Formato aparte — **Long form** (podcasts u otro contenido largo): pide solo el video largo, y opcionalmente B-roll que la persona tenga para poner acorde a lo que se va diciendo.
+6. Formato aparte — **Long form a short form**: pide solo el video (subida directa O pegar un link, incluso de YouTube). Una vez elegido el video, recién ahí se elige en qué estilo(s) generar los short forms resultantes.
+
+"Y ya eso sería, por ahora" — Daniel puede seguir agregando más formatos/casos después; esto no es necesariamente la lista completa final.
+
+---
+
 ## Cómo agregar una entrada nueva
 
 Una entrada por ronda de feedback, fecha arriba. Para cada pedido: la cita textual de Daniel cuando la haya, qué reemplaza (si elimina o reestructura algo de una versión anterior, decirlo explícito y marcar **NO RECREAR** lo que corresponda), y el estado. No editar ni borrar entradas viejas — si una decisión se revierte más adelante, se agrega una entrada nueva que lo diga, no se reescribe la vieja.
