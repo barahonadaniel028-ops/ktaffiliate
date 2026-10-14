@@ -495,8 +495,8 @@ main { position: relative; z-index: 2; }
 h2[data-trat] .seg { transition: background var(--d2), color var(--d2); }
 h2[data-trat] .w { display: inline-block; }
 
-:root[data-trat="acento"] h2[data-trat] .seg:not(em) { font-size: .5em; text-transform: uppercase; letter-spacing: -.01em; font-weight: 760; font-stretch: 118%; vertical-align: .55em; }
-:root[data-trat="acento"] h2[data-trat] em.seg { font-style: normal; font-weight: 860; font-stretch: 125%; color: var(--sc-accent); letter-spacing: -.055em; font-size: 1.08em; }
+:root[data-trat="acento"] h2[data-trat] .seg:not(em) { display: block; font-size: .46em; line-height: 1.1; text-transform: uppercase; letter-spacing: -.005em; font-weight: 760; font-stretch: 118%; margin: .2em 0; }
+:root[data-trat="acento"] h2[data-trat] em.seg { display: block; font-style: normal; font-weight: 860; font-stretch: 125%; color: var(--sc-accent); letter-spacing: -.055em; font-size: 1.08em; line-height: .92; }
 
 :root[data-trat="apilado"] h2[data-trat] .seg { display: block; width: fit-content; font-size: .74em; text-transform: uppercase; letter-spacing: -.02em; font-style: normal; font-weight: 780; font-stretch: 112%; background: var(--sc-ink); color: var(--sc-canvas); padding: .08em .22em .04em; margin: 0 0 .1em; border-radius: var(--sc-r-sm); line-height: 1; }
 :root[data-trat="apilado"] h2[data-trat] em.seg { background: var(--sc-accent); color: var(--sc-accent-ink); }
