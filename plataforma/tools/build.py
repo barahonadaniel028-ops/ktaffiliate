@@ -59,9 +59,11 @@ FONTS_CDN = '<link rel="preconnect" href="https://fonts.googleapis.com"><link re
 GSAP_CDN = '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>'
 
 def fragment(fonts, gsap):
+    # Sin claude:viewport-fit-sides: ese meta solo corresponde si el shell tiene el margen lateral
+    # seguro (env(safe-area-inset-left/right)) y hoy no lo tiene (solo --safe-t/--safe-b). Agregarlo
+    # a secas prometeria algo que la hoja de estilos no cumple.
     return (
         f"<title>{TITLE}</title>\n"
-        '<meta name="claude:viewport-fit-sides" content="cover">\n'
         f"{fonts}\n<style>\n{css}\n</style>\n"
         '<div id="aura-root"></div>\n'
         f"{gsap}\n<script>\n{js}\n</script>\n"
@@ -83,6 +85,6 @@ if local:
 else:
     fonts, gsap = FONTS_CDN, GSAP_CDN
 page = ("<!doctype html>\n<html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"><meta name=\"theme-color\" content=\"#eef2f0\">\n"
-        + fragment(fonts, gsap).replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "").replace("<div id=\"aura-root\"></div>", "</head><body style=\"margin:0\"><div id=\"aura-root\"></div>") + "</body></html>\n")
+        + fragment(fonts, gsap).replace("<div id=\"aura-root\"></div>", "</head><body style=\"margin:0\"><div id=\"aura-root\"></div>") + "</body></html>\n")
 (dist / ("index.html" if not local else "index.local.html")).write_text(page)
 print("ok", {"artifact": (dist / "artifact.html").stat().st_size, "page": len(page)})
