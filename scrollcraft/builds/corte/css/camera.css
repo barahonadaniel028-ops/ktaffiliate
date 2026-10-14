@@ -20,6 +20,10 @@
   --cam-shrink: .27;                /* resting scale = 1 - shrink */
   --cam-dorm-y: 4svh;               /* dormant: lower by this much, .94 scale */
   --cam-flash: #FFF8E6;             /* warm white */
+  /* Left edge of the resting camera (body plus strap lug) and the column the
+     line may use to its left. Desktop only; the phone block ignores them. */
+  --cam-left: calc(50vw + var(--cam-dx) - .45 * (1 - var(--cam-shrink)) * var(--cam-w));
+  --cam-copy-w: max(14rem, min(46rem, 49vw, calc(var(--cam-left) - var(--sc-gutter) - 2rem)));
   position: relative;
   color: var(--sc-ink);
 }
@@ -68,11 +72,11 @@
 /* -------------------------------------------------------------- copy -- */
 .camara__copy {
   position: absolute; z-index: 1; left: var(--sc-gutter); top: 50%;
-  width: min(49vw, 46rem); transform: translateY(-50%);
+  width: var(--cam-copy-w); transform: translateY(-50%);
 }
 .camara__title {
   margin: 0;
-  font: 640 clamp(2.4rem, 1.2rem + 4.6vw, 6rem)/.98 var(--sc-font-display);
+  font: 640 min(clamp(2.4rem, 1.2rem + 4.6vw, 6rem), calc(var(--cam-copy-w) / 7.6))/.98 var(--sc-font-display);
   font-stretch: 112%; letter-spacing: -.04em; text-wrap: balance;
   color: var(--sc-ink);
 }
@@ -135,7 +139,7 @@
 }
 
 /* ------------------------------------------------------------- phone -- */
-@media (max-width: 860px) {
+@media (max-width: 860px) and (max-aspect-ratio: 1/1) {
   .camara {
     --cam-w: min(92vw, 56svh);
     --cam-dx: 0px;

@@ -28,7 +28,7 @@ void main() {
 
 const STRIP_FRAG = /* glsl */`
 precision highp float;
-uniform float uDraw, uOpacity, uTime, uHeat, uSheen, uSoft, uFrames, uSweep;
+uniform float uDraw, uOpacity, uTime, uHeat, uSheen, uSoft, uFrames, uSweep, uGold;
 uniform vec3 uRim;
 varying vec2 vUv;
 varying vec3 vN;
@@ -42,10 +42,12 @@ void main() {
   float edge = min(vUv.y, 1.0 - vUv.y);
   // Perforations along both edges: 4 per frame, rounded, punched through.
   float fu = fract(vUv.x * 4.0);
+  float pd = 1.0;
   if (edge < 0.15) {
     vec2 p = vec2((fu - 0.5) * 1.0, (edge - 0.075) / 0.15);
     float d = box(p, vec2(0.17, 0.26), 0.08);
     if (d < 0.0) discard;
+    pd = d;
   }
   vec3 v = normalize(vView);
   vec3 n = normalize(vN);
@@ -54,16 +56,24 @@ void main() {
   float ndv = clamp(dot(n, v), 0.0, 1.0);
   float fres = pow(1.0 - ndv, 2.6);
 
+  // uGold 0..1 is the page's second metal. At 0 every term below reduces to
+  // the obsidian strip exactly; as it rises the same film turns to gold plate.
+  float G = uGold;
+
   // Base: obsidian. Frame windows hold a faint exposure each, so the strip
-  // reads as film without competing with the page.
+  // reads as film without competing with the page. Under gold the albedo goes
+  // to dark bronze and the windows warm up.
   float fi = floor(vUv.x);
   float h = fract(sin(fi * 91.7) * 43758.5);
   vec3 base = vec3(0.052, 0.054, 0.06);
+  base = mix(base, vec3(0.092, 0.062, 0.024), G);
   float fx = fract(vUv.x);
   float win = step(0.2, vUv.y) * step(vUv.y, 0.8) * step(0.05, fx) * step(fx, 0.95);
-  vec3 expo = mix(vec3(0.10, 0.095, 0.09), vec3(0.16, 0.15, 0.14), h) * (0.6 + 0.4 * smoothstep(0.2, 0.8, vUv.y));
-  base = mix(base, expo, win * 0.85);
-  float lip = smoothstep(0.014, 0.0, abs(edge - 0.17)) + smoothstep(0.02, 0.0, edge) * 0.6;
+  float ev = 0.6 + 0.4 * smoothstep(0.2, 0.8, vUv.y);
+  vec3 expo = mix(vec3(0.10, 0.095, 0.09), vec3(0.16, 0.15, 0.14), h) * ev;
+  vec3 expoG = mix(vec3(0.20, 0.130, 0.052), vec3(0.31, 0.205, 0.086), h) * ev;
+  base = mix(base, mix(expo, expoG, G), win * 0.85);
+  float lip = (1.0 - smoothstep(0.0, 0.014, abs(edge - 0.17))) + (1.0 - smoothstep(0.0, 0.02, edge)) * 0.6;
 
   vec3 L = normalize(vec3(-0.45, 0.75, 0.55));
   float diff = max(dot(n, L), 0.0);
@@ -74,19 +84,42 @@ void main() {
 
   // A light that travels along the strip, like a frame passing the gate.
   float sw = fract(vS * 1.6 - uTime * 0.06 * uSweep);
-  float sweep = smoothstep(0.06, 0.0, abs(sw - 0.5));
+  float sweep = 1.0 - smoothstep(0.0, 0.06, abs(sw - 0.5));
 
   float rimF = pow(1.0 - ndv, 4.0);
-  vec3 bone = vec3(0.93, 0.92, 0.89);
+  vec3 bone = mix(vec3(0.93, 0.92, 0.89), vec3(1.0, 0.80, 0.43), G);
+  // The rim light slides from REC red toward amber but keeps a trace of red.
+  vec3 rimC = mix(uRim, vec3(1.0, 0.56, 0.10), 0.72 * G);
   vec3 col = base * (0.55 + 1.25 * diff)
-           + bone * (spec * 1.1 + spec2 + lip * 0.16 + sweep * win * 0.10)
-           + uRim * rimF * (0.12 + 0.55 * uHeat)
-           + uRim * lip * 0.05 * uHeat;
+           + bone * (spec * (1.1 + 0.7 * G) + spec2 + lip * (0.16 + 0.30 * G) + sweep * win * 0.10)
+           + rimC * rimF * (0.12 + 0.55 * uHeat)
+           + rimC * lip * 0.05 * uHeat;
+
+  if (G > 0.001) {
+    // Plate: reflect a small studio (warm key, a hard strip light, a dark
+    // floor). The twist of the film sweeps the reflection along it, and a slow
+    // band keeps even a flat, camera-facing run from reading as one flat tone.
+    vec3 R = reflect(-v, n);
+    float sky = smoothstep(-0.7, 0.9, R.y);
+    float key = smoothstep(0.55, 0.97, dot(R, normalize(vec3(-0.45, 0.75, 0.55))));
+    float fil = smoothstep(0.86, 0.995, dot(R, normalize(vec3(0.75, -0.2, 0.6))));
+    float band = 0.5 + 0.5 * sin(vS * 13.0 + R.x * 3.0 - uTime * 0.11);
+    float env = 0.15 + 0.55 * sky * (0.5 + 0.5 * band) + 0.85 * key + 0.55 * fil;
+    vec3 metal = mix(vec3(0.15, 0.088, 0.028), vec3(1.0, 0.79, 0.40), clamp(env, 0.0, 1.0));
+    metal *= 1.0 - 0.40 * win;
+    vec3 plate = metal * (0.50 + 0.50 * fres) * 0.74;
+    // Frame windows keep a crisp bright border so it still reads as film.
+    float wb = min(min(fx - 0.05, 0.95 - fx), min(vUv.y - 0.2, 0.8 - vUv.y));
+    plate += vec3(1.0, 0.83, 0.48) * (1.0 - smoothstep(0.0, 0.016, abs(wb))) * 0.20;
+    // Punched perforations catch a bright lip.
+    plate += vec3(1.0, 0.82, 0.46) * (1.0 - smoothstep(0.0, 0.075, pd)) * 0.34;
+    col += plate * G;
+  }
 
   float a = uOpacity;
   // Out-of-focus look for the near strip: softer, flatter, lighter.
   if (uSoft > 0.0) {
-    col = mix(col, vec3(0.08, 0.085, 0.09) + uRim * 0.08, uSoft * 0.55);
+    col = mix(col, mix(vec3(0.08, 0.085, 0.09), vec3(0.13, 0.095, 0.05), G) + rimC * 0.08, uSoft * 0.55);
     a *= mix(1.0, smoothstep(0.0, 0.2, edge) * 0.9, uSoft);
   }
   gl_FragColor = vec4(col, a);
@@ -133,7 +166,7 @@ uniform float uOpacity;
 varying float vTw;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
-  float a = smoothstep(0.5, 0.0, length(c));
+  float a = 1.0 - smoothstep(0.0, 0.5, length(c));
   gl_FragColor = vec4(vec3(0.93, 0.9, 0.85), a * uOpacity * (0.25 + 0.5 * vTw));
 }`;
 
@@ -205,6 +238,8 @@ class Strip {
       uDraw: { value: 0 }, uOpacity: { value: 1 }, uTime: { value: 0 },
       uHeat: { value: 0.5 }, uSheen: { value: 0.8 }, uSoft: { value: opts.soft || 0 },
       uFrames: { value: 40 }, uSweep: { value: 1 }, uCam: { value: new THREE.Vector3(0, 0, 8) },
+      // Shared with every other strip: one object, one value per frame.
+      uGold: opts.gold || { value: 0 },
       uRim: { value: new THREE.Color('#FF4A1C') }
     };
     this.mat = new THREE.ShaderMaterial({
@@ -308,15 +343,34 @@ export function createStage({ back, front, mobile, reduce, reelCanvases }) {
   if (rf) rf.setClearColor(0x000000, 0);
   const dprCap = mobile ? 1.25 : 1.75;
 
+  // Fallback signals for the host (it can swap in the poster): any program
+  // that failed to link, and any canvas whose GL context is currently lost.
+  // Programs build on first use, so poll failed() each frame.
+  let failed = false;
+  const onShaderError = (gl, program, vs, fs) => {
+    failed = true;
+    console.error('CORTE shader: ' + (gl.getShaderInfoLog(fs) || gl.getShaderInfoLog(vs) || gl.getProgramInfoLog(program)));
+  };
+  rb.debug.onShaderError = onShaderError;
+  if (rf) rf.debug.onShaderError = onShaderError;
+  const gone = new Set();
+  for (const cv of [back, front]) {
+    if (!cv) continue;
+    cv.addEventListener('webglcontextlost', () => gone.add(cv));
+    cv.addEventListener('webglcontextrestored', () => gone.delete(cv));
+  }
+
   const scene = new THREE.Scene();
   const fscene = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(FOV, 1, 0.1, 60);
   cam.position.set(0, 0, CAM_Z);
 
-  const main = new Strip(mobile ? 220 : 340);
-  const braidB = new Strip(mobile ? 140 : 220);
-  const braidC = new Strip(mobile ? 140 : 220);
-  const near = new Strip(120, { soft: 1 });
+  // One uniform object shared by every strip: the page's gold, 0..1.
+  const goldU = { value: 0 };
+  const main = new Strip(mobile ? 220 : 340, { gold: goldU });
+  const braidB = new Strip(mobile ? 140 : 220, { gold: goldU });
+  const braidC = new Strip(mobile ? 140 : 220, { gold: goldU });
+  const near = new Strip(120, { soft: 1, gold: goldU });
   scene.add(main.mesh, braidB.mesh, braidC.mesh);
   fscene.add(near.mesh);
 
@@ -363,6 +417,7 @@ export function createStage({ back, front, mobile, reduce, reelCanvases }) {
   const P = { opacity: 0, chaos: 0.8, noiseAmp: 0.14, width: 0.16, twist: 1, twistBase: 0, flat: 0, heat: 0.5, sheen: 0.8, speed: 1, taper: 1 };
   const curP = { ...P };
   let grade = { heat: 0.5, sheen: 0.8, twist: 1, speed: 1 };
+  let goldT = 0, goldC = 0;
   let braidOp = 0, nearOp = 0, reelOp = 0, dustOp = 0;
   const pointer = { x: 0, y: 0, k: 0, r: 0.9, tx: 0, ty: 0, on: false, sx: 0, sy: 0 };
 
@@ -482,6 +537,8 @@ export function createStage({ back, front, mobile, reduce, reelCanvases }) {
     curP.chaos = curP.chaos * (1 - ex * 0.5);
     curP.heat += (grade.heat - curP.heat) * kp; curP.sheen += (grade.sheen - curP.sheen) * kp;
     curP.speed += (grade.speed - curP.speed) * kp;
+    goldC += (goldT - goldC) * kp;
+    goldU.value = goldC < 0.0005 ? 0 : goldC;
     curP.noiseAmp = Math.min(worldH, worldW) * 0.03;
     braidOp += (bOp - braidOp) * kp; reelOp += (rOp - reelOp) * kp; dustOp += (dOp - dustOp) * kp; nearOp += (nOp - nearOp) * kp;
 
@@ -548,6 +605,12 @@ export function createStage({ back, front, mobile, reduce, reelCanvases }) {
   return {
     frame, resize,
     setGrade(g) { grade = { ...grade, ...g }; },
+    // 0 = obsidian film (the hero), 1 = gold-plated film. Eased inside frame().
+    setGold(g) { goldT = g > 0 ? (g < 1 ? g : 1) : 0; },
+    // true once any shader program has failed to compile or link
+    failed() { return failed; },
+    // true while a canvas has lost its GL context (false again once restored)
+    lost() { return gone.size > 0; },
     setPointer(px, py, on) {
       const [x, y] = toWorld(px, py);
       pointer.tx = x; pointer.ty = y; pointer.on = on;

@@ -36,9 +36,10 @@
 .cd__sep { color: var(--sc-ink-soft); padding-inline: .04em; }
 
 /* ------------------------------------------------------------- chip --- */
-/* For the fixed bar and the phone strip: calm, 30px, never louder than the button. */
+/* For the fixed bar and the phone strip: calm, 30px, never louder than the button.
+   A thin strip shorter than 34px sets --cd-chip-h on itself (for example 22px). */
 .cd--chip {
-  display: inline-flex; align-items: center; gap: .55rem; height: 30px; padding: 0 .75rem 0 .65rem;
+  display: inline-flex; align-items: center; gap: .55rem; height: var(--cd-chip-h, 30px); padding: 0 .75rem 0 .65rem;
   border-radius: var(--sc-r-md);
   background: color-mix(in oklab, var(--sc-ink) 6%, transparent);
   box-shadow: inset 0 0 0 1px var(--hair-strong);
@@ -86,7 +87,7 @@
   color: var(--sc-ink);
 }
 .cd__cap { font: 600 .625rem/1 var(--sc-font-text); letter-spacing: .18em; text-transform: uppercase; color: var(--sc-ink-soft); }
-.cd__colon { font-family: var(--sc-font-display); font-weight: 400; font-stretch: 100%; font-size: var(--cd-num); line-height: 1; color: var(--hair-strong); }
+.cd__colon { font-family: var(--sc-font-display); font-weight: 400; font-stretch: 100%; font-size: var(--cd-num); line-height: 1; color: var(--sc-ink-soft); }
 
 /* The dial: a 60-tick ring, a sweeping hand, the seconds at its heart. */
 /* The sweep is a rotating square; clip it so its corners never widen the page. */

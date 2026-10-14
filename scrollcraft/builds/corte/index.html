@@ -17,6 +17,9 @@
 <link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="scrollcraft.css">
 <link rel="stylesheet" href="css/corte.css">
+<link rel="stylesheet" href="css/camera.css">
+<link rel="stylesheet" href="css/countdown.css">
+<link rel="stylesheet" href="css/ground.css">
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 <script>
   // Runs before first paint: decides the intro and restores a chosen grade
@@ -45,7 +48,6 @@
 <div class="haze" aria-hidden="true"></div>
 <canvas class="gl gl--back" id="gl-back" aria-hidden="true"></canvas>
 <div class="sc-grain" aria-hidden="true"></div>
-<div class="fx-flash" aria-hidden="true"></div>
 <div class="fx-grade" aria-hidden="true"><i></i></div>
 
 <header class="bar" data-bar>
@@ -55,10 +57,10 @@
     <span class="bar__grade" data-grade-label>Abrir el bin</span>
   </button>
   <div class="bar__right">
-    <div class="bar__offer" data-offer-wrap>
+    <div class="bar__offer">
       <s class="was nums"><span class="sr">Precio regular </span>$497</s>
       <b class="nums"><span class="sr">Precio de oferta </span>$67</b>
-      <span class="bar__chip" data-countdown="chip"></span>
+      <span class="bar__chip" data-offer-wrap data-countdown="chip"></span>
     </div>
     <a class="btn btn--sm bar__cta" href="#precio" data-buy>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
   </div>
@@ -254,9 +256,311 @@
         </li>
       </ul>
       </div>
-      <p class="tuyos__remate" data-sc-in>No compras 16 plantillas fijas. <em>Compras 16 puntos de partida probados.</em></p>
     </div>
   </section>
+
+<!-- CAMARA:START synced from lab/dev/camera-markup.html by lab/dev/integrate.py -->
+<!-- 4b · LA FOTO. Pin, scroll-scrubbed. A camera wakes, focuses, shoots; the flash fires and only then does the line develop.
+     Load order: corte.css then camera.css. createCamera(#camara) from js/camera.js drives it. -->
+<section id="camara" class="camara" data-sc-act="pin" data-sc-span="2.8" data-clip="Puntos de partida" aria-labelledby="camara-title">
+  <div data-sc-stage class="camara__stage">
+    <div class="camara__rig" aria-hidden="true">
+      <div class="cam">
+<svg class="cam__body" viewBox="0 0 760 520" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="cam-g-body" gradientUnits="userSpaceOnUse" x1="50" y1="138" x2="710" y2="452">
+      <stop offset="0" stop-color="#3b3f45"/><stop offset=".28" stop-color="#2a2d32"/><stop offset=".62" stop-color="#1e2024"/><stop offset="1" stop-color="#141517"/>
+    </linearGradient>
+    <linearGradient id="cam-g-leather" gradientUnits="userSpaceOnUse" x1="50" y1="176" x2="710" y2="432">
+      <stop offset="0" stop-color="#2b2e33"/><stop offset=".45" stop-color="#202226"/><stop offset="1" stop-color="#141618"/>
+    </linearGradient>
+    <linearGradient id="cam-g-plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4d5158"/><stop offset=".22" stop-color="#383b41"/><stop offset=".7" stop-color="#282b2f"/><stop offset="1" stop-color="#1f2125"/>
+    </linearGradient>
+    <linearGradient id="cam-g-plate-b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24272b"/><stop offset=".5" stop-color="#1b1d20"/><stop offset="1" stop-color="#121315"/>
+    </linearGradient>
+    <linearGradient id="cam-g-hump" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#454950"/><stop offset=".16" stop-color="#34373d"/><stop offset="1" stop-color="#25282c"/>
+    </linearGradient>
+    <linearGradient id="cam-g-humpside" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity=".07"/><stop offset=".22" stop-color="#000" stop-opacity="0"/><stop offset=".78" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/>
+    </linearGradient>
+    <linearGradient id="cam-g-grip" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#383b41"/><stop offset=".07" stop-color="#2a2d32"/><stop offset=".6" stop-color="#1f2124"/><stop offset="1" stop-color="#111214"/>
+    </linearGradient>
+    <linearGradient id="cam-g-edge" gradientUnits="userSpaceOnUse" x1="50" y1="138" x2="710" y2="452">
+      <stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset=".22" stop-color="#fff" stop-opacity=".12"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/>
+    </linearGradient>
+    <linearGradient id="cam-g-dial" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a5e66"/><stop offset=".18" stop-color="#3c3f45"/><stop offset=".62" stop-color="#26292d"/><stop offset="1" stop-color="#17181b"/>
+    </linearGradient>
+    <linearGradient id="cam-g-btn" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7a7f88"/><stop offset=".4" stop-color="#40444a"/><stop offset="1" stop-color="#1c1e21"/>
+    </linearGradient>
+    <linearGradient id="cam-g-shoe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8b9099"/><stop offset=".5" stop-color="#5b5f67"/><stop offset="1" stop-color="#34373c"/>
+    </linearGradient>
+    <linearGradient id="cam-g-barrel" gradientUnits="userSpaceOnUse" x1="234" y1="154" x2="526" y2="446">
+      <stop offset="0" stop-color="#3f4349"/><stop offset=".3" stop-color="#26292d"/><stop offset=".7" stop-color="#16181b"/><stop offset="1" stop-color="#0d0e10"/>
+    </linearGradient>
+    <linearGradient id="cam-g-barrel-rim" gradientUnits="userSpaceOnUse" x1="234" y1="154" x2="526" y2="446">
+      <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".3" stop-color="#fff" stop-opacity=".1"/><stop offset=".62" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/>
+    </linearGradient>
+    <linearGradient id="cam-g-gold" gradientUnits="userSpaceOnUse" x1="242" y1="162" x2="518" y2="438">
+      <stop offset="0" style="stop-color:var(--gold-hi)"/><stop offset=".3" style="stop-color:var(--gold)"/><stop offset=".62" style="stop-color:var(--gold-lo)"/><stop offset="1" style="stop-color:var(--gold-lo)"/>
+    </linearGradient>
+    <linearGradient id="cam-g-goldshade" gradientUnits="userSpaceOnUse" x1="242" y1="162" x2="518" y2="438">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#000" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".5"/>
+    </linearGradient>
+    <linearGradient id="cam-g-retain" gradientUnits="userSpaceOnUse" x1="290" y1="210" x2="470" y2="390">
+      <stop offset="0" stop-color="#4b4f56"/><stop offset=".45" stop-color="#1c1e21"/><stop offset="1" stop-color="#0b0c0d"/>
+    </linearGradient>
+    <radialGradient id="cam-g-contact" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#000" stop-opacity=".62"/><stop offset=".6" stop-color="#000" stop-opacity=".24"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cam-g-socket" cx=".36" cy=".32" r=".8">
+      <stop offset="0" stop-color="#3a3d43"/><stop offset="1" stop-color="#0c0d0f"/>
+    </radialGradient>
+    <radialGradient id="cam-g-dome" cx=".34" cy=".3" r=".85">
+      <stop offset="0" stop-color="#5a4a38"/><stop offset=".55" stop-color="#2a1f17"/><stop offset="1" stop-color="#0d0907"/>
+    </radialGradient>
+    <clipPath id="cam-c-body"><rect x="50" y="138" width="660" height="314" rx="24"/></clipPath>
+    <clipPath id="cam-c-grip"><path d="M50 176H190Q204 176 204 190V420Q204 432 192 432H50Z"/></clipPath>
+    <filter id="cam-f-blur" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="cam-f-blur-s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="cam-f-grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -3.4 0 0 0 1.75"/>
+    </filter>
+    <filter id="cam-f-grain-hi" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".62" numOctaves="2" seed="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  3.2 0 0 0 -1.95"/>
+    </filter>
+    <path id="cam-lens-text" d="M282 300a98 98 0 1 1 196 0a98 98 0 1 1 -196 0"/>
+  </defs>
+
+  <!-- contact + ambient shadow -->
+  <ellipse cx="380" cy="474" rx="318" ry="17" fill="url(#cam-g-contact)"/>
+  <rect x="58" y="156" width="660" height="314" rx="26" fill="#000" opacity=".5" filter="url(#cam-f-blur)"/>
+
+  <!-- strap lugs (behind the body) -->
+  <g>
+    <rect x="34" y="188" width="26" height="38" rx="7" fill="url(#cam-g-dial)"/>
+    <rect x="40" y="198" width="9" height="18" rx="4.5" fill="#0b0c0d"/>
+    <rect x="700" y="188" width="26" height="38" rx="7" fill="url(#cam-g-dial)"/>
+    <rect x="711" y="198" width="9" height="18" rx="4.5" fill="#0b0c0d"/>
+  </g>
+
+  <!-- viewfinder hump + hot shoe -->
+  <path d="M286 144V136Q286 128 296 122L318 96Q323 88 334 88H426Q437 88 442 96L464 122Q474 128 474 136V144Z" fill="url(#cam-g-hump)"/>
+  <path d="M286 144V136Q286 128 296 122L318 96Q323 88 334 88H426Q437 88 442 96L464 122Q474 128 474 136V144Z" fill="url(#cam-g-humpside)"/>
+  <path d="M297.5 121.5L318.5 96.5Q323.5 89.5 334 89.5H426Q436.5 89.5 441.5 96.5L462.5 121.5" fill="none" stroke="#fff" stroke-opacity=".34" stroke-width="1.2"/>
+  <g>
+    <rect x="328" y="76" width="104" height="13" rx="2.5" fill="url(#cam-g-shoe)"/>
+    <rect x="334" y="68" width="16" height="9" rx="2" fill="#2b2e33"/><rect x="410" y="68" width="16" height="9" rx="2" fill="#2b2e33"/>
+    <rect x="334" y="68" width="16" height="1.6" fill="#fff" opacity=".3"/><rect x="410" y="68" width="16" height="1.6" fill="#fff" opacity=".3"/>
+    <rect x="352" y="79" width="56" height="6" rx="1.5" fill="#15161a"/>
+    <g fill="#9aa0a9"><rect x="357" y="80.5" width="5" height="3" rx=".8"/><rect x="368" y="80.5" width="5" height="3" rx=".8"/><rect x="379" y="80.5" width="5" height="3" rx=".8"/><rect x="390" y="80.5" width="5" height="3" rx=".8"/><rect x="401" y="80.5" width="5" height="3" rx=".8"/></g>
+    <rect x="328" y="76.4" width="104" height="1.2" fill="#fff" opacity=".4"/>
+  </g>
+
+  <!-- body silhouette -->
+  <g clip-path="url(#cam-c-body)">
+    <rect x="50" y="138" width="660" height="314" fill="url(#cam-g-body)"/>
+    <rect x="50" y="138" width="660" height="38" fill="url(#cam-g-plate)"/>
+    <rect x="50" y="176" width="660" height="256" fill="url(#cam-g-leather)"/>
+    <rect x="50" y="176" width="660" height="256" filter="url(#cam-f-grain)" opacity=".62"/>
+    <rect x="50" y="176" width="660" height="256" filter="url(#cam-f-grain-hi)" opacity=".05"/>
+    <rect x="50" y="432" width="660" height="20" fill="url(#cam-g-plate-b)"/>
+    <rect x="50" y="176" width="660" height="2.4" fill="#000" opacity=".6"/>
+    <rect x="50" y="178.4" width="660" height="1" fill="#fff" opacity=".1"/>
+    <rect x="50" y="430" width="660" height="2" fill="#000" opacity=".5"/>
+    <rect x="50" y="138" width="660" height="1.4" fill="#fff" opacity=".34"/>
+  </g>
+  <rect x="50.75" y="138.75" width="658.5" height="312.5" rx="23.5" fill="none" stroke="url(#cam-g-edge)" stroke-width="1.5"/>
+
+  <!-- grip -->
+  <rect x="198" y="184" width="22" height="240" fill="#000" opacity=".55" filter="url(#cam-f-blur-s)"/>
+  <g>
+    <path d="M50 176H190Q204 176 204 190V420Q204 432 192 432H50Z" fill="url(#cam-g-grip)"/>
+    <g clip-path="url(#cam-c-grip)">
+      <rect x="50" y="176" width="160" height="256" filter="url(#cam-f-grain)" opacity=".8"/>
+      <rect x="50" y="176" width="3" height="256" fill="#fff" opacity=".16"/>
+    </g>
+    <path d="M203.4 190V420" stroke="#fff" stroke-opacity=".08" stroke-width="1"/>
+  </g>
+
+  <!-- top controls -->
+  <g>
+    <rect x="92" y="138" width="98" height="8" rx="3" fill="url(#cam-g-dial)"/>
+    <rect x="98" y="114" width="86" height="28" rx="5" fill="url(#cam-g-dial)"/>
+    <path d="M102 118V140M105.2 118V140M108.4 118V140M111.6 118V140M114.8 118V140M118 118V140M121.2 118V140M124.4 118V140M127.6 118V140M130.8 118V140M134 118V140M137.2 118V140M140.4 118V140M143.6 118V140M146.8 118V140M150 118V140M153.2 118V140M156.4 118V140M159.6 118V140M162.8 118V140M166 118V140M169.2 118V140M172.4 118V140M175.6 118V140M178.8 118V140" stroke="#000" stroke-opacity=".42" stroke-width=".9"/>
+    <path d="M103.1 118V140M106.3 118V140M109.5 118V140M112.7 118V140M115.9 118V140M119.1 118V140M122.3 118V140M125.5 118V140M128.7 118V140M131.9 118V140M135.1 118V140M138.3 118V140M141.5 118V140M144.7 118V140M147.9 118V140M151.1 118V140M154.3 118V140M157.5 118V140M160.7 118V140M163.9 118V140M167.1 118V140M170.3 118V140M173.5 118V140M176.7 118V140M179.9 118V140" stroke="#fff" stroke-opacity=".08" stroke-width=".8"/>
+    <rect x="98" y="114" width="86" height="1.5" rx=".7" fill="#fff" opacity=".42"/>
+    <rect x="574" y="130" width="54" height="13" rx="3" fill="url(#cam-g-dial)"/>
+    <rect x="588" y="114" width="26" height="18" rx="6" fill="url(#cam-g-btn)"/>
+    <rect x="588" y="114" width="26" height="1.6" rx=".8" fill="#fff" opacity=".5"/>
+    <rect x="642" y="136" width="54" height="8" rx="3" fill="url(#cam-g-dial)"/>
+    <rect x="646" y="120" width="46" height="22" rx="4.5" fill="url(#cam-g-dial)"/>
+    <path d="M650 123V140M653.2 123V140M656.4 123V140M659.6 123V140M662.8 123V140M666 123V140M669.2 123V140M672.4 123V140M675.6 123V140M678.8 123V140M682 123V140M685.2 123V140M688.4 123V140" stroke="#000" stroke-opacity=".42" stroke-width=".9"/>
+    <path d="M651.1 123V140M654.3 123V140M657.5 123V140M660.7 123V140M663.9 123V140M667.1 123V140M670.3 123V140M673.5 123V140M676.7 123V140M679.9 123V140M683.1 123V140M686.3 123V140M689.5 123V140" stroke="#fff" stroke-opacity=".08" stroke-width=".8"/>
+    <rect x="646" y="120" width="46" height="1.4" rx=".7" fill="#fff" opacity=".4"/>
+  </g>
+
+  <!-- engraved wordmark on the hump -->
+  <g style="font-family:var(--sc-font-display,'Archivo',system-ui,sans-serif);font-weight:800;font-stretch:125%;letter-spacing:.24em" font-size="21" text-anchor="middle">
+    <text x="382" y="123.2" fill="#fff" fill-opacity=".2">CORTE</text>
+    <text x="382" y="122" fill="#0e0f11" fill-opacity=".92">CORTE</text>
+  </g>
+
+  <!-- front furniture: flash lamp socket, tally socket, release, front dial -->
+  <g>
+    <circle cx="240" cy="208" r="14" fill="url(#cam-g-socket)"/>
+    <circle cx="240" cy="208" r="14" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="1"/>
+    <circle cx="240" cy="208" r="9.4" fill="url(#cam-g-dome)"/>
+    <circle cx="237.2" cy="205" r="2.2" fill="#fff" opacity=".28"/>
+
+    <circle cx="640" cy="208" r="11.5" fill="url(#cam-g-socket)"/>
+    <circle cx="640" cy="208" r="11.5" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="1"/>
+    <circle cx="640" cy="208" r="7" fill="#2a0f09"/>
+
+    <circle cx="222" cy="386" r="7.5" fill="url(#cam-g-btn)"/>
+    <circle cx="222" cy="386" r="7.5" fill="none" stroke="#000" stroke-opacity=".5"/>
+
+    <circle cx="646" cy="316" r="25" fill="#0c0d0f"/>
+    <circle cx="646" cy="316" r="25" fill="none" stroke="#fff" stroke-opacity=".1"/>
+    <circle cx="646" cy="316" r="19" fill="url(#cam-g-dial)"/>
+    <g transform="translate(646 316)"><path d="M0 -13L0 -18.2M2.26 -12.8L3.16 -17.92M4.45 -12.22L6.22 -17.1M6.5 -11.26L9.1 -15.76M8.36 -9.96L11.7 -13.94M9.96 -8.36L13.94 -11.7M11.26 -6.5L15.76 -9.1M12.22 -4.45L17.1 -6.22M12.8 -2.26L17.92 -3.16M13 0L18.2 0M12.8 2.26L17.92 3.16M12.22 4.45L17.1 6.22M11.26 6.5L15.76 9.1M9.96 8.36L13.94 11.7M8.36 9.96L11.7 13.94M6.5 11.26L9.1 15.76M4.45 12.22L6.22 17.1M2.26 12.8L3.16 17.92M0 13L0 18.2M-2.26 12.8L-3.16 17.92M-4.45 12.22L-6.22 17.1M-6.5 11.26L-9.1 15.76M-8.36 9.96L-11.7 13.94M-9.96 8.36L-13.94 11.7M-11.26 6.5L-15.76 9.1M-12.22 4.45L-17.1 6.22M-12.8 2.26L-17.92 3.16M-13 0L-18.2 0M-12.8 -2.26L-17.92 -3.16M-12.22 -4.45L-17.1 -6.22M-11.26 -6.5L-15.76 -9.1M-9.96 -8.36L-13.94 -11.7M-8.36 -9.96L-11.7 -13.94M-6.5 -11.26L-9.1 -15.76M-4.45 -12.22L-6.22 -17.1M-2.26 -12.8L-3.16 -17.92" stroke="#000" stroke-opacity=".5" stroke-width="1.1"/><path d="M0.91 -12.97L1.27 -18.16M3.14 -12.61L4.4 -17.66M5.29 -11.88L7.4 -16.63M7.27 -10.78L10.18 -15.09M9.03 -9.35L12.64 -13.09M10.52 -7.64L14.72 -10.7M11.68 -5.7L16.36 -7.98M12.5 -3.58L17.49 -5.02M12.93 -1.36L18.1 -1.9M12.97 0.91L18.16 1.27M12.61 3.14L17.66 4.4M11.88 5.29L16.63 7.4M10.78 7.27L15.09 10.18M9.35 9.03L13.09 12.64M7.64 10.52L10.7 14.72M5.7 11.68L7.98 16.36M3.58 12.5L5.02 17.49M1.36 12.93L1.9 18.1M-0.91 12.97L-1.27 18.16M-3.14 12.61L-4.4 17.66M-5.29 11.88L-7.4 16.63M-7.27 10.78L-10.18 15.09M-9.03 9.35L-12.64 13.09M-10.52 7.64L-14.72 10.7M-11.68 5.7L-16.36 7.98M-12.5 3.58L-17.49 5.02M-12.93 1.36L-18.1 1.9M-12.97 -0.91L-18.16 -1.27M-12.61 -3.14L-17.66 -4.4M-11.88 -5.29L-16.63 -7.4M-10.78 -7.27L-15.09 -10.18M-9.35 -9.03L-13.09 -12.64M-7.64 -10.52L-10.7 -14.72M-5.7 -11.68L-7.98 -16.36M-3.58 -12.5L-5.02 -17.49M-1.36 -12.93L-1.9 -18.1" stroke="#fff" stroke-opacity=".1" stroke-width=".9"/></g>
+    <circle cx="646" cy="316" r="11.6" fill="url(#cam-g-btn)"/>
+  </g>
+
+  <!-- lens: shadow on the body, barrel, gold focus ring base, rings, engraving -->
+  <circle cx="388" cy="316" r="150" fill="#000" opacity=".6" filter="url(#cam-f-blur)"/>
+  <g>
+    <circle cx="380" cy="300" r="146" fill="url(#cam-g-barrel)"/>
+    <circle cx="380" cy="300" r="145.2" fill="none" stroke="url(#cam-g-barrel-rim)" stroke-width="1.6"/>
+    <circle cx="380" cy="300" r="141.4" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="1"/>
+    <circle cx="380" cy="300" r="140.2" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="1"/>
+    <circle cx="380" cy="300" r="125" fill="none" stroke="url(#cam-g-gold)" stroke-width="22"/>
+    <circle cx="380" cy="300" r="125" fill="none" stroke="url(#cam-g-goldshade)" stroke-width="22"/>
+    <circle cx="380" cy="300" r="108" fill="none" stroke="#0a0b0c" stroke-width="9"/>
+    <circle cx="380" cy="300" r="112.2" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width=".9"/>
+    <circle cx="380" cy="300" r="98" fill="none" stroke="#181a1d" stroke-width="13"/>
+    <circle cx="380" cy="300" r="104" fill="none" stroke="#fff" stroke-opacity=".07" stroke-width=".8"/>
+    <circle cx="380" cy="300" r="91.6" fill="none" stroke="#000" stroke-opacity=".6" stroke-width="1"/>
+    <circle cx="380" cy="300" r="87.5" fill="none" stroke="url(#cam-g-retain)" stroke-width="7"/>
+    <circle cx="380" cy="300" r="84" fill="#040506"/>
+    <g style="font-family:var(--sc-font-text,'Geist',system-ui,sans-serif);font-weight:600;letter-spacing:.2em" font-size="7.6" fill="#a8abb2" fill-opacity=".62" text-anchor="middle">
+      <text><textPath href="#cam-lens-text" startOffset="25%">CORTE · CINE · 35 MM · T1.5</textPath></text>
+    </g>
+    <g transform="translate(380 300)"><path d="M0 -93L0 -96.4M93 0L96.4 0M0 93L0 96.4M-93 0L-96.4 0" stroke="#fff" stroke-opacity=".5" stroke-width="1.2" transform="rotate(45)"/></g>
+  </g>
+</svg>
+<svg class="cam__eye" viewBox="-150 -150 300 300" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="cam-e-blade" gradientUnits="userSpaceOnUse" x1="0" y1="-42" x2="0" y2="-104">
+      <stop offset="0" stop-color="#33373d"/><stop offset=".5" stop-color="#1c1f23"/><stop offset="1" stop-color="#101214"/>
+    </linearGradient>
+    <radialGradient id="cam-e-glass" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#020405"/><stop offset=".5" stop-color="#060b0d"/><stop offset=".86" stop-color="#0e1719"/><stop offset="1" stop-color="#1a2528"/>
+    </radialGradient>
+    <radialGradient id="cam-e-deep" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#05090b"/><stop offset=".7" stop-color="#0a1214"/><stop offset="1" stop-color="#141e21"/>
+    </radialGradient>
+    <linearGradient id="cam-e-cool" gradientUnits="userSpaceOnUse" x1="-76" y1="-30" x2="-26" y2="-72">
+      <stop offset="0" stop-color="#bff3ee" stop-opacity="0"/><stop offset=".5" stop-color="#cdf6f1" stop-opacity=".62"/><stop offset="1" stop-color="#bff3ee" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="cam-e-warm" gradientUnits="userSpaceOnUse" x1="24" y1="70" x2="68" y2="30">
+      <stop offset="0" stop-color="#ffb866" stop-opacity="0"/><stop offset=".5" stop-color="#ffc47c" stop-opacity=".5"/><stop offset="1" stop-color="#ffb866" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="cam-e-coat" gradientUnits="userSpaceOnUse" x1="-80" y1="-80" x2="80" y2="80">
+      <stop offset="0" stop-color="#7fe0d4" stop-opacity=".55"/><stop offset=".5" stop-color="#7fe0d4" stop-opacity=".04"/><stop offset="1" stop-color="#ffb35c" stop-opacity=".5"/>
+    </linearGradient>
+    <radialGradient id="cam-e-soft" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#e8fbf8" stop-opacity=".34"/><stop offset="1" stop-color="#e8fbf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cam-e-warmsoft" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffcf8a" stop-opacity=".3"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cam-e-pinhole" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffd9a0" stop-opacity=".5"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="cam-e-iris"><circle r="42"/></clipPath>
+    <clipPath id="cam-e-glass-c"><circle r="86"/></clipPath>
+  </defs>
+
+  <!-- focus ring: rim + knurl (the knurl turns while the lens hunts) -->
+  <circle r="136.2" fill="none" stroke="var(--gold-hi)" stroke-opacity=".7" stroke-width="1.1"/>
+  <circle r="113.8" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="1.2"/>
+  <g class="cam__ticks">
+    <path d="M0 -116.4L0 -134M7.61 -116.15L8.76 -133.71M15.19 -115.4L17.49 -132.85M22.71 -114.16L26.14 -131.43M30.13 -112.43L34.68 -129.43M37.42 -110.22L43.07 -126.89M44.54 -107.54L51.28 -123.8M51.48 -104.4L59.27 -120.18M58.2 -100.81L67 -116.05M64.67 -96.78L74.45 -111.42M70.86 -92.35L81.57 -106.31M76.75 -87.51L88.35 -100.75M82.31 -82.31L94.75 -94.75M87.51 -76.75L100.75 -88.35M92.35 -70.86L106.31 -81.57M96.78 -64.67L111.42 -74.45M100.81 -58.2L116.05 -67M104.4 -51.48L120.18 -59.27M107.54 -44.54L123.8 -51.28M110.22 -37.42L126.89 -43.07M112.43 -30.13L129.43 -34.68M114.16 -22.71L131.43 -26.14M115.4 -15.19L132.85 -17.49M116.15 -7.61L133.71 -8.76M116.4 0L134 0M116.15 7.61L133.71 8.76M115.4 15.19L132.85 17.49M114.16 22.71L131.43 26.14M112.43 30.13L129.43 34.68M110.22 37.42L126.89 43.07M107.54 44.54L123.8 51.28M104.4 51.48L120.18 59.27M100.81 58.2L116.05 67M96.78 64.67L111.42 74.45M92.35 70.86L106.31 81.57M87.51 76.75L100.75 88.35M82.31 82.31L94.75 94.75M76.75 87.51L88.35 100.75M70.86 92.35L81.57 106.31M64.67 96.78L74.45 111.42M58.2 100.81L67 116.05M51.48 104.4L59.27 120.18M44.54 107.54L51.28 123.8M37.42 110.22L43.07 126.89M30.13 112.43L34.68 129.43M22.71 114.16L26.14 131.43M15.19 115.4L17.49 132.85M7.61 116.15L8.76 133.71M0 116.4L0 134M-7.61 116.15L-8.76 133.71M-15.19 115.4L-17.49 132.85M-22.71 114.16L-26.14 131.43M-30.13 112.43L-34.68 129.43M-37.42 110.22L-43.07 126.89M-44.54 107.54L-51.28 123.8M-51.48 104.4L-59.27 120.18M-58.2 100.81L-67 116.05M-64.67 96.78L-74.45 111.42M-70.86 92.35L-81.57 106.31M-76.75 87.51L-88.35 100.75M-82.31 82.31L-94.75 94.75M-87.51 76.75L-100.75 88.35M-92.35 70.86L-106.31 81.57M-96.78 64.67L-111.42 74.45M-100.81 58.2L-116.05 67M-104.4 51.48L-120.18 59.27M-107.54 44.54L-123.8 51.28M-110.22 37.42L-126.89 43.07M-112.43 30.13L-129.43 34.68M-114.16 22.71L-131.43 26.14M-115.4 15.19L-132.85 17.49M-116.15 7.61L-133.71 8.76M-116.4 0L-134 0M-116.15 -7.61L-133.71 -8.76M-115.4 -15.19L-132.85 -17.49M-114.16 -22.71L-131.43 -26.14M-112.43 -30.13L-129.43 -34.68M-110.22 -37.42L-126.89 -43.07M-107.54 -44.54L-123.8 -51.28M-104.4 -51.48L-120.18 -59.27M-100.81 -58.2L-116.05 -67M-96.78 -64.67L-111.42 -74.45M-92.35 -70.86L-106.31 -81.57M-87.51 -76.75L-100.75 -88.35M-82.31 -82.31L-94.75 -94.75M-76.75 -87.51L-88.35 -100.75M-70.86 -92.35L-81.57 -106.31M-64.67 -96.78L-74.45 -111.42M-58.2 -100.81L-67 -116.05M-51.48 -104.4L-59.27 -120.18M-44.54 -107.54L-51.28 -123.8M-37.42 -110.22L-43.07 -126.89M-30.13 -112.43L-34.68 -129.43M-22.71 -114.16L-26.14 -131.43M-15.19 -115.4L-17.49 -132.85M-7.61 -116.15L-8.76 -133.71" fill="none" stroke="var(--gold-lo)" stroke-opacity=".78" stroke-width="1.35"/>
+    <path d="M3.15 -116.36L3.62 -133.95M10.75 -115.9L12.38 -133.43M18.31 -114.95L21.08 -132.33M25.79 -113.51L29.69 -130.67M33.16 -111.58L38.17 -128.45M40.38 -109.17L46.49 -125.68M47.44 -106.3L54.61 -122.37M54.29 -102.97L62.5 -118.53M60.91 -99.19L70.11 -114.19M67.26 -95L77.43 -109.36M73.33 -90.4L84.42 -104.06M79.09 -85.41L91.05 -98.32M84.5 -80.05L97.28 -92.15M89.56 -74.35L103.1 -85.59M94.23 -68.34L108.48 -78.67M98.5 -62.03L113.39 -71.41M102.34 -55.45L117.82 -63.84M105.75 -48.64L121.74 -55.99M108.71 -41.62L125.14 -47.91M111.19 -34.42L128.01 -39.62M113.21 -27.07L130.32 -31.17M114.74 -19.61L132.08 -22.58M115.77 -12.07L133.28 -13.89M116.31 -4.47L133.9 -5.14M116.36 3.15L133.95 3.62M115.9 10.75L133.43 12.38M114.95 18.31L132.33 21.08M113.51 25.79L130.67 29.69M111.58 33.16L128.45 38.17M109.17 40.38L125.68 46.49M106.3 47.44L122.37 54.61M102.97 54.29L118.53 62.5M99.19 60.91L114.19 70.11M95 67.26L109.36 77.43M90.4 73.33L104.06 84.42M85.41 79.09L98.32 91.05M80.05 84.5L92.15 97.28M74.35 89.56L85.59 103.1M68.34 94.23L78.67 108.48M62.03 98.5L71.41 113.39M55.45 102.34L63.84 117.82M48.64 105.75L55.99 121.74M41.62 108.71L47.91 125.14M34.42 111.19L39.62 128.01M27.07 113.21L31.17 130.32M19.61 114.74L22.58 132.08M12.07 115.77L13.89 133.28M4.47 116.31L5.14 133.9M-3.15 116.36L-3.62 133.95M-10.75 115.9L-12.38 133.43M-18.31 114.95L-21.08 132.33M-25.79 113.51L-29.69 130.67M-33.16 111.58L-38.17 128.45M-40.38 109.17L-46.49 125.68M-47.44 106.3L-54.61 122.37M-54.29 102.97L-62.5 118.53M-60.91 99.19L-70.11 114.19M-67.26 95L-77.43 109.36M-73.33 90.4L-84.42 104.06M-79.09 85.41L-91.05 98.32M-84.5 80.05L-97.28 92.15M-89.56 74.35L-103.1 85.59M-94.23 68.34L-108.48 78.67M-98.5 62.03L-113.39 71.41M-102.34 55.45L-117.82 63.84M-105.75 48.64L-121.74 55.99M-108.71 41.62L-125.14 47.91M-111.19 34.42L-128.01 39.62M-113.21 27.07L-130.32 31.17M-114.74 19.61L-132.08 22.58M-115.77 12.07L-133.28 13.89M-116.31 4.47L-133.9 5.14M-116.36 -3.15L-133.95 -3.62M-115.9 -10.75L-133.43 -12.38M-114.95 -18.31L-132.33 -21.08M-113.51 -25.79L-130.67 -29.69M-111.58 -33.16L-128.45 -38.17M-109.17 -40.38L-125.68 -46.49M-106.3 -47.44L-122.37 -54.61M-102.97 -54.29L-118.53 -62.5M-99.19 -60.91L-114.19 -70.11M-95 -67.26L-109.36 -77.43M-90.4 -73.33L-104.06 -84.42M-85.41 -79.09L-98.32 -91.05M-80.05 -84.5L-92.15 -97.28M-74.35 -89.56L-85.59 -103.1M-68.34 -94.23L-78.67 -108.48M-62.03 -98.5L-71.41 -113.39M-55.45 -102.34L-63.84 -117.82M-48.64 -105.75L-55.99 -121.74M-41.62 -108.71L-47.91 -125.14M-34.42 -111.19L-39.62 -128.01M-27.07 -113.21L-31.17 -130.32M-19.61 -114.74L-22.58 -132.08M-12.07 -115.77L-13.89 -133.28M-4.47 -116.31L-5.14 -133.9" fill="none" stroke="var(--gold-hi)" stroke-opacity=".5" stroke-width="1"/>
+    <path d="M0 -117L0 -133.4M101.32 -58.5L115.53 -66.7M101.32 58.5L115.53 66.7M0 117L0 133.4M-101.32 58.5L-115.53 66.7M-101.32 -58.5L-115.53 -66.7" fill="none" stroke="#2a1f08" stroke-opacity=".7" stroke-width="3"/>
+    <path d="M1.63 -116.99L1.86 -133.39M102.13 -57.08L116.45 -65.08M100.5 59.91L114.59 68.31M-1.63 116.99L-1.86 133.39M-102.13 57.08L-116.45 65.08M-100.5 -59.91L-114.59 -68.31" fill="none" stroke="var(--gold-hi)" stroke-opacity=".5" stroke-width="1"/>
+  </g>
+
+  <g class="cam__sheen"><path d="M-122.7 -23.85A125 125 0 0 1 -23.85 -122.7" fill="none" stroke="#FFF3CC" stroke-opacity="0.05" stroke-width="21" /><path d="M-117.83 -41.73A125 125 0 0 1 -41.73 -117.83" fill="none" stroke="#FFF3CC" stroke-opacity="0.06" stroke-width="21" /><path d="M-110.37 -58.68A125 125 0 0 1 -58.68 -110.37" fill="none" stroke="#FFF3CC" stroke-opacity="0.07" stroke-width="21" /><path d="M-100.48 -74.35A125 125 0 0 1 -74.35 -100.48" fill="none" stroke="#FFF3CC" stroke-opacity="0.08" stroke-width="21" /><path d="M120.74 32.35A125 125 0 0 1 32.35 120.74" fill="none" stroke="#FFF3CC" stroke-opacity="0.03" stroke-width="21" /><path d="M113.29 52.83A125 125 0 0 1 52.83 113.29" fill="none" stroke="#FFF3CC" stroke-opacity="0.035" stroke-width="21" /><path d="M102.39 71.7A125 125 0 0 1 71.7 102.39" fill="none" stroke="#FFF3CC" stroke-opacity="0.04" stroke-width="21" /><path d="M-28.12 121.8A125 125 0 0 1 -121.8 28.12" fill="none" stroke="#000" stroke-opacity="0.07" stroke-width="21" /><path d="M-50.18 114.49A125 125 0 0 1 -114.49 50.18" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="21" /><path d="M-70.5 103.22A125 125 0 0 1 -103.22 70.5" fill="none" stroke="#000" stroke-opacity="0.09" stroke-width="21" /><path d="M32.35 -120.74A125 125 0 0 1 120.74 -32.35" fill="none" stroke="#000" stroke-opacity="0.06" stroke-width="21" /><path d="M52.83 -113.29A125 125 0 0 1 113.29 -52.83" fill="none" stroke="#000" stroke-opacity="0.07" stroke-width="21" /><path d="M71.7 -102.39A125 125 0 0 1 102.39 -71.7" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="21" /></g>
+
+  <!-- glass, rear element, iris -->
+  <circle r="86" fill="url(#cam-e-glass)"/>
+  <circle r="76" fill="none" stroke="#fff" stroke-opacity=".05" stroke-width="1"/>
+  <circle r="62" fill="none" stroke="#000" stroke-opacity=".6" stroke-width="1.4"/>
+  <circle r="62" fill="none" stroke="#fff" stroke-opacity=".06" stroke-width=".8" transform="translate(.8 .8)"/>
+  <circle r="48" fill="url(#cam-e-deep)"/>
+  <g clip-path="url(#cam-e-iris)">
+    <circle r="42" fill="#05080a"/>
+    <circle r="42" fill="url(#cam-e-deep)"/>
+    <g class="cam__pinhole"><circle r="42" fill="url(#cam-e-pinhole)"/></g>
+    <g class="cam__blades"><g transform="rotate(0)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(45)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(90)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(135)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(180)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(225)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(270)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g><g transform="rotate(315)"><path data-blade d="M-14 -42L56 -42L56 -104L-14 -104Z" transform="rotate(53 0 -42)" fill="url(#cam-e-blade)"/><path d="M-14 -42L56 -42" transform="rotate(53 0 -42)" data-blade-edge fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/></g></g>
+  </g>
+  <circle r="43.5" fill="none" stroke="#000" stroke-opacity=".75" stroke-width="3"/>
+  <circle r="45.4" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width=".8"/>
+  <g><g transform="rotate(0)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(45)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(90)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(135)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(180)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(225)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(270)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g><g transform="rotate(315)"><circle cy="-43" r="3.1" fill="#16181b" stroke="#fff" stroke-opacity=".18" stroke-width=".8"/><circle cy="-43.6" r=".9" fill="#fff" fill-opacity=".5"/></g></g>
+
+  <!-- coatings: cool and warm reflections catch light as the lens wakes -->
+  <g class="cam__refl" clip-path="url(#cam-e-glass-c)">
+    <circle r="80.6" fill="none" stroke="url(#cam-e-coat)" stroke-width="2.4"/>
+    <ellipse cx="-30" cy="-36" rx="46" ry="15" transform="rotate(-42 -30 -36)" fill="url(#cam-e-soft)"/>
+    <ellipse cx="34" cy="40" rx="30" ry="10" transform="rotate(-42 34 40)" fill="url(#cam-e-warmsoft)"/>
+    <path d="M-70.17 -20.12A73 73 0 0 1 -15.18 -71.4" fill="none" stroke="url(#cam-e-cool)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M63.44 18.19A66 66 0 0 1 26.84 60.29" fill="none" stroke="url(#cam-e-warm)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="-46" cy="-52" r="2.5" fill="#fff" fill-opacity=".85"/>
+    <circle cx="-38" cy="-57" r="1.1" fill="#fff" fill-opacity=".7"/>
+    <circle cx="40" cy="46" r="1.9" fill="#ffd9a0" fill-opacity=".8"/>
+    <circle cx="18" cy="-28" r="1" fill="#bff3ee" fill-opacity=".55"/>
+  </g>
+
+  <!-- autofocus: brackets contract, lock gold, pip -->
+  <g class="cam__af">
+    <g class="cam__af-sh">
+    <g class="cam__af-b cam__af-b--shadow" fill="none" stroke-linejoin="miter" stroke-linecap="butt">
+      <path d="M-124 -98V-124H-98M98 -124H124V-98M124 98V124H98M-98 124H-124V98" vector-effect="non-scaling-stroke"/>
+    </g></g>
+    <g class="cam__af-w">
+    <g class="cam__af-b cam__af-b--w" fill="none" stroke-linejoin="miter" stroke-linecap="butt">
+      <path d="M-124 -98V-124H-98M98 -124H124V-98M124 98V124H98M-98 124H-124V98" vector-effect="non-scaling-stroke"/>
+    </g></g>
+    <g class="cam__af-g">
+    <g class="cam__af-b cam__af-b--g" fill="none" stroke-linejoin="miter" stroke-linecap="butt">
+      <path d="M-124 -98V-124H-98M98 -124H124V-98M124 98V124H98M-98 124H-124V98" vector-effect="non-scaling-stroke"/>
+    </g></g>
+    <circle class="cam__pip" r="3.6" style="fill:var(--gold-hi)"/>
+  </g>
+</svg>
+        <i class="cam__lamp"></i>
+        <i class="cam__tally"></i>
+        <i class="cam__burst"></i>
+        <i class="cam__shock"></i>
+      </div>
+    </div>
+    <div class="camara__copy">
+      <h2 class="camara__title" id="camara-title"><span class="camara__l1">No compras 16 plantillas fijas.</span> <em>Compras 16 puntos de partida probados.</em></h2>
+    </div>
+    <div class="camara__flash" aria-hidden="true"></div>
+  </div>
+</section>
+<!-- CAMARA:END -->
 
   <!-- 5 · CÓMO FUNCIONA. Pin. A line draws itself through four stations. Arrives on a flash frame. -->
   <section id="como" class="como" data-sc-act="pin" data-sc-span="2.7" data-clip="Cómo funciona" aria-labelledby="como-title">
@@ -393,7 +697,7 @@
       <div class="cierre__copy">
         <h2 class="h2 h2--xl" id="cierre-title" data-trat data-sc-cue="0 1 0 0">Tu próximo video. <em>Un mejor punto de partida.</em></h2>
         <p class="lede" data-sc-cue="0.06">16 estilos probados. Tu material. Tu dirección.</p>
-        <p class="cierre__price" data-sc-cue="0.07"><s class="was nums"><span class="sr">Precio regular </span>$497</s> <b class="nums"><span class="sr">Precio de oferta </span>$67</b> <span>una vez</span><span class="cierre__timer" data-offer-wrap><span class="cierre__dot" aria-hidden="true"></span><span data-countdown="line"></span></span></p>
+        <p class="cierre__price" data-sc-cue="0.07"><s class="was nums"><span class="sr">Precio regular </span>$497</s> <b class="nums"><span class="sr">Precio de oferta </span>$67</b> <span>una vez</span><span class="cierre__timer" data-offer-wrap><span data-countdown="line"></span></span></p>
         <p class="cierre__grade" data-sc-cue="0.08">Estilo en el monitor: <strong data-close-name>Subtítulo ajustado</strong> · <a href="#estilos">cambiar</a></p>
         <a class="btn btn--lg" href="#precio" data-buy data-sc-cue="0.1" data-sc-rise="0" data-sc-magnet="0.22">Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>

@@ -1,0 +1,44 @@
+/* CORTE · the ground. Load AFTER corte.css. Only overrides.
+   js/ground.js writes --sc-canvas, --sc-surface, --haze-a, --haze-b and
+   --ground-gold on <html> as the page scrolls. The values below are the hero's
+   own, so with JavaScript off, or under any failure, the page rests exactly as
+   it always looked. */
+
+:root {
+  --haze-a: rgb(238 234 226 / .055);
+  --haze-b: rgb(255 74 28 / .045);
+  --ground-gold: 0;
+}
+
+/* The haze keeps its geometry. Only the two light colours follow the grounds
+   (bone and REC red in the hero, steel, hot red, forest, gold further down). */
+.haze {
+  background:
+    radial-gradient(48% 42% at 70% 30%, var(--haze-a), transparent 70%),
+    radial-gradient(36% 40% at 12% 92%, var(--haze-b), transparent 70%),
+    radial-gradient(80% 60% at 50% 120%, rgb(0 0 0 / .5), transparent 70%);
+}
+
+/* The solid bar is the ground it floats over. */
+.bar.is-solid { background: color-mix(in oklab, var(--sc-canvas) 92%, transparent); }
+
+/* Cómo funciona is a deliberate hard cut to near black, whatever the grade
+   around it. */
+.como, .como__stage { background: var(--black); }
+
+/* ----------------------------------------------------------- gold details --
+   A second metal, used three times and no more. */
+
+/* The paper price sheet gets a thin foil edge along its top. */
+.sheet {
+  background:
+    linear-gradient(90deg, var(--gold-lo) 0%, var(--gold) 22%, var(--gold-hi) 50%, var(--gold) 78%, var(--gold-lo) 100%) 0 0 / 100% 3px no-repeat,
+    var(--sc-canvas);
+}
+.sheet::before, .sheet::after { border-color: var(--gold); }
+
+/* "Precio de lanzamiento", in gold on paper (5:1 on #E7E7E2). */
+.precio .label { color: var(--gold); }
+
+/* The station ring that lights as the line reaches each step. */
+.step__ico::after { box-shadow: 0 0 0 1px var(--gold); }

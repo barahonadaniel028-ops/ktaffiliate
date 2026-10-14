@@ -40,10 +40,10 @@ const T = {
   flashDown: [0.459, 0.62],   // peak plateau 0.452-0.459 so a fast flick still catches it
   burst: [0.44, 0.6],
   shock: [0.447, 0.585],
-  aside: [0.462, 0.64],    // the camera clears the text column first
-  dev: [0.47, 0.7],        // heading filter (blur and brightness come down)
-  t1: [0.49, 0.66],        // first sentence
-  t2: [0.55, 0.7]          // second sentence, about 0.06 later
+  aside: [0.455, 0.58],    // recoils from the flash and clears the text column BEFORE any word is legible
+  dev: [0.51, 0.7],        // heading filter (blur and brightness come down)
+  t1: [0.52, 0.68],        // first sentence (flash is already under 3 % here)
+  t2: [0.58, 0.7]          // second sentence, about 0.06 later
 };
 
 const PHI_DORMANT = 60;    // blade angle (deg): lens asleep, aperture a touch smaller
@@ -117,8 +117,7 @@ export function frame(p) {
   v['--c-shock-o'] = 0.55 * sUp * decay(seg(0.455, T.shock[1], p), 3);
 
   // 0.46-0.70 the camera eases aside while the line develops out of the flash.
-  const aq = seg(T.aside[0], T.aside[1], p);
-  v['--c-aside'] = aq < 0.5 ? 2 * aq * aq : 1 - Math.pow(-2 * aq + 2, 2) / 2;
+  v['--c-aside'] = easeOut(seg(T.aside[0], T.aside[1], p));
   const d = easeOut(seg(T.dev[0], T.dev[1], p));
   v['--c-t1'] = easeOut2(seg(T.t1[0], T.t1[1], p));
   v['--c-t2'] = easeOut2(seg(T.t2[0], T.t2[1], p));

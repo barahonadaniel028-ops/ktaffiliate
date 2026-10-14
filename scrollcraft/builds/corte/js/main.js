@@ -4,12 +4,19 @@
 // reveals and counters; everything bespoke lives here.
 
 import { STYLES, byId, drawFrame, fit } from './animatic.js';
+import { createGround } from './ground.js';
+import { createCamera } from './camera.js';
+import { initCountdowns } from './countdown.js';
 
 // The one place to change business facts the markup cannot know.
 const CONFIG = {
   checkout: '',            // real checkout URL; empty keeps buttons on #precio
   pageSeconds: 90,         // the page is presented as a 90 second edit
-  defaultClose: 'subtitulo-ajustado'
+  defaultClose: 'subtitulo-ajustado',
+  // The launch offer ends here (ISO 8601 with a time zone). A real deadline,
+  // never reset by the page. Empty hides the timer everywhere; once the date
+  // passes, the page says the offer ended.
+  offerEndsAt: '2026-10-21T23:59:59-05:00'
 };
 
 const root = document.documentElement;
@@ -92,6 +99,7 @@ setClaimCues();
 if (reduce) {
   document.getElementById('inicio').setAttribute('data-sc-span', '1.2');
   document.getElementById('estilos').setAttribute('data-sc-span', '1.3');
+  document.getElementById('camara').setAttribute('data-sc-span', '1.2');
 }
 
 window.__corte = true;
@@ -101,10 +109,16 @@ const actOf = (el) => sc.acts.find((a) => a.el === el);
 // ---------------------------------------------------------------- refs --
 const S = {
   hero: $('#inicio'), costo: $('#costo'), estilos: $('#estilos'), tuyos: $('#tuyos'),
-  como: $('#como'), porque: $('#porque'), necesitas: $('#necesitas'),
+  como: $('#como'), camara: $('#camara'), porque: $('#porque'), necesitas: $('#necesitas'),
   precio: $('#precio'), faq: $('#faq'), cierre: $('#cierre')
 };
-const A = { hero: actOf(S.hero), estilos: actOf(S.estilos), cierre: actOf(S.cierre), como: actOf(S.como) };
+const A = { hero: actOf(S.hero), estilos: actOf(S.estilos), cierre: actOf(S.cierre), como: actOf(S.como), camara: actOf(S.camara) };
+
+// The three new parts: the scene that fires the flash, the offer timer, and the
+// ground colour that follows the scroll.
+const camera = createCamera(S.camara);
+const ground = createGround({ ids: ['inicio', 'costo', 'estilos', 'tuyos', 'camara', 'como', 'porque', 'necesitas', 'precio', 'faq', 'cierre'], reduce });
+initCountdowns({ endsAt: CONFIG.offerEndsAt, reduce, root: document });
 const bar = $('[data-bar]');
 const tcEl = $('[data-tc]');
 const gradeLabel = $('[data-grade-label]');
@@ -446,9 +460,7 @@ function measure() {
 // ------------------------------------------------------------------ loop --
 const whipEl = $('[data-whip]');
 const sheetEl = $('[data-sheet]');
-const flashEl = $('.fx-flash');
 const estStage = $('.estilos__stage');
-let lastComoTop = Infinity, flashCool = 0;
 let lastReel = 0, lastMon = 0, lastClose = 0;
 const heroAnchor = $('.hero__anchor');
 const costoAnchor = $('[data-anchor="costo"]');
@@ -467,6 +479,7 @@ function loop(now) {
   if (document.hidden) return;
   const vh = innerHeight, vw = innerWidth, y = scrollY;
   const max = maxScroll();
+  const gd = ground.update();
 
   // nav
   bar.classList.toggle('is-solid', y > 24);
@@ -514,16 +527,8 @@ function loop(now) {
     whipEl.style.opacity = (0.15 + 0.85 * k).toFixed(3);
   }
 
-  // como: flash frame when it cuts in
-  {
-    const t = S.como.getBoundingClientRect().top;
-    const th = vh * 0.42;
-    if (!reduce && lastComoTop > th && t <= th && now > flashCool) {
-      flashEl.classList.remove('is-on'); void flashEl.offsetWidth; flashEl.classList.add('is-on');
-      flashCool = now + 1400;
-    }
-    lastComoTop = t;
-  }
+  // camara: the scene is a pure function of its own scroll progress
+  if (A.camara && cover(S.camara, vh) > 0) camera.update(A.camara.p, { reduce });
 
   // precio: the sheet slides up over the dark
   if (sheetEl) {
@@ -558,6 +563,7 @@ function loop(now) {
     add(S.costo, 'hilo', rectOf(costoAnchor));
     add(S.estilos, 'pista', rectOf(trackEl));
     add(S.tuyos, 'trenza', rectOf(braidEl));
+    add(S.camara, 'off', null, 0);
     add(S.como, 'off', null, 0);
     add(S.porque, 'off', null, 0);
     add(S.necesitas, 'off', null, 0);
@@ -569,6 +575,7 @@ function loop(now) {
       states.push({ w: ciCover, shape: 'loop', key: 'cierre', box: { x: r.left + r.width / 2 - side / 2, y: r.top + r.height / 2 - side / 2, w: side, h: side } });
     }
     if (fine && !reduce) stage.setPointer(ptr.x, ptr.y, ptr.on && heroCover > 0.3);
+    stage.setGold(gd.gold);
     stage.frame({ states, heroBox: hb, heroExit: reduce ? 0 : clamp01((hp - 0.1) / 0.62), ready: !root.classList.contains('slate-on') || root.classList.contains('slate-out') });
   }
 }
@@ -582,7 +589,7 @@ function boot() {
 let resizeT = 0;
 addEventListener('resize', () => {
   clearTimeout(resizeT);
-  resizeT = setTimeout(() => { measure(); if (stage) stage.resize(); }, 120);
+  resizeT = setTimeout(() => { measure(); if (stage) stage.resize(); camera.resize(); ground.refresh(); }, 120);
 });
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { measure(); });
 initGL().finally(boot);
