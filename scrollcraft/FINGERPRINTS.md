@@ -28,9 +28,7 @@ changes only grammar and world will fail it.
 
 | Build | Grammar | Nav treatment | Hero device | Act-sequence shape | Close pattern | Signature move | World | Port |
 |---|---|---|---|---|---|---|---|---|
-
-*(empty: your first build has nothing to clear, so build whatever the interview
-points at. From the second onwards, this table is the constraint.)*
+| corte (2026-10-14) | Sala de montaje (new: scenes joined by named editing transitions) | Timecode bar; the timecode opens a Bin that lists sections as clips with in-points | Pinned headline cut in two by a razor line, halves part to reveal a line inside the cut; WebGL film strip knotted through five live reels at five depths | 10 acts, ~19 vh: pin, flow+count, pan (peak, span 6), flow+reveal, pin+line draw, flow+kinetic, flow+in (iris), flow (sheet), flow+in, pin | Render plate: the strip closes into a reel around a monitor playing the chosen style, render bar to 100 %, magnetic CTA | El Grade: choosing an editing style regrades the page (strip material, H2 caption treatment, nav readout, close plate, checkout param) | Rendered: obsidian WebGL film strip + live Canvas animatics, dark graphite with one REC accent and a paper price sheet | Static HTML, engine copy untouched |
 
 ---
 
@@ -41,7 +39,11 @@ reusing: a grammar, a nav treatment, a close pattern, a signature move, an
 act-count-and-length band. The shared columns are what the next build inherits
 as a constraint, so writing them down is the whole point.
 
-Nothing is taken yet.
+- **Grammar:** Sala de montaje (scenes joined by named editing transitions).
+- **Nav:** timecode readout that opens a clip Bin.
+- **Signature:** a selectable style that regrades the whole page (El Grade).
+- **Object:** a WebGL film strip anchored to DOM boxes that morphs across sections.
+- **Band:** 10 acts at about 19 viewport-heights.
 
 ---
 
@@ -63,4 +65,3 @@ If you want to see what a filled-in table looks like, and which shapes tend to
 collide, read `EXAMPLES.md` in the scroll-craft repository. Treat it as
 illustration only: those rows are somebody else's builds and they do **not**
 constrain yours.
-| corte (2026-10-14) | Sala de montaje (new: scenes joined by named editing transitions) | Timecode bar; the timecode opens a Bin that lists sections as clips with in-points | Pinned headline cut in two by a razor line, halves part to reveal a line inside the cut; WebGL film strip knotted through five live reels at five depths | 10 acts, ~19 vh: pin, flow+count, pan (peak, span 6), flow+reveal, pin+line draw, flow+kinetic, flow+in (iris), flow (sheet), flow+in, pin | Render plate: the strip closes into a reel around a monitor playing the chosen style, render bar to 100 %, magnetic CTA | El Grade: choosing an editing style regrades the page (strip material, H2 caption treatment, nav readout, close plate, checkout param) | Rendered: obsidian WebGL film strip + live Canvas animatics, dark graphite with one REC accent and a paper price sheet | Static HTML, engine copy untouched |
