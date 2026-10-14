@@ -4,7 +4,8 @@ from pathlib import Path
 
 here = Path(__file__).parent
 funciones = (here / "partes" / "funciones.md").read_text().strip()
-salidas = {"p1.md": "master-prompt-1-mando.md", "p2.md": "master-prompt-2-pauta.md", "p3.md": "master-prompt-3-foco.md"}
+salidas = {"p1.md": "master-prompt-1-mando.md", "p2.md": "master-prompt-2-pauta.md", "p3.md": "master-prompt-3-foco.md",
+           "r2a.md": "master-prompt-ronda2-a-halo.md", "r2b.md": "master-prompt-ronda2-b-objeto.md", "r2c.md": "master-prompt-ronda2-c-aura.md"}
 for fuente, destino in salidas.items():
     src = here / "partes" / fuente
     if src.exists():
