@@ -143,11 +143,54 @@
     </svg>`;
   }
 
+
+  // cuadro de video desenfocado: fondo de luz, bokeh y una silueta fuera de foco. Sin caras dibujadas.
+  const STILL = {
+    amber: ["#2a160b", "#8a4a1c", "#ffb46a", "#ffd9a8", "#c98a5e"],
+    ocean: ["#06121f", "#173a5c", "#6fb2ff", "#bfe0ff", "#b98c70"],
+    sage: ["#0e140d", "#3f5232", "#cbe2a0", "#f1f7d8", "#c49474"],
+    rose: ["#1c0a12", "#6d2340", "#ff8fb1", "#ffd1de", "#c48e78"],
+    smoke: ["#0c0c0d", "#3a3a3e", "#e8e4dc", "#ffffff", "#b88e74"],
+    teal: ["#041311", "#11504b", "#6ff2dc", "#cffff6", "#b48a6e"],
+    gold: ["#140f04", "#5b4512", "#ffd36b", "#fff0c2", "#c69a70"],
+    dusk: ["#0d0b1c", "#3b2a5e", "#ff9f7a", "#ffd2b8", "#b98a72"],
+  };
+  function still(el) {
+    const t = STILL[el.dataset.still] || STILL.amber, id = "s" + Math.random().toString(36).slice(2, 8), side = el.dataset.side === "r" ? 1 : -1;
+    const fig = el.dataset.fig !== "0";
+    el.insertAdjacentHTML("afterbegin", `<svg class="still" viewBox="0 0 90 160" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="${id}a" x1="0" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="${t[1]}"/><stop offset="1" stop-color="${t[0]}"/></linearGradient>
+        <radialGradient id="${id}k" cx="${side > 0 ? .8 : .2}" cy=".3" r=".75"><stop offset="0" stop-color="${t[2]}" stop-opacity=".75"/><stop offset="1" stop-color="${t[2]}" stop-opacity="0"/></radialGradient>
+        <radialGradient id="${id}f" cx="${side > 0 ? .62 : .38}" cy=".4" r=".7"><stop offset="0" stop-color="${t[4]}"/><stop offset="1" stop-color="${t[0]}" stop-opacity=".2"/></radialGradient>
+        <filter id="${id}b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${el.dataset.blur || 3.4}"/></filter>
+        <filter id="${id}bb" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+        <filter id="${id}n"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0"/></filter>
+        <radialGradient id="${id}v" cx=".5" cy=".45" r=".8"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+      </defs>
+      <rect width="90" height="160" fill="url(#${id}a)"/>
+      <rect width="90" height="160" fill="url(#${id}k)"/>
+      <g filter="url(#${id}bb)">
+        <circle cx="${45 + side * 30}" cy="30" r="9" fill="${t[3]}" opacity=".55"/><circle cx="${45 - side * 28}" cy="22" r="6" fill="${t[2]}" opacity=".45"/>
+        <circle cx="${45 + side * 34}" cy="74" r="7" fill="${t[2]}" opacity=".4"/><circle cx="${45 - side * 36}" cy="64" r="5" fill="${t[3]}" opacity=".35"/>
+        <circle cx="${45 + side * 14}" cy="12" r="4" fill="${t[3]}" opacity=".5"/>
+      </g>
+      ${fig ? `<g filter="url(#${id}b)">
+        <path d="M2 160 C6 124 26 112 ${45 + side * 3} 110 C${66 + side * 3} 112 84 124 88 160 Z" fill="${t[0]}" opacity=".92"/>
+        <ellipse cx="${45 + side * 3}" cy="76" rx="15" ry="19" fill="url(#${id}f)"/>
+        <path d="M${30 + side * 3} 72 C${29 + side * 3} 56 ${40 + side * 3} 53 ${46 + side * 3} 54 C${56 + side * 3} 54 ${61 + side * 3} 60 ${60 + side * 3} 72 C${55 + side * 3} 63 ${36 + side * 3} 63 ${30 + side * 3} 72Z" fill="${t[0]}" opacity=".85"/>
+      </g>` : ""}
+      <rect width="90" height="160" fill="url(#${id}v)"/>
+      <rect width="90" height="160" filter="url(#${id}n)" opacity=".07"/>
+    </svg>`);
+  }
+
   window.KIT = { icon };
   document.querySelectorAll("[data-i]").forEach((el) => { el.outerHTML = icon(el.dataset.i, el.className); });
   document.querySelectorAll("[data-spark]").forEach(spark);
   document.querySelectorAll("[data-bars]").forEach(bars);
   document.querySelectorAll("[data-ring]").forEach(ring);
   document.querySelectorAll("[data-frame]").forEach(frame);
+  document.querySelectorAll("[data-still]").forEach(still);
   document.documentElement.classList.add("kit-ready");
 })();
