@@ -1,0 +1,141 @@
+/* CORTE · temporizador de oferta. Load after corte.css.
+   Three variants share one set of tokens, so the same markup reads on the dark
+   ground and on .ground-light paper. Only transform and opacity animate. */
+
+.cd { box-sizing: border-box; --cd-roll: 420ms; --cd-ease: var(--ease-cut, cubic-bezier(.16, 1, .3, 1)); }
+.cd *, .cd *::before, .cd *::after { box-sizing: border-box; }
+.cd[hidden] { display: none !important; }
+.cd__sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ------------------------------------------------------------- digits -- */
+/* A cell clips; the old glyph leaves upward, the new one rises from below. */
+.cd-d {
+  display: inline-grid; justify-items: center; vertical-align: top;
+  line-height: 1; padding-block: .1em; margin-block: -.1em;
+  overflow: hidden; overflow: clip;
+}
+.cd-g { grid-area: 1 / 1; display: block; line-height: 1; }
+.cd-g--out { animation: cd-out var(--cd-roll) var(--cd-ease) both; }
+.cd-g--in  { animation: cd-in var(--cd-roll) var(--cd-ease) both; }
+@keyframes cd-out { to { transform: translate3d(0, -115%, 0); opacity: 0; } }
+@keyframes cd-in  { from { transform: translate3d(0, 115%, 0); opacity: 0; } }
+
+/* The REC light. Opacity only. */
+.cd__rec {
+  display: inline-block; flex: none; width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--sc-accent);
+  animation: cd-rec 2s ease-in-out infinite;
+}
+@keyframes cd-rec { 0%, 100% { opacity: 1; } 50% { opacity: .28; } }
+
+/* The compact shared readout: "06d 23:41:09". */
+.cd__time { display: inline-flex; align-items: baseline; white-space: nowrap; font-variant-numeric: tabular-nums lining-nums; }
+.cd__grp { display: inline-flex; }
+.cd__unit { color: var(--sc-ink-soft); margin-left: .08em; }
+.cd__gap { display: inline-block; width: .5em; }
+.cd__sep { color: var(--sc-ink-soft); padding-inline: .04em; }
+
+/* ------------------------------------------------------------- chip --- */
+/* For the fixed bar and the phone strip: calm, 30px, never louder than the button. */
+.cd--chip {
+  display: inline-flex; align-items: center; gap: .55rem; height: 30px; padding: 0 .75rem 0 .65rem;
+  border-radius: var(--sc-r-md);
+  background: color-mix(in oklab, var(--sc-ink) 6%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair-strong);
+  color: var(--sc-ink); font: 600 .8125rem/1 var(--sc-font-text);
+  white-space: nowrap; vertical-align: middle;
+}
+.cd--chip .cd__rec { width: .4375rem; height: .4375rem; }
+.cd--chip .cd__lab {
+  font-size: .625rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--sc-ink-soft);
+  padding-right: .55rem; border-right: 1px solid var(--hair-strong); line-height: 12px;
+}
+.cd--chip .cd__time { letter-spacing: .01em; }
+
+/* ------------------------------------------------------------- line --- */
+.cd--line {
+  display: inline-flex; align-items: center; gap: .6rem; flex-wrap: nowrap;
+  font: 500 1rem/1.4 var(--sc-font-text); color: var(--sc-ink-soft); white-space: nowrap;
+}
+.cd--line .cd__rec { width: .4375rem; height: .4375rem; }
+.cd--line .cd__lab { color: var(--sc-ink-soft); }
+.cd--line .cd__time { color: var(--sc-ink); font-weight: 600; font-size: 1.0625rem; letter-spacing: .01em; }
+
+/* -------------------------------------------------------------- big --- */
+/* The showpiece. It sizes from its own width, so it fits the price column,
+   the full sheet or a phone without a media query. Give it a block parent. */
+.cd--big {
+  display: block; width: 100%; container-type: inline-size;
+  padding: 1.25rem 1.4rem 1.5rem;
+  border-radius: var(--sc-r-lg);
+  background: var(--sc-surface);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  color: var(--sc-ink); font-family: var(--sc-font-text);
+}
+.cd__title { display: flex; align-items: center; gap: .65rem; margin: 0 0 1.25rem; font: 600 .875rem/1.3 var(--sc-font-text); letter-spacing: .005em; color: var(--sc-ink); }
+.cd__board {
+  --cd-dial: clamp(10rem, 43cqw, 16rem);
+  --cd-num: clamp(1.9rem, 8.6cqw, 3.4rem);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: clamp(1rem, 5cqw, 2.75rem);
+}
+.cd__units { display: grid; grid-template-columns: auto auto auto auto auto; justify-content: space-between; align-items: start; }
+.cd__col { display: grid; justify-items: start; gap: .7rem; }
+.cd__num {
+  display: inline-flex; font-family: var(--sc-font-display); font-weight: 760; font-stretch: 118%;
+  font-size: var(--cd-num); line-height: 1; letter-spacing: -.035em; font-variant-numeric: tabular-nums lining-nums;
+  color: var(--sc-ink);
+}
+.cd__cap { font: 600 .625rem/1 var(--sc-font-text); letter-spacing: .18em; text-transform: uppercase; color: var(--sc-ink-soft); }
+.cd__colon { font-family: var(--sc-font-display); font-weight: 400; font-stretch: 100%; font-size: var(--cd-num); line-height: 1; color: var(--hair-strong); }
+
+/* The dial: a 60-tick ring, a sweeping hand, the seconds at its heart. */
+/* The sweep is a rotating square; clip it so its corners never widen the page. */
+.cd__dial { position: relative; width: var(--cd-dial); aspect-ratio: 1; justify-self: end; overflow: hidden; overflow: clip; border-radius: 50%; }
+.cd__svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.cd__face { fill: color-mix(in oklab, var(--sc-ink) 3.5%, transparent); stroke: var(--hair); stroke-width: 1; }
+.cd__t { stroke: var(--hair-strong); stroke-width: 1; stroke-linecap: butt; }
+.cd__t--m { stroke-width: 1.7; }
+.cd__t.is-on { stroke: var(--gold); }
+.cd__t.is-now { stroke: var(--sc-accent); stroke-width: 2.6; }
+.cd__ring { fill: none; stroke: var(--hair); stroke-width: 1; }
+.cd__ring--gold { stroke: var(--gold-hi); stroke-width: .9; opacity: .8; }
+.cd__reg line { stroke: var(--hair-strong); stroke-width: 1; }
+
+.cd__sweep { position: absolute; inset: 0; pointer-events: none; transform: rotate(0deg); will-change: transform; }
+.cd__wedge {
+  position: absolute; inset: 1%; border-radius: 50%; display: block;
+  background: conic-gradient(from -70deg at 50% 50%, transparent 0deg, color-mix(in oklab, var(--gold-hi) 38%, transparent) 69.4deg, transparent 70deg);
+  -webkit-mask: radial-gradient(circle closest-side, transparent 0 57%, #000 58%);
+          mask: radial-gradient(circle closest-side, transparent 0 57%, #000 58%);
+}
+.cd__hand { position: absolute; left: 50%; top: 2%; width: 1.5px; height: 19%; margin-left: -.75px; background: var(--sc-accent); display: block; }
+
+.cd__core { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: .55rem; }
+.cd__num--s { font-size: calc(var(--cd-dial) * .3); font-weight: 800; font-stretch: 122%; letter-spacing: -.05em; }
+.cd__core .cd__cap { padding-left: .18em; }
+
+/* Narrow containers stack: the three units on top, the dial below, centred. */
+@container (max-width: 27rem) {
+  .cd__board { --cd-dial: min(66cqw, 15rem); --cd-num: clamp(2rem, 12cqw, 3rem); grid-template-columns: 1fr; row-gap: 1.6rem; }
+  .cd__dial { justify-self: center; }
+}
+
+/* ------------------------------------------------------------ ended --- */
+.cd__ended { margin: 0; padding: .35rem 0; font: 500 1rem/1.4 var(--sc-font-text); color: var(--sc-ink-soft); text-align: center; }
+.cd--big.is-ended { background: transparent; }
+
+/* ------------------------------------------------------ small phones --- */
+@media (max-width: 380px) {
+  .cd--chip { gap: .45rem; padding: 0 .6rem 0 .55rem; }
+  .cd--chip .cd__lab { padding-right: .45rem; letter-spacing: .12em; }
+}
+
+/* ------------------------------------------------------ reduced motion -- */
+/* Digits swap in place, the REC light holds, the ring is a still instrument. */
+@media (prefers-reduced-motion: reduce) {
+  .cd-g--out, .cd-g--in { animation: none; }
+  .cd-g--out { display: none; }
+  .cd__rec { animation: none; }
+}
+/* Same hold when the caller asked for reduced motion and the OS did not. */
+.cd.is-still .cd__rec { animation: none; }

@@ -1,0 +1,162 @@
+/* CORTE · La foto. A pinned act where a camera wakes, focuses, shoots, and the
+   line only develops after the flash. Load AFTER corte.css.
+
+   Contract with js/camera.js
+   - camera.js adds .is-live to the section and writes unitless custom
+     properties (--c-*) on the stage. Every scrubbed rule below is keyed on
+     .camara.is-live and reads those properties WITH a fallback equal to the
+     resting scene, so with no JS, a failed module or reduced motion the page
+     shows the finished frame: camera aside, headline crisp, no flash.
+   - Only transform, opacity and one filter (the headline's development) are
+     animated. No layout property is ever written.
+   - The stage is transparent on purpose; the page ground shows through it.
+   - Do not set position on the stage: the engine makes it sticky. */
+
+.camara {
+  /* Layout tokens. Desktop first; the phone block below re-keys them. */
+  --cam-w: min(64vw, 100svh);       /* camera width at its largest (centre, awake) */
+  --cam-dx: 24vw;                   /* resting offset: camera sits right of centre */
+  --cam-dy: 0px;
+  --cam-shrink: .27;                /* resting scale = 1 - shrink */
+  --cam-dorm-y: 4svh;               /* dormant: lower by this much, .94 scale */
+  --cam-flash: #FFF8E6;             /* warm white */
+  position: relative;
+  color: var(--sc-ink);
+}
+.camara__stage { min-height: 100svh; }
+
+/* ------------------------------------------------------------- camera -- */
+.camara__rig {
+  position: absolute; inset: 0; margin: auto; z-index: 2;
+  width: var(--cam-w); height: calc(var(--cam-w) * 520 / 760);
+  transform: translate3d(var(--cam-dx), var(--cam-dy), 0) scale(calc(1 - var(--cam-shrink)));
+  pointer-events: none;
+}
+.cam { position: absolute; inset: 0; }
+.cam > svg { position: absolute; display: block; overflow: visible; max-width: none; }
+.cam__body { inset: 0; width: 100%; height: 100%; }
+/* The eye is a 300-unit square centred on the lens (380,300 in a 760 x 520 box). */
+.cam__eye { left: 30.263%; top: 28.846%; width: 39.474%; height: 57.692%; }
+.cam > i { position: absolute; display: block; pointer-events: none; }
+
+.cam__lamp {
+  left: 31.579%; top: 40%; width: 6.58%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(circle, #FFF6DE 0 17%, rgb(255 233 190 / .78) 30%, rgb(255 226 170 / .26) 56%, transparent 74%);
+  opacity: 0;
+}
+.cam__tally {
+  left: 84.211%; top: 40%; width: 1.842%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #FFB19A 0, var(--sc-accent) 40%, #B52A08 100%);
+}
+.cam__burst, .cam__shock {
+  left: 50%; top: 57.692%; width: 64%; aspect-ratio: 1; border-radius: 50%;
+  opacity: 0; transform: translate(-50%, -50%) scale(.1);
+}
+.cam__burst { background: radial-gradient(circle, rgb(255 250 236 / 1) 0, rgb(255 248 230 / .74) 16%, rgb(255 244 220 / .28) 38%, transparent 66%); }
+.cam__shock { background: radial-gradient(circle, transparent 0 58%, rgb(255 248 230 / .0) 59%, rgb(255 248 230 / .6) 63.5%, rgb(255 248 230 / .0) 68%, transparent 69%); }
+
+/* Light the eye layers need to read on a near-black ground. */
+.cam__af, .cam__refl, .cam__ticks, .cam__pip { transform-box: view-box; }
+.cam__af { opacity: 0; }                       /* hidden at rest */
+.cam__af-b { stroke-width: 2.6; }
+.cam__af-b--shadow { stroke: #000; stroke-opacity: .55; stroke-width: 5.4; }
+.cam__af-b--w { stroke: var(--sc-ink); }
+.cam__af-b--g { stroke: var(--gold-hi); }
+.cam__af-w, .cam__af-g { opacity: 0; }
+.cam__pip { opacity: 0; transform: scale(.2); }
+
+/* -------------------------------------------------------------- copy -- */
+.camara__copy {
+  position: absolute; z-index: 1; left: var(--sc-gutter); top: 50%;
+  width: min(49vw, 46rem); transform: translateY(-50%);
+}
+.camara__title {
+  margin: 0;
+  font: 640 clamp(2.4rem, 1.2rem + 4.6vw, 6rem)/.98 var(--sc-font-display);
+  font-stretch: 112%; letter-spacing: -.04em; text-wrap: balance;
+  color: var(--sc-ink);
+}
+.camara__l1 { display: block; }
+.camara__title em {
+  display: block; margin-top: .14em;
+  font-style: italic; font-weight: 460; font-stretch: 100%; letter-spacing: -.035em;
+  color: var(--sc-ink-soft);
+}
+
+.camara__flash {
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: var(--cam-flash); opacity: 0;
+}
+
+/* ---------------------------------------------- scrubbed: only when live -- */
+.camara.is-live .camara__rig {
+  will-change: transform;
+  transform:
+    translate3d(
+      calc(var(--c-aside, 1) * var(--cam-dx)),
+      calc(var(--c-dorm, 0) * var(--cam-dorm-y) + var(--c-aside, 1) * var(--cam-dy) + var(--c-kick, 0) * 6px),
+      0)
+    scale(calc((1 - var(--c-dorm, 0) * .06) * (1 - var(--c-aside, 1) * var(--cam-shrink)) * (1 - var(--c-kick, 0) * .012)));
+}
+.camara.is-live .cam__body, .camara.is-live .cam__eye { will-change: transform; }
+
+.camara.is-live .cam__refl { opacity: var(--c-wake, 1); }
+.camara.is-live .cam__pinhole { opacity: var(--c-wake, 1); }
+.camara.is-live .cam__ticks { transform: rotate(calc(var(--c-ring, 0) * 1deg)); }
+.camara.is-live .cam__tally { opacity: var(--c-tally, 1); will-change: opacity; }
+
+.camara.is-live .cam__af { opacity: var(--c-af-o, 0); }
+.camara.is-live .cam__af-b { transform: scale(var(--c-af-s, 1)); }
+.camara.is-live .cam__af-w { opacity: var(--c-af-w, 0); }
+.camara.is-live .cam__af-g { opacity: var(--c-af-g, 0); }
+.camara.is-live .cam__pip { opacity: var(--c-pip-o, 0); transform: scale(calc(.2 + .8 * var(--c-pip, 0))); }
+
+.camara.is-live .cam__lamp { opacity: var(--c-lamp, 0); will-change: opacity; }
+.camara.is-live .cam__burst {
+  opacity: var(--c-burst-o, 0); will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(calc(.1 + var(--c-burst-s, 0) * 5.4));
+}
+.camara.is-live .cam__shock {
+  opacity: var(--c-shock-o, 0); will-change: transform, opacity;
+  transform: translate(-50%, -50%) scale(calc(.1 + var(--c-shock-s, 0) * 5.8));
+}
+.camara.is-live .camara__flash { opacity: var(--c-flash, 0); will-change: opacity; }
+
+/* The line develops like a print in a tray: blur and brightness come down,
+   opacity comes up, a few pixels of rise. One filter, on the heading only. */
+.camara.is-live .camara__title { filter: var(--c-filter, none); }
+.camara.is-live .camara__l1 {
+  opacity: var(--c-t1, 1);
+  transform: translate3d(0, calc((1 - var(--c-t1, 1)) * 10px), 0);
+}
+.camara.is-live .camara__title em {
+  opacity: var(--c-t2, 1);
+  transform: translate3d(0, calc((1 - var(--c-t2, 1)) * 10px), 0);
+}
+
+/* ------------------------------------------------------------- phone -- */
+@media (max-width: 860px) {
+  .camara {
+    --cam-w: min(92vw, 56svh);
+    --cam-dx: 0px;
+    --cam-dy: -20svh;               /* camera goes up, the line takes the lower half */
+    --cam-shrink: .16;
+    --cam-dorm-y: 3svh;
+  }
+  .camara__copy {
+    top: 54svh; left: var(--sc-gutter); right: var(--sc-gutter); width: auto; transform: none;
+  }
+  .camara__title { font-size: clamp(2rem, 9.4vw, 3.4rem); line-height: 1; }
+}
+
+/* --------------------------------------------------- reduced motion -- */
+/* The finished frame, whatever the script does: camera aside, line crisp,
+   nothing flashing. camera.js also writes this state when it is told. */
+@media (prefers-reduced-motion: reduce) {
+  .camara .camara__rig { transform: translate3d(var(--cam-dx), var(--cam-dy), 0) scale(calc(1 - var(--cam-shrink))) !important; will-change: auto; }
+  .camara .camara__title { filter: none !important; }
+  .camara .camara__l1, .camara .camara__title em { opacity: 1 !important; transform: none !important; }
+  .camara .camara__flash, .camara .cam__burst, .camara .cam__shock, .camara .cam__lamp, .camara .cam__af { display: none !important; }
+  .camara .cam__refl, .camara .cam__pinhole, .camara .cam__tally { opacity: 1 !important; }
+  .camara .cam__ticks { transform: none !important; }
+}
