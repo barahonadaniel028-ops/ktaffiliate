@@ -6,7 +6,8 @@
   const MAX_TURNS = 8, MAX_TASK = 1500, VOICE_KEY = "jv-voice";
   const ERRORS = { rate_limited: "Llegaste al límite de uso por ahora. Prueba en un rato.", session_expired: "Vuelve a iniciar sesión en Claude y prueba de nuevo.", refused: "Eso no lo puedo responder. Prueba con otra pregunta.", empty_completion: "No me salió respuesta. Prueba de otra forma.", prompt_too_large: "Eso quedó muy largo. Prueba más corto.", upstream_error: "Se cortó la conexión. Prueba de nuevo." };
   const BLOCKED = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
-  let open = false, busy = false, ctl = null, rec = null, sample = null, canTools = false, ready = false, turns = [], confirmCtx = null, from = null, blockedMsg = "", cmdIdx = 0;
+  let open = false, busy = false, ctl = null, rec = null, sample = null, canTools = false, imgLim = null, ready = false, turns = [], confirmCtx = null, from = null, blockedMsg = "", cmdIdx = 0, att = null;
+  const convFiles = new Map(), lastAsk = { text: "", files: [] };
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
   const COMMANDS = () => [
@@ -39,6 +40,7 @@ Reglas:
 - Usa SOLO los datos del RESUMEN. Si algo no está ahí, no lo inventes: di que no lo ves y ofrece pasárselo a Claude.
 - Navegar: go_to. Aprobar una pieza: propose_approval (siempre muestra un botón de confirmación, nunca aprueba solo). Pendiente hecho: mark_todo_done. Abrir un video en el editor: open_studio. Pedir un video nuevo: new_request. Feedback general: leave_feedback.
 - Todo lo que sea trabajo real (producir, rehacer o agendar videos, cambiar posts en Metricool, intros, leer páginas) se lo pasas a Claude con ask_claude con una instrucción completa y autosuficiente.
+- Si la persona adjunta videos o archivos, vienen listados al final de su mensaje como ADJUNTOS con un id. No puedes verlos (salvo imágenes): para trabajar con ellos pásalos a Claude con ask_claude y el campo attachments con esos id, y describe en la instrucción qué quiere hacer con cada uno.
 - Nunca digas que algo está hecho si solo lo pediste: di "se lo pasé a Claude" o "te muestro el botón para confirmar".
 - No hay ventas ni dinero en esta plataforma: si preguntan, di que esa parte no está.`;
 
@@ -65,22 +67,24 @@ Reglas:
         execute: ({ topic, brand }) => { if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); App.ui.draft = Object.assign(App.ui.draft || {}, { topic: String(topic || "").slice(0, 600) }); setTimeout(() => nav("#crear"), 350); return "Abrí Crear con la idea cargada; falta que confirme y envíe."; } },
       { name: "leave_feedback", description: "Guarda feedback general como borrador en Notas; llega a Claude con Enviar cambios. scope = general o brand (con brand).", inputSchema: { type: "object", properties: { text: { type: "string" }, scope: { type: "string" }, brand: { type: "string" } }, required: ["text"] },
         execute: async ({ text, scope, brand }) => { const isB = scope === "brand" && S.brands.some((b) => b.id === brand); stat("guardando…"); await App.act.createFeedback(isB ? { scope: "brand", brand, title: "Toda la cuenta " + sel.brand(brand).name } : { scope: "general", title: "Todo el espacio" }, String(text || ""), []); return "Guardado. Se envía cuando toques Enviar cambios."; } },
-      { name: "ask_claude", description: "Le pasa una tarea a Claude, la sesión real que produce y agenda videos, cambia posts en Metricool y genera material. task = instrucción completa y autosuficiente.", inputSchema: { type: "object", properties: { task: { type: "string" } }, required: ["task"] },
-        execute: async ({ task }) => { const t = String(task || "").trim().slice(0, MAX_TASK); if (!t) throw new Error("tarea vacía"); stat("pasándole el pedido a Claude…"); await App.data.set("requests", "jarvis_" + Date.now(), { kind: "jarvis", text: t, at: App.stamp(), by: S.userId, status: "pendiente" }); const told = await App.data.tell("PEDIDO DESDE JARVIS: " + t); return told ? "Claude recibió el pedido ahora mismo." : "Guardado. Claude lo lee cuando haya una sesión abierta."; } },
+      { name: "ask_claude", description: "Le pasa una tarea a Claude, la sesión real que produce y agenda videos, cambia posts en Metricool y genera material. task = instrucción completa y autosuficiente. attachments = id de los ADJUNTOS de la conversación que Claude debe usar (opcional).", inputSchema: { type: "object", properties: { task: { type: "string" }, attachments: { type: "array", items: { type: "string" } } }, required: ["task"] },
+        execute: async ({ task, attachments }) => { const t = String(task || "").trim().slice(0, MAX_TASK); if (!t) throw new Error("tarea vacía"); stat("pasándole el pedido a Claude…"); const files = (Array.isArray(attachments) ? attachments : []).map((id) => convFiles.get(String(id))).filter(Boolean); const r = await App.act.askClaude({ text: t, assets: files }); if (!r) throw new Error("no se pudo guardar el pedido"); return r.told ? "Claude recibió el pedido ahora mismo." : "Guardado. Claude lo lee cuando haya una sesión abierta."; } },
     ];
   }
 
   // ---------- UI ----------
   const wrap = () => $("#jvwrap"), panel = () => $("#jv");
   function mount() {
+    att = App.attach.make();
     $("#jvmount").innerHTML = `<div class="jv-wrap" id="jvwrap"><div class="veil" data-jvclose></div>
       <section class="jv lg solid-glass" id="jv" role="dialog" aria-modal="true" aria-label="Jarvis"><div class="inner">
-        <div class="jh"><span class="orb"></span><div class="nm">Jarvis<small id="jvstat">en línea</small></div><span style="flex:1"></span>
+        <div class="jh"><span class="orb"></span><div class="nm">Jarvis<small id="jvstat">en línea</small></div><span style="flex:1"></span>${App.ai.pillHtml("global")}
           <button class="iconbtn" id="jvvoice" type="button" aria-pressed="true" aria-label="Respuestas en voz" title="Respuestas en voz">${icon("volume")}</button><button class="iconbtn" type="button" data-jvclose aria-label="Cerrar">${icon("x")}</button></div>
         <div class="jvlisten" id="jvlisten" aria-hidden="true"><span class="orb listen"></span><p id="jvlive">Te escucho…</p></div><div class="log" id="jvlog" role="log" aria-live="polite"></div>
-        <div class="cmds" id="jvcmds"></div><div class="chips" id="jvchips"></div>
-        <form class="ask2" id="jvform"><input id="jvbox" type="text" autocomplete="off" placeholder="${esc(App.say("Escribí, hablame o buscá un comando…", "Escribe, háblame o busca un comando…"))}" aria-label="Mensaje para Jarvis"><button class="mic" id="jvmic" type="button" aria-label="Hablar" aria-pressed="false">${icon("mic")}</button><button class="go" type="submit" aria-label="Enviar">${icon("arrow")}</button></form>
+        <div class="cmds" id="jvcmds"></div><div class="chips" id="jvchips"></div>${att.chips().replace('class="atts"', 'class="atts jvatts"')}
+        <form class="ask2" id="jvform">${att.btn()}<input id="jvbox" type="text" autocomplete="off" placeholder="${esc(App.say("Escribí, hablame o buscá un comando…", "Escribe, háblame o busca un comando…"))}" aria-label="Mensaje para Jarvis"><button class="mic" id="jvmic" type="button" aria-label="Hablar" aria-pressed="false">${icon("mic")}</button><button class="go" type="submit" aria-label="Enviar">${icon("arrow")}</button></form>
         <p class="note" id="jvnote"></p></div></section></div>`;
+    att.bind($("#jv"));
     const v = $("#jvvoice"); v.setAttribute("aria-pressed", String(voiceOn()));
     v.onclick = () => { const on = !voiceOn(); App.store.set(VOICE_KEY, on); v.setAttribute("aria-pressed", String(on)); if (!on) try { speechSynthesis.cancel(); } catch (e) { /* sin voz */ } };
     $("#jvwrap").addEventListener("click", (e) => { if (e.target.closest("[data-jvclose]")) close(); const b = e.target.closest("[data-jvc]"); if (b) resolveConfirm(b.dataset.jvc === "yes", b.closest(".confirm")); const c = e.target.closest("[data-cmd]"); if (c) runCmd(+c.dataset.cmd); const ch = e.target.closest("[data-chip]"); if (ch) send(ch.textContent); const ac = e.target.closest("[data-jvask]"); if (ac) toClaude(ac.dataset.jvask); });
@@ -100,8 +104,9 @@ Reglas:
   }
   function runCmd(i) { const c = curCmds[i]; if (c) { $("#jvbox").value = ""; c.run(); } }
   function submit() {
-    const q = $("#jvbox").value.trim(); if (!q) return;
-    const top = curCmds[cmdIdx], strong = top && score(top, norm(q)) >= 1 && norm(q).split(/\s+/).length <= 2;
+    const q = $("#jvbox").value.trim(); if (!q && !att.items.length) return;
+    if (att.busy()) { App.toast("Espera a que terminen de subir los archivos."); return; }
+    const top = curCmds[cmdIdx], strong = q && !att.items.length && top && score(top, norm(q)) >= 1 && norm(q).split(/\s+/).length <= 2;
     if (strong) { runCmd(cmdIdx); return; }
     send(q);
   }
@@ -132,19 +137,33 @@ Reglas:
   async function init() {
     if (ready) return; ready = true;
     sample = await App.adapter().sample();
-    if (sample) { try { const lim = await sample.limits(); canTools = !!(lim && lim.tools); } catch (e) { canTools = false; } }
+    if (sample) { try { const lim = await sample.limits(); canTools = !!(lim && lim.tools); imgLim = (lim && lim.images) || null; } catch (e) { canTools = false; imgLim = null; } }
     const note = $("#jvnote");
     if (!sample) note.textContent = App.adapter().name === "demo" ? "Modo demostración: respondo con reglas simples. Con Claude conectado entiendo cualquier pregunta." : "Jarvis completo no está disponible en esta vista; respondo con reglas simples.";
   }
   async function send(raw) {
-    const text = String(raw || "").trim(); if (!text || busy) return;
-    $("#jvbox").value = ""; $("#jvchips").hidden = true; $("#jvcmds").hidden = true; add("u", text); turns.push({ role: "user", content: text });
-    if (!sample) { local(text); return; }
+    if (busy) return;
+    const files = att.take();
+    let text = String(raw || "").trim(); if (!text && files.length) text = files.length === 1 ? "Te dejo este archivo." : `Te dejo estos ${files.length} archivos.`;
+    if (!text) return;
+    files.forEach((f) => convFiles.set(f.id, f));
+    $("#jvbox").value = ""; $("#jvchips").hidden = true; $("#jvcmds").hidden = true;
+    const mine = add("u", text); if (files.length) mine.insertAdjacentHTML("beforeend", App.attach.sentHtml(files));
+    const note = files.length ? "\n\nADJUNTOS DE ESTE MENSAJE: " + JSON.stringify(files.map((f) => ({ id: f.id, nombre: f.name, tipo: f.kind, bytes: f.size }))) : "";
+    turns.push({ role: "user", content: text + note });
+    lastAsk.text = text; lastAsk.files = files;
+    if (!sample) { local(text, files); return; }
     const bubble = add("a", '<span class="typing"><i></i><i></i><i></i></span>', true); setBusy(true); ctl = new AbortController();
     const input = [{ role: "user", content: RULES() + "\n\nRESUMEN ACTUAL (JSON):\n" + brief() }, ...turns.slice(-MAX_TURNS)];
-    const opts = { modelTier: "quick", signal: ctl.signal, onText: ({ text: t }) => { bubble.textContent = t; $("#jvlog").scrollTop = $("#jvlog").scrollHeight; } };
+    const opts = Object.assign({ cache: false, signal: ctl.signal, onText: ({ text: t }) => { bubble.textContent = t; $("#jvlog").scrollTop = $("#jvlog").scrollHeight; } }, App.ai.opts());
     if (canTools) opts.tools = tools();
-    try { const res = await sample(input, opts); bubble.textContent = res.text; turns.push({ role: "assistant", content: res.text }); speak(res.text); }
+    // las imagenes las puede ver; los videos y archivos se los pasa a Claude con ask_claude
+    const imgs = files.filter((f) => f.kind === "imagen" && f.file && imgLim && (!imgLim.mediaTypes || imgLim.mediaTypes.includes(f.file.type)) && f.size <= (imgLim.maxInputBytes || Infinity)).map((f) => f.file).slice(0, (imgLim && imgLim.maxCount) || 0);
+    if (imgs.length) opts.images = imgs;
+    try {
+      const res = await sample(input, opts); bubble.textContent = res.text; turns.push({ role: "assistant", content: res.text }); speak(res.text);
+      if (!res.modelApplied) bubble.insertAdjacentHTML("afterend", `<p class="msg-note">Respondió el modelo estándar: el que elegiste no está disponible en esta vista.</p>`);
+    }
     catch (e) {
       const code = e && e.code;
       if (e && e.text) bubble.textContent = e.text + (code === "cancelled" ? "" : " (se cortó)"); else bubble.remove();
@@ -153,7 +172,7 @@ Reglas:
     } finally { ctl = null; setBusy(false); }
   }
   // modo local: reglas simples sobre el mismo resumen
-  function local(text) {
+  function local(text, files) {
     const q = norm(text), reply = (t, extra) => { const d = add("a", t, true); if (extra) d.insertAdjacentHTML("beforeend", extra); turns.push({ role: "assistant", content: d.textContent }); speak(d.textContent); };
     const rs = S.brands.map((b) => [b, sel.runway(b)]);
     const goto = /(llevame|llevame a|llevame|ve a|ir a|abre|abrir|muestrame|llevame)/.test(q) && ROUTES.find((r) => q.includes(r) || (r === "metricas" && /redes|numeros/.test(q)));
@@ -164,11 +183,12 @@ Reglas:
     if (/redes|vistas|seguidor|instagram|metrica|resultado/.test(q)) { const ev = S.brands.map((b) => [b, sel.evoOf(b)]).filter((x) => x[1]); reply(ev.length ? ev.map((x) => `<b>${esc(x[0].name)}</b>: ${fmt(x[1].views)} vistas, ${x[1].net >= 0 ? "+" : ""}${x[1].net} seguidores esta semana`).join("<br>") : "Todavía no tengo datos de Metricool cargados."); return; }
     if (/ventas|comision|dinero|stripe/.test(q)) { reply("Esa parte no está en esta plataforma: nos enfocamos en redes sociales."); return; }
     if (/biblioteca|estilo/.test(q)) { const c = App.lib.countByType(); reply(`La Biblioteca tiene ${Object.values(c).reduce((a, b) => a + b, 0)} elementos aprobados: ${Object.entries(c).map(([k, n]) => `${n} ${k}`).join(", ")}.`); return; }
-    reply(`Eso no lo puedo resolver solo. ¿Se lo paso a Claude?`, `<p><button class="btn sm pri" data-jvask="${esc(text)}">Pasárselo a Claude</button></p>`);
+    reply(files && files.length ? `Recibí ${files.length === 1 ? "tu archivo" : "tus " + files.length + " archivos"}, pero solo no los puedo trabajar. ¿Se lo paso a Claude?` : `Eso no lo puedo resolver solo. ¿Se lo paso a Claude?`, `<p><button class="btn sm pri" data-jvask="${esc(text)}">Pasárselo a Claude</button></p>`);
   }
   async function toClaude(text) {
-    await App.data.set("requests", "jarvis_" + Date.now(), { kind: "jarvis", text, at: App.stamp(), by: S.userId, status: "pendiente" });
-    const told = await App.data.tell("PEDIDO DESDE JARVIS: " + text); add("a", told ? "Se lo pasé a Claude: ya lo recibió." : "Guardado. Claude lo lee cuando haya una sesión abierta.");
+    const files = lastAsk.text === text ? lastAsk.files : [];
+    const r = await App.act.askClaude({ text, assets: files });
+    add("a", !r ? "No se pudo guardar el pedido. Prueba de nuevo." : r.told ? "Se lo pasé a Claude: ya lo recibió." : "Guardado. Claude lo lee cuando haya una sesión abierta.");
   }
   function listen() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition, mic = $("#jvmic");

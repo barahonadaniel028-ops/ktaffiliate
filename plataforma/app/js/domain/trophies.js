@@ -44,6 +44,7 @@
   }
   const all = (c) => [...c.total, ...Object.values(c.brands).flat()];
   function level(xp) { const lv = Math.floor(Math.sqrt(xp / XP_BASE)) + 1, from = XP_BASE * (lv - 1) * (lv - 1), to = XP_BASE * lv * lv; return { level: lv, xp, from, to, ratio: (xp - from) / (to - from) }; }
+  const totalXp = (c) => c.total.reduce((a, x) => a + x.xp, 0);
   const seen = () => (S.trophyDoc && S.trophyDoc.seen) || {};
   const newIds = (cs) => (!S.trophyDoc || !S.trophyDoc.baseline ? [] : cs.flatMap((c) => c.ids).filter((id) => !seen()[id]));
   const dataReady = () => S.brands.length > 0 && S.brands.every((b) => sel.evoOf(b) && sel.rowsOf(b).length);
@@ -51,13 +52,27 @@
   async function ensureBaseline(cs) {
     if (baselining || !S.ready.home || (S.trophyDoc && S.trophyDoc.baseline) || !dataReady() || !App.adapter().canWrite()) return;
     baselining = true; const at = App.stamp(), s = Object.fromEntries(cs.flatMap((c) => c.ids).map((id) => [id, at]));
-    S.trophyDoc = { baseline: at, seen: s }; // la primera vez: lo ya logrado queda como visto; solo se celebra lo que llegue despues
+    S.trophyDoc = { baseline: at, seen: s, level: level(totalXp(cards())).level }; // la primera vez: lo ya logrado queda como visto; solo se celebra lo que llegue despues
     if (!(await App.data.set("home", "trophies", S.trophyDoc))) { S.trophyDoc = null; baselining = false; }
   }
   async function markSeen(ids) {
     const at = App.stamp(), s = { ...seen(), ...Object.fromEntries(ids.map((id) => [id, at])) };
-    S.trophyDoc = { ...(S.trophyDoc || {}), seen: s }; App.emit("home");
+    S.trophyDoc = { ...(S.trophyDoc || {}), seen: s, level: level(totalXp(cards())).level }; App.emit("home");
     if (!(await App.data.set("home", "trophies", S.trophyDoc))) App.toast("No se pudo guardar. Prueba de nuevo.");
   }
-  App.trophies = { TIERS, DEFS, KEYS, tierOf, cards, all, level, newIds, ensureBaseline, markSeen, seen, totalXp: (c) => c.total.reduce((a, x) => a + x.xp, 0), fmtVal: (v) => fmt(v) };
+  // lo nuevo, listo para celebrar: un logro por tarjeta (el escalon mas alto que alcanzo), los de "todas las cuentas" primero, y la subida de nivel si la hubo
+  const UNIT = { followers: (n) => `${fmt(n)} seguidores`, views: (n) => `${fmt(n)} vistas`, inter: (n) => `${fmt(n)} interacciones`, best: (n) => `un reel con ${fmt(n)} vistas`, reels: (n) => `${fmt(n)} reels publicados`, weekViews: (n) => `${fmt(n)} vistas en 7 días`, weekFollowers: (n) => `${fmt(n)} seguidores nuevos en 7 días`, streak: (n) => `${n} días de contenido seguidos` };
+  function fresh() {
+    const cs = cards(), a = all(cs), nw = new Set(newIds(a)); if (!nw.size) return null;
+    const items = [];
+    a.forEach((c) => {
+      const idx = c.steps.map((st, i) => (nw.has(`${c.group}:${c.key}:${st}`) ? i : -1)).filter((i) => i >= 0); if (!idx.length) return;
+      const top = idx[idx.length - 1], brand = c.group === "total" ? null : S.brands.find((b) => b.id === c.group);
+      items.push({ id: c.id, group: c.group, brand: brand ? brand.name : "", key: c.key, def: c.def, step: c.steps[top], tier: tierOf(top, c.steps.length), extra: idx.length - 1, xp: idx.reduce((x, i) => x + POINTS[tierOf(i, c.steps.length)], 0), ids: idx.map((i) => `${c.group}:${c.key}:${c.steps[i]}`), line: UNIT[c.key] ? UNIT[c.key](c.steps[top]) : fmt(c.steps[top]) });
+    });
+    items.sort((x, y) => (x.group === "total" ? 0 : 1) - (y.group === "total" ? 0 : 1) || y.tier - x.tier);
+    const lv = level(totalXp(cs)), before = S.trophyDoc && S.trophyDoc.level, up = before && lv.level > before ? { from: before, to: lv.level, xp: lv.xp, ratio: lv.ratio, left: lv.to - lv.xp } : null;
+    return { items, ids: [...nw], xp: items.filter((x) => x.group === "total").reduce((x, i) => x + i.xp, 0), level: up, now: lv };
+  }
+  App.trophies = { TIERS, DEFS, KEYS, UNIT, tierOf, cards, all, level, newIds, fresh, ensureBaseline, markSeen, seen, totalXp, fmtVal: (v) => fmt(v) };
 })();

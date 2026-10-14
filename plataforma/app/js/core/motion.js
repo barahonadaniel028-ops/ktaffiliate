@@ -45,7 +45,9 @@
   // el panel florece desde un punto: clip-path circular que crece (y su contenido llega escalonado por CSS)
   function bloom(panel, at, ms) {
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;
-    return panel.animate([{ clipPath: `circle(18px at ${x}px ${y}px)`, opacity: 0.9 }, { clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }], { duration: ms || 620, easing: OUT, fill: "both" }).finished.catch(() => {});
+    const a = panel.animate([{ clipPath: `circle(18px at ${x}px ${y}px)`, opacity: 0.9 }, { clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }], { duration: ms || 620, easing: OUT, fill: "both" });
+    // al terminar se suelta el recorte: si no, la sombra grande del panel queda cortada en un circulo
+    return a.finished.then(() => { try { a.cancel(); } catch (e) { /* ya cancelada */ } }).catch(() => {});
   }
   function wilt(panel, at, ms) {
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;

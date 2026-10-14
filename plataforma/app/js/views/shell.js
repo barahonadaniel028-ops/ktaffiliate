@@ -7,7 +7,7 @@
   const MORE = ["biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
-  function counts() { return { aprobar: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length }; }
+  function counts() { return { aprobar: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, logros: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
     const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");

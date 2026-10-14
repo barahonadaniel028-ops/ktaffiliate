@@ -25,11 +25,12 @@
   // pedido a Claude con su lista de pasos (la arma y la tilda Claude); le llega solo
   ST.ask = async (vid, kind, text, extra) => {
     const v = sel.video(vid), id = App.uid("req");
-    const req = Object.assign({ videoId: vid, project: v ? v.piece : "", brand: v ? v.brand : "", kind, text, scope: "video", targets: [], status: "pedido", steps: [], at: nowIso(), by: S.userId || "", rev: (ver(vid) || {}).rev || 0 }, extra || {});
+    const m = App.ai.stamp(), req = Object.assign({ videoId: vid, project: v ? v.piece : "", brand: v ? v.brand : "", kind, text, scope: "video", targets: [], status: "pedido", steps: [], at: nowIso(), by: S.userId || "", rev: (ver(vid) || {}).rev || 0, model: m.model, effort: m.effort }, extra || {});
+    if (!req.assets || !req.assets.length) delete req.assets;
     if (!(await ST.write("studio_requests", id, req))) return null;
     const what = { export: "EXPORTAR", abrir: "ABRIR EN EL ESTUDIO", version: "NUEVA VERSIÓN" }[kind] || "CAMBIO";
-    const detail = [`versión en studio_versions/${vid} rev ${req.rev}`, req.scope && req.scope !== "video" ? `alcance ${req.scope}${req.targets && req.targets.length ? " (" + req.targets.join(", ") + ")" : ""}` : "", req.at_time != null ? `parado en ${req.at_time}s` : "", req.export ? `formato ${req.export.format}${req.export.quality ? " calidad " + req.export.quality : ""}` : "", req.style ? `estilo ${req.style}` : ""].filter(Boolean).join(", ");
-    App.data.tell(`PEDIDO DEL ESTUDIO (${what}) sobre ${v ? sel.label(v) : vid} (studio_requests/${id}; ${detail}): "${text}". Primero escribe la lista de pasos en \`steps\` (cada uno {id, text, status:"pendiente"}), después hazlos uno por uno actualizando el estado de cada paso (haciendo, hecho, error) y al final status "listo" con una respuesta corta en \`reply\`. Se ve en vivo. Sin que te lo repita.`);
+    const detail = [`versión en studio_versions/${vid} rev ${req.rev}`, req.scope && req.scope !== "video" ? `alcance ${req.scope}${req.targets && req.targets.length ? " (" + req.targets.join(", ") + ")" : ""}` : "", req.at_time != null ? `parado en ${req.at_time}s` : "", req.export ? `formato ${req.export.format}${req.export.quality ? " calidad " + req.export.quality : ""}` : "", req.style ? `estilo ${req.style}` : "", req.assets ? `${req.assets.length} ${req.assets.length === 1 ? "archivo adjunto" : "archivos adjuntos"} (assetId en studio_requests/${id}.assets)` : ""].filter(Boolean).join(", ");
+    App.data.tell(`PEDIDO DEL ESTUDIO (${what}) sobre ${v ? sel.label(v) : vid} (studio_requests/${id}; ${detail}): "${text}". Primero escribe la lista de pasos en \`steps\` (cada uno {id, text, status:"pendiente"}), después hazlos uno por uno actualizando el estado de cada paso (haciendo, hecho, error) y al final status "listo" con una respuesta corta en \`reply\`. Se ve en vivo. ${App.ai.tellNote(m)} Sin que te lo repita.`);
     return id;
   };
 

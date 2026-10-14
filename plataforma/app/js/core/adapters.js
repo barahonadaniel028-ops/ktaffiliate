@@ -8,14 +8,18 @@
 
   // ---------- Claude real ----------
   App.adapters.claude = function () {
-    let db = null, user = null, mcp = null, comments = null, assets = null, sampleP = null, dl = null, uid = null;
+    let db = null, user = null, mcp = null, comments = null, assets = null, sampleP = null, dl = null, uid = null, writer = true;
     const cap = (name, ms) => withTimeout(window.claude && window.claude.use(name), ms || 10000);
     return {
       name: "claude",
       async connect(emit) {
         db = await cap("db", 10000); if (!db) return false;
         App.COLLECTIONS.concat([]).forEach((name) => { try { db.collection(name).onSnapshot((s) => emit(name, s.docs), () => {}); } catch (e) { /* esa coleccion no existe todavia */ } });
-        cap("user", 8000).then(async (u) => { user = u; try { uid = u ? await u.id() : null; App.S.userId = uid; } catch (e) { /* anonimo */ } });
+        cap("user", 8000).then(async (u) => {
+          user = u; try { uid = u ? await u.id() : null; App.S.userId = uid; } catch (e) { /* anonimo */ }
+          // quien solo mira no escribe copias de metricas ni marcas de logros; null = no lo sabemos: se deja y decide el primer rechazo
+          try { if (u) writer = (await u.can("data.write")) !== false; } catch (e) { writer = true; }
+        });
         cap("mcp", 12000).then((m) => { mcp = m; App.emit("mcp"); });
         cap("comments", 12000).then((c) => { comments = c; App.refreshClaudeState(); setInterval(App.refreshClaudeState, 120000); });
         return true;
@@ -46,13 +50,14 @@
         dl = dl || (await cap("downloads", 6000)); if (!dl || !dl.save) return false;
         try { await dl.save({ filename, data }); return true; } catch (e) { if (e && e.code === "declined") return "declined"; return false; }
       },
-      canWrite: () => { try { return user ? user.canEdit() ?? true : true; } catch (e) { return true; } },
+      canWrite: () => writer,
     };
   };
 
   // ---------- memoria de demostracion (misma forma que la base real, con onSnapshot) ----------
   App.adapters.demo = function (seed) {
     const data = {}, listeners = {}, files = {};
+    let sampleD = null;
     const docsOf = (c) => Object.entries(data[c] || {}).map(([id, v]) => ({ id, data: () => JSON.parse(JSON.stringify(v)) }));
     const fire = (c) => (listeners[c] || []).forEach((fn) => fn(docsOf(c)));
     Object.entries(seed || {}).forEach(([c, obj]) => { data[c] = {}; Object.entries(obj).forEach(([id, v]) => { data[c][id] = JSON.parse(JSON.stringify(v)); }); });
@@ -84,7 +89,8 @@
         const dm = window.AuraDemo; if (!dm) throw Object.assign(new Error("sin datos"), { code: "server_not_connected" });
         return { payload: dm.metricRows(brand, q && q.evo), at: Date.now() };
       },
-      async sample() { return null; },
+      // en demostracion los datos son de ejemplo, pero si la pagina tiene la capacidad "sample" Jarvis conversa con Claude de verdad
+      async sample() { if (!window.claude || !window.claude.use) return null; sampleD = sampleD || (await withTimeout(window.claude.use("sample"), 6000)); return sampleD; },
       async canTell() { return "demo"; },
       async tell(text) { log.push(["tell", text]); return true; },
       async download(filename, d) { log.push(["download", filename]); const blob = d instanceof Blob ? d : new Blob([d], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); return true; },

@@ -1,0 +1,35 @@
+/* Modelo e intensidad (pastilla + menu) y adjuntar archivos (boton +, fichas) */
+.aipill { display: inline-flex; align-items: center; gap: 7px; flex: none; height: 32px; padding: 0 9px 0 11px; border-radius: 16px; background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); font: 500 12.5px/1 var(--font); letter-spacing: -.005em; white-space: nowrap; transition: background .2s var(--ease), transform .25s var(--spring); }
+.aipill:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); } .aipill:active { transform: scale(.96); }
+.aipill .aid { width: 8px; height: 8px; border-radius: 50%; background: conic-gradient(from 200deg, var(--teal), var(--mint), var(--apricot), var(--rose), var(--teal)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 8%, transparent); }
+.aipill .aie { color: var(--ink3); font-weight: 400; } .aipill .aie::before { content: "·"; margin-right: 7px; }
+.aipill .ic { width: 12px; height: 12px; color: var(--ink3); transition: transform .3s var(--ease); } .aipill[aria-expanded="true"] .ic { transform: rotate(180deg); }
+
+.aimenu { position: fixed; z-index: 520; width: 272px; padding: 8px 8px 10px; border-radius: 24px; box-shadow: inset 0 1px 0 var(--edge), 0 44px 80px -30px var(--shadow), 0 0 0 1px var(--edge2); animation: aimIn .34s var(--spring) both; }
+@keyframes aimIn { from { opacity: 0; transform: scale(.9); } }
+.aim-h { padding: 8px 12px 6px; font: 600 12px/1 var(--font); color: var(--ink3); }
+.aim-m { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; padding: 6px 12px; border-radius: 14px; text-align: left; color: var(--ink); transition: background .15s; }
+.aim-m:hover, .aim-m:focus-visible { background: var(--accent-soft); outline: none; }
+.aim-m b { display: block; font: 500 14.5px/1.2 var(--font); } .aim-m small { display: block; margin-top: 2px; font-size: 12px; color: var(--ink3); }
+.aim-m .ic { width: 17px; height: 17px; color: var(--accent); opacity: 0; transform: scale(.5); transition: opacity .2s, transform .35s var(--spring); } .aim-m[aria-checked="true"] .ic { opacity: 1; transform: none; }
+.aim-seg { display: flex; margin: 2px 8px 0; padding: 2px; border-radius: 10px; background: var(--seg-bg); }
+.aim-seg button { flex: 1; height: 30px; border-radius: 8px; font: 500 13px/1 var(--font); color: var(--ink); transition: background .25s var(--ease), box-shadow .25s var(--ease); }
+.aim-seg button[aria-checked="true"] { background: var(--seg-on); font-weight: 600; box-shadow: 0 3px 8px -2px rgba(0,0,0,.16), 0 0 0 .5px rgba(0,0,0,.05); }
+.aim-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.aim-e { margin: 8px 14px 0; font-size: 12.5px; color: var(--ink2); } .aim-n { margin: 6px 14px 2px; font-size: 11.5px; line-height: 1.4; color: var(--ink3); }
+
+.attbtn { width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink2); transition: background .2s, color .2s, transform .3s var(--spring); }
+.attbtn:hover { background: color-mix(in srgb, var(--ink) 11%, transparent); color: var(--ink); } .attbtn:active { transform: scale(.9) rotate(90deg); } .attbtn .ic { width: 18px; height: 18px; }
+.atts { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; } .atts[hidden] { display: none; } .atts::-webkit-scrollbar { display: none; }
+.achip { position: relative; display: inline-flex; align-items: center; gap: 9px; flex: none; max-width: 236px; height: 46px; padding: 5px 32px 5px 5px; border-radius: 14px; background: color-mix(in srgb, var(--ink) 6%, transparent); overflow: hidden; animation: popIn .4s var(--spring) both; }
+.achip .ath { position: relative; width: 36px; height: 36px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink2); }
+.achip .ath img, .achip .ath video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; } .achip .ath .ic { position: relative; width: 17px; height: 17px; }
+.achip[data-k="video"] .ath video + .ic { color: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.55)); }
+.achip .atn { display: grid; gap: 2px; min-width: 0; } .achip .atn b { font: 500 12.5px/1.15 var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .achip .atn small { font-size: 11px; color: var(--ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.achip[data-s="err"] .atn small { color: var(--down); }
+.achip .atx { position: absolute; right: 5px; top: 50%; translate: 0 -50%; width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; color: var(--ink3); } .achip .atx:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); } .achip .atx .ic { width: 12px; height: 12px; }
+.achip .atp { position: absolute; left: 0; bottom: 0; width: 100%; height: 2.5px; transform-origin: 0 50%; background: linear-gradient(90deg, var(--teal), var(--apricot)); transition: transform .25s var(--ease); } .achip:not([data-s="up"]) .atp { opacity: 0; }
+.atts.sent { margin-top: 8px; flex-wrap: wrap; overflow: visible; } .atts.sent .achip { height: 42px; padding-right: 12px; animation: none; background: color-mix(in srgb, currentColor 11%, transparent); }
+.jv .msg.me .achip { color: var(--on-solid); } .jv .msg.me .achip .atn small, .jv .msg.me .achip .ath { color: inherit; opacity: .8; }
+.att-over { outline: 2px dashed var(--accent); outline-offset: -5px; border-radius: inherit; }
+@media (max-width: 480px) { .aipill .aie { display: none; } }

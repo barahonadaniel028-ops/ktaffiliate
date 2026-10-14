@@ -7,6 +7,12 @@
   const PURPOSES = () => [["crudo", "Crudo para editar"], ["clip", "Clip para usar (B-roll)"], ["intro", "Intro"], ...(App.config.hasTeacher ? [["teacher", "Teacher"]] : []), ["referencia", "Referencia de estilo"]];
   const mode = (r) => (r.args[0] === "subir" ? "subir" : "pedir");
   const D = () => UI.draft;
+  // el modelo de este pedido: arranca en el de siempre (Sonnet 5.5) y, si lo cambias aqui, vale solo para este pedido
+  App.ai.contexts.draft = {
+    get: () => { const g = App.ai.get("global"), d = UI.draft || {}; return { model: App.ai.MODELS.some((m) => m.id === d.model) ? d.model : g.model, effort: App.ai.EFFORTS.some((x) => x[0] === d.effort) ? d.effort : g.effort }; },
+    set: (p) => { UI.draft = Object.assign(UI.draft || {}, p); },
+    note: "Solo para este pedido. Tu modelo de siempre no cambia.",
+  };
   const opts = (list, cur) => list.map(([k, t]) => `<option value="${esc(k)}" ${String(cur) === String(k) ? "selected" : ""}>${esc(t)}</option>`).join("");
 
   function styleStrip() {
@@ -33,7 +39,7 @@
     const list = sel.newRequests(b.id);
     const rows = list.map((r) => { const s = STATUS[r.status || "pedido"] || [r.status, ""], steps = r.steps || [], done = steps.filter((x) => x.status === "hecho").length, p = steps.length ? done / steps.length : r.status === "listo" ? 1 : r.status === "produccion" ? 0.4 : 0.06;
       return `<li class="rq"><div class="rqh"><span class="chip ${s[1]}">${esc(s[0])}</span><b>${esc((r.topic || (r.hooks || [])[0] || (r.assets || []).length + " archivos").slice(0, 70))}</b><span class="faint">${r.at ? App.ago(r.at) : ""}</span></div>
-        <div class="rqm muted">${r.count || 1} ${plural(r.count || 1, "pieza", "piezas")}${r.format ? " · " + esc((App.config.formats.find((f) => f[0] === r.format) || [0, r.format])[1]) : ""}${(r.assets || []).length ? ` · ${(r.assets || []).length} ${plural((r.assets || []).length, "archivo", "archivos")}` : ""}${(r.links || []).length ? ` · ${(r.links || []).length} links` : ""}</div>
+        <div class="rqm muted">${r.count || 1} ${plural(r.count || 1, "pieza", "piezas")}${r.format ? " · " + esc((App.config.formats.find((f) => f[0] === r.format) || [0, r.format])[1]) : ""}${(r.assets || []).length ? ` · ${(r.assets || []).length} ${plural((r.assets || []).length, "archivo", "archivos")}` : ""}${(r.links || []).length ? ` · ${(r.links || []).length} links` : ""}${r.model ? ` · ${esc(App.ai.byId(r.model).name)}` : ""}</div>
         ${r.status !== "cancelado" ? `<div class="bar" style="--p:${Math.round(p * 100)}%"><i></i></div>` : ""}${steps.length ? `<ol class="steps">${steps.map((x) => `<li data-s="${esc(x.status)}"><i></i>${esc(x.text || x.label || "")}</li>`).join("")}</ol>` : ""}
         ${r.reply ? `<p class="reply">${esc(r.reply)}</p>` : ""}${(r.status || "pedido") === "pedido" ? `<button class="btn sm ghost" type="button" data-act="crcancel" data-id="${esc(r.id)}">Cancelar pedido</button>` : ""}</li>`; }).join("");
     return `<section class="card lg"><div class="ch">${icon("wand")}Cola de pedidos<span class="sp"></span><span class="faint">${list.length}</span></div>${rows ? `<ul class="rqs">${rows}</ul>` : `<div class="empty small"><span class="orb"></span><p>Todavía no pediste nada para ${esc(b.name)}.</p></div>`}</section>`;
@@ -62,7 +68,7 @@
           ${m === "pedir" ? `<div class="field span2"><span class="l">Material (opcional)</span>${dropzone(false)}</div>` : ""}
           <div class="field span2"><label for="crlinks">Links (opcional)</label><textarea id="crlinks" data-draft="links" rows="2" placeholder="Pega uno o varios links, uno por línea (Instagram, TikTok, YouTube, Drive…)">${esc(d.links || "")}</textarea></div>
           <div class="field span2"><label for="crnotes">Notas para Claude</label><textarea id="crnotes" data-draft="notes" rows="2" placeholder="Cualquier detalle: qué evitar, referencias, cómo debe sentirse">${esc(d.notes || "")}</textarea></div></div>
-        <div class="send"><button class="btn pri lg2" type="submit" id="crsend">Enviar pedido</button><span class="status" id="crstatus" aria-live="polite"></span></div></form>`;
+        <div class="send"><button class="btn pri lg2" type="submit" id="crsend">Enviar pedido</button>${App.ai.pillHtml("draft")}<span class="status" id="crstatus" aria-live="polite"></span></div></form>`;
       return head + `<div class="crear-grid">${form}<aside class="crear-side">${rawTiles(b)}${queue(b)}</aside></div>`;
     },
     bind(root) {

@@ -106,15 +106,41 @@
   };
   A.createRequest = async (r) => {
     const b = sel.brand(r.brand), id = "new_" + Date.now();
-    const body = Object.assign({ kind: "new_video", brand: b.id, blogId: b.blogId, at: App.stamp(), by: S.userId, status: "pedido", steps: [] }, r);
+    const m = App.ai.stamp("draft"), body = Object.assign({ kind: "new_video", brand: b.id, blogId: b.blogId, at: App.stamp(), by: S.userId, status: "pedido", steps: [], model: m.model, effort: m.effort }, r);
     if (!(await D.set("requests", id, body))) return null;
-    const told = await D.tell(`PEDIDO DE VIDEO NUEVO de ${App.config.owner} para ${b.name}: ${r.topic || (r.hooks || []).join(" / ") || "con archivos adjuntos"} (requests/${id})${(r.assets || []).length ? `, con ${(r.assets || []).length} archivos subidos (assetId en requests/${id}.assets)` : ""}. Empieza a producirlo sin que te lo repita.`);
+    const told = await D.tell(`PEDIDO DE VIDEO NUEVO de ${App.config.owner} para ${b.name}: ${r.topic || (r.hooks || []).join(" / ") || "con archivos adjuntos"} (requests/${id})${(r.assets || []).length ? `, con ${(r.assets || []).length} archivos subidos (assetId en requests/${id}.assets)` : ""}. ${App.ai.tellNote(m)} Empieza a producirlo sin que te lo repita.`);
     return { id, told };
   };
   A.cancelRequest = (r) => D.write("requests", r.id, { status: "cancelado" });
+  // lo que se adjunta a un pedido: solo lo que Claude necesita para encontrar el archivo
+  const assetsOf = (list) => (list || []).filter((a) => a && a.id).map((a) => ({ id: a.id, name: a.name || "", size: a.size || 0, type: a.type || "", kind: a.kind || "" }));
+  A.assetsOf = assetsOf;
+  const assetsNote = (as) => (as.length ? ` Con ${as.length} ${as.length === 1 ? "archivo adjunto" : "archivos adjuntos"} (assetId en el campo assets): ${as.map((a) => a.name).slice(0, 6).join(", ")}.` : "");
+  // un mensaje a Claude desde un chat (Jarvis): queda en requests/jarvis_<ts> con el modelo y la intensidad elegidos
+  A.askClaude = async ({ text, assets }) => {
+    const m = App.ai.stamp(), as = assetsOf(assets), id = "jarvis_" + Date.now();
+    const body = { kind: "jarvis", text, at: App.stamp(), by: S.userId, status: "pendiente", model: m.model, effort: m.effort }; if (as.length) body.assets = as;
+    if (!(await D.set("requests", id, body))) return null;
+    const told = await D.tell(`PEDIDO DESDE JARVIS: ${text} (requests/${id}).${assetsNote(as)} ${App.ai.tellNote(m)}`);
+    return { id, told };
+  };
   A.addRefLink = (url, note) => D.add("refs", { kind: "link", url, assetId: "", name: "", note: note || "", status: "nueva", sent: false, by: S.userId, created: App.stamp() });
   A.addRefFile = (file, note) => D.add("refs", { kind: "file", url: "", assetId: file.id, name: file.name, note: note || "", status: "nueva", sent: false, by: S.userId, created: App.stamp() });
-
+  // referencia leida en el navegador: guarda su ADN (paleta, cortes, ejes, cuadros chicos) y la receta inicial
+  A.addRefDna = (o) => D.add("refs", { kind: o.kind || "file", url: o.url || "", assetId: o.assetId || "", name: o.name || "", note: o.note || "", status: o.dna ? "analizada" : "nueva", sent: false, by: S.userId, created: App.stamp(), dna: o.dna || null, recipe: o.recipe || null });
+  A.saveRecipe = (ref, recipe) => D.write("refs", ref.id, { recipe: JSON.parse(JSON.stringify(recipe)) });
+  A.saveStyleFromRecipe = async (recipe, from) => {
+    const id = "lab_" + Date.now().toString(36), R = JSON.parse(JSON.stringify(recipe)), F = { Anton: "mayúsculas gruesas", Inter: "letra limpia", Caveat: "letra a mano" }[R.font] || "texto grande";
+    const description = `${F[0].toUpperCase() + F.slice(1)}, una idea cada ${String(R.beat).replace(".", ",")} s y transición ${({ flash: "con destello", zoom: "con zoom", wipe: "con barrido", slide: "deslizando", iris: "en iris", blur: "con desenfoque", cut: "con corte directo" })[R.trans] || ""}.`;
+    const ok = await D.set("exp_styles", id, { name: R.name || "Mi estilo", description, status: "aprobado", kind: "estilo", demo: "r-" + id, recipe: R, from: from || {}, when: "", source: "laboratorio", created: App.stamp(), decidedAt: App.stamp() });
+    if (!ok) return null; D.tellSoon(`GUARDÉ UN ESTILO NUEVO EN EL LABORATORIO: «${R.name}» (exp_styles/${id}, con su receta). Úsalo cuando un pedido lo elija.`); return id;
+  };
+  A.askRecreate = async (recipe, ref, note, assets) => {
+    const m = App.ai.stamp(), as = assetsOf(assets), id = "recreate_" + Date.now(), body = { kind: "recreate_style", recipe: JSON.parse(JSON.stringify(recipe)), ref: ref ? ref.id : "", note: note || "", at: App.stamp(), by: S.userId, status: "pedido", steps: [], model: m.model, effort: m.effort }; if (as.length) body.assets = as;
+    if (!(await D.set("requests", id, body))) return null;
+    const told = await D.tell(`RECREAR UN ESTILO DESDE EL LABORATORIO: «${recipe.name}» (requests/${id}). La receta (letra, acento, ritmo, entrada, transición, fondo) está en requests/${id}.recipe${ref ? `; la referencia y su ADN en refs/${ref.id}` : ""}.${note ? ` Nota: "${String(note).slice(0, 400)}".` : ""}${assetsNote(as)} ${App.ai.tellNote(m)} Arma el estilo completo para el Estudio y déjalo en exp_styles con status "prueba".`);
+    return { id, told };
+  };
   // ---------- Laboratorio ----------
   A.setVerdict = (c, verdict) => D.write("exp_cards", c.id, { verdict, dirty: true });
   A.setCardNote = (c, note) => D.write("exp_cards", c.id, { note, dirty: true });

@@ -22,12 +22,12 @@
       return `<div class="vhead"><div class="t"><span class="eyebrow">Nivel ${lv.level}</span><h1 class="h-l">Tus <em>logros</em> en redes</h1><p class="muted">Cada hito de seguidores, vistas e interacciones suma experiencia. Solo redes sociales.</p></div></div>
         <section class="lvlhero lg card"><div class="lvbadge"><b class="num" data-count="${lv.level}">${lv.level}</b><small>NIVEL</small></div><div class="lvi"><div class="lvt"><strong class="num">${fmt(lv.xp)} XP</strong><span class="muted">${fmt(lv.to - lv.xp)} XP para el nivel ${lv.level + 1}</span></div><div class="bar big" style="--p:${Math.round(Math.min(1, Math.max(0, lv.ratio)) * 100)}%"><i></i></div>
           <div class="nextrow">${near.map((x) => `<span class="chip">${esc(x.def.name)}: faltan ${fmt(x.next - x.value)}</span>`).join("")}</div></div>
-          ${nw.length ? `<div class="newb"><b>¡Logros nuevos!</b><span>${nw.length} ${nw.length === 1 ? "nuevo" : "nuevos"} desde la última vez</span><button class="btn pri" type="button" data-act="trseen">¡Genial!</button></div>` : ""}</section>
+          ${nw.length ? `<div class="newb"><b>¡Logros nuevos!</b><span>${nw.length} ${nw.length === 1 ? "nuevo" : "nuevos"} desde la última vez</span><button class="btn pri" type="button" data-act="celebrate">Verlos</button><button class="btn ghost" type="button" data-act="trseen">Ya los vi</button></div>` : ""}</section>
         <div class="tabs"><div class="seg lg" role="tablist">${chips}</div></div>
         <div class="trs rise">${list.map((c) => trCard(c, fresh(c))).join("")}</div>`;
     },
     bind(root) {
-      T.ensureBaseline(T.all(T.cards()));
+      T.ensureBaseline(T.all(T.cards())); App.celebrate.check();
       const fresh = $$(".tr[data-fresh='1']", root); fresh.forEach((el, i) => setTimeout(() => { const m = el.querySelector(".medal"); m.classList.add("drop"); App.morph.sparkles(m, 4); }, 400 + i * 350));
     },
     update() { return false; },

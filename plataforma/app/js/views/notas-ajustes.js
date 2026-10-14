@@ -45,6 +45,7 @@
           ${row("Zona segura de Instagram", "Muestra por defecto el recuadro seguro al revisar videos.", sw("setsafe", App.store.get("safe", false), "Zona segura"))}
           ${row("Subtítulos en todas las versiones", "Un cambio de palabras se aplica a toda la pieza.", sw("setcapall", App.store.get("cap-all", true) !== false, "Aplicar a todas"))}</section>
         <section class="card lg"><div class="ch">${icon("sparkles")}Jarvis</div>
+          ${row("Modelo e intensidad", "El de siempre para Jarvis, el Estudio, el Laboratorio y los videos nuevos.", App.ai.pillHtml("global"))}
           ${row("Respuestas en voz", "Jarvis lee en voz alta sus respuestas.", sw("setvoice", App.store.get("jv-voice", true) !== false, "Voz"))}
           ${row("Atajo", "Abre a Jarvis desde cualquier pantalla.", `<kbd class="kb">⌘ K</kbd>`)}</section>
         <section class="card lg"><div class="ch">${icon("users")}Cuentas<span class="sp"></span><span class="faint">${S.brands.length}</span></div><ul class="accs">${accounts}</ul>
@@ -53,6 +54,7 @@
           ${row("Datos", claude ? "Conectado a la base de tu artefacto." : "Modo demostración: datos de ejemplo en memoria.", `<span class="chip ${claude ? "good" : "apricot"}">${claude ? "Claude" : "Demo"}</span>`)}
           ${row("Aviso a Claude", S.claudeState === "available" ? "Claude recibe tus aprobaciones y notas solo." : "Se guarda todo y Claude lo lee cuando abra una sesión.", `<span class="chip ${S.claudeState === "available" ? "good" : ""}">${S.claudeState === "available" ? "Conectado" : S.claudeState === "no_session" ? "Sin sesión" : "No disponible"}</span>`)}
           ${row("Metricool", S.mode === "demo" ? "Datos de ejemplo de redes." : metr ? "Métricas en vivo de tus cuentas." : "No conectado: se usan los últimos datos guardados.", `<span class="chip ${S.mode === "demo" ? "apricot" : metr ? "good" : ""}">${S.mode === "demo" ? "Demo" : metr ? "Conectado" : "Sin conexión"}</span>`)}
+          ${S.mode === "demo" ? row("Animación de logros", "Mira cómo se celebra un logro nuevo.", `<button class="btn sm" type="button" data-act="celebratetest">${icon("sparkles")}Probar</button>`) : ""}
           ${row("Modo demostración", "Usa datos de ejemplo en memoria en lugar de tu base real. Útil para probar sin riesgo.", sw("forcedemo", App.store.get("force-demo", false), "Modo demostración"))}
           ${claude && !S.videos.length ? row("Cargar datos de ejemplo", "Tu base está vacía. Carga piezas, métricas y un editor listo para recorrer la plataforma.", `<button class="btn sm pri" type="button" data-act="seeddemo">Cargar</button>`) : ""}
           ${row("Espacio de trabajo", "Cambia entre configuraciones de marca para probar la plataforma.", `<select class="mini-sel" data-change="setpreset" aria-label="Espacio">${Object.values(App.PRESETS).map((p) => `<option value="${p.id}" ${p.id === c.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>`)}

@@ -14,12 +14,12 @@ local = None
 if "--local" in sys.argv:
     local = Path(sys.argv[sys.argv.index("--local") + 1]).resolve()
 
-CSS = ["tokens", "base", "shell", "v-hoy", "v-aprobar", "v-crear", "v-biblioteca", "v-lab", "v-metricas", "v-notas", "studio"]
+CSS = ["tokens", "base", "shell", "v-ai", "v-hoy", "v-aprobar", "v-crear", "v-biblioteca", "v-lab", "v-metricas", "v-cel", "v-notas", "studio"]
 JS = ["core/util", "core/config", "core/state", "core/adapters", "core/theme", "core/router", "core/motion",
-      "engine/studio-engine", "engine/pred-data", "engine/pred",
+      "engine/studio-engine", "engine/dna", "engine/pred-data", "engine/pred",
       "domain/select", "domain/actions", "domain/library", "domain/trophies",
-      "views/shell", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/biblioteca",
-      "views/laboratorio", "views/metricas", "views/logros", "views/notas-ajustes", "views/estudio-core", "views/estudio-panels",
+      "views/shell", "views/ai", "views/attach", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/biblioteca",
+      "views/laboratorio", "views/metricas", "views/logros", "views/celebrate", "views/notas-ajustes", "views/estudio-core", "views/estudio-panels",
       "dev/fixtures", "dev/demo-video", "boot"]
 
 # video de demostracion embebido: MP4 (Safari y la mayoria) y WebM (navegadores sin H.264). Se elige con canPlayType.
@@ -55,7 +55,7 @@ js = "\n".join(f"/* ===== {n} ===== */\n{(app / 'js' / f'{n}.js').read_text() if
 js = js.replace("</script", "<\\/script")
 
 TITLE = "Aura"
-FONTS_CDN = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Anton&family=Caveat:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">'
+FONTS_CDN = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Anton&family=Caveat:wght@500;700&display=swap" rel="stylesheet">'
 GSAP_CDN = '<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>'
 
 def fragment(fonts, gsap):
@@ -73,7 +73,7 @@ def fragment(fonts, gsap):
 # pagina autonoma
 if local:
     ff = []
-    for fam, files in {"Onest": ["onest-latin-300-normal", "onest-latin-400-normal", "onest-latin-500-normal", "onest-latin-600-normal", "onest-latin-700-normal"], "Anton": ["anton-latin-400-normal"], "Caveat": ["caveat-latin-500-normal", "caveat-latin-700-normal"], "Inter": ["inter-latin-400-normal", "inter-latin-600-normal", "inter-latin-700-normal"]}.items():
+    for fam, files in {"Anton": ["anton-latin-400-normal"], "Caveat": ["caveat-latin-500-normal", "caveat-latin-700-normal"], "Inter": ["inter-latin-300-normal", "inter-latin-400-normal", "inter-latin-500-normal", "inter-latin-600-normal", "inter-latin-700-normal"]}.items():
         for f in files:
             wt = re.search(r"-(\d{3})-", f).group(1)
             p = next(local.glob(f"fonts/*/files/{f}.woff2"))

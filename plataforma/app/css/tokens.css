@@ -2,7 +2,11 @@
    El bloque entre @DARK y @END lo repite tools/build.py bajo tres selectores (sistema oscuro, data-theme del anfitrion y data-aura="night"). */
 :root {
   color-scheme: light;
-  --font: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* la letra de Apple (SF Pro) donde existe; Inter, su pariente mas cercano, en el resto */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --font-d: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --seg-bg: rgba(13,27,29,.065); --seg-on: #ffffff;
+  --title-grad: linear-gradient(100deg, #0f6b6c 0%, #2b9a8a 42%, #e0784f 100%);
   --teal: #0f6b6c; --apricot: #ffad85; --rose: #f7a6bd; --sand: #f3dcb2; --mint: #a9e6d3;
 
   --base: #eef2f0;
@@ -39,4 +43,6 @@
   --veil: rgba(6,16,15,.6);
   --b1: rgba(15,107,108,.62); --b2: rgba(255,150,100,.30); --b3: rgba(247,120,160,.24); --b4: rgba(60,170,150,.34); --b5: rgba(243,200,140,.14);
   --grain: .09;
+  --seg-bg: rgba(255,255,255,.075); --seg-on: rgba(255,255,255,.17);
+  --title-grad: linear-gradient(100deg, #8fe6d5 0%, #b9eadc 40%, #ffb38c 100%);
 /*@END*/

@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   const App = window.App, S = App.S, UI = App.ui, { $ } = App;
-  const q = new URLSearchParams(location.search), wantDemo = q.has("demo") || App.store.get("force-demo", false);
+  const q = new URLSearchParams(location.search), wantDemo = q.has("demo") || window.AURA_FORCE_DEMO === true || App.store.get("force-demo", false);
 
   // carga datos de ejemplo en la base real (cuando esta vacia) o reinicia la memoria demo
   App.seedDemo = async function () {

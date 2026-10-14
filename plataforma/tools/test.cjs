@@ -7,8 +7,16 @@ const mockSrc = fs.readFileSync(path.join(root, "app", "dev", "mock-claude.js"),
 let pass = 0, fail = 0; const failures = [];
 const ok = (cond, name, extra) => { if (cond) { pass++; console.log("  ok  ", name); } else { fail++; failures.push(name + (extra ? " -> " + extra : "")); console.log("  FALLA", name, extra || ""); } };
 const wait = (p, ms) => p.waitForTimeout(ms);
+// navega por hash y espera a que la vista nueva este dibujada (el navegador de pruebas no tiene GPU y va lento)
+async function nav(p, hash, ms) {
+  const name = hash.replace(/^#/, "").split("/")[0];
+  await p.evaluate((h) => { location.hash = h; }, hash.startsWith("#") ? hash : "#" + hash);
+  await p.waitForFunction((n) => { const v = document.querySelector("#main > .view"); return v && v.dataset.view === n && v.style.opacity !== "0"; }, name, { timeout: 6000 }).catch(() => {});
+  await p.waitForTimeout(ms || 400);
+}
 
-async function open(browser, url, init, viewport) {
+async function open(browser, url, init, viewport, o) {
+  if (!(o && o.cel)) url = url.replace("?", "?nocel=1&"); // el aviso automatico de logros solo se prueba en su seccion
   const ctx = await browser.newContext({ viewport: viewport || { width: 1440, height: 900 } }); if (init) await ctx.addInitScript(init);
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(e.message)); page.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
   page.errs = errs; await page.goto(file + url, { waitUntil: "load" });
@@ -24,13 +32,13 @@ async function open(browser, url, init, viewport) {
   ok(await p.evaluate(() => !!document.querySelector(".hoy h1") && document.querySelector(".hoy h1").textContent.length > 20), "Hoy muestra la frase del dia");
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad|\$\d/i.test(document.body.innerText))), "Hoy no menciona ventas ni dinero");
   for (const r of ["aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) {
-    await p.evaluate((h) => { location.hash = "#" + h; }, r); await wait(p, 700);
+    await p.evaluate((h) => { location.hash = "#" + h; }, r); await p.waitForFunction((n) => !!document.querySelector(`.view[data-view="${n}"]`), r, { timeout: 5000 }).catch(() => {}); await wait(p, 250);
     ok(await p.evaluate((n) => !!document.querySelector(`.view[data-view="${n}"]`) && document.querySelector(".view").innerText.length > 40, r), "vista " + r + " dibuja contenido");
   }
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad/i.test(document.body.innerText))), "ninguna vista menciona ventas");
 
   console.log("\n== Aprobar ==");
-  await p.evaluate(() => { location.hash = "#aprobar"; }); await wait(p, 600);
+  await nav(p, "#aprobar", 300);
   const pend0 = await p.evaluate(() => App.sel.allPending().length);
   const firstId = await p.evaluate(() => App.sel.groupByPiece(App.sel.pending())[0].vs[0].id);
   await p.evaluate((id) => { location.hash = "#aprobar/ver/" + encodeURIComponent(id); }, firstId); await wait(p, 1200);
@@ -53,7 +61,7 @@ async function open(browser, url, init, viewport) {
   ok(await p.evaluate(() => App.sel.unsentCount() >= 4), "la barra cuenta los cambios sin enviar");
   await p.keyboard.press("Escape"); await wait(p, 500);
   // en lote desde la lista
-  await p.evaluate(() => { location.hash = "#aprobar"; }); await wait(p, 600);
+  await nav(p, "#aprobar", 300);
   await p.click(".piece .pick >> nth=0"); await p.click(".piece .pick >> nth=1"); await wait(p, 300);
   ok(await p.evaluate(() => !!document.querySelector("#bulk")), "seleccionar versiones muestra la barra de lote");
   await p.click('[data-act="bulk"][data-st="approved"]'); await wait(p, 600);
@@ -66,7 +74,7 @@ async function open(browser, url, init, viewport) {
   ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "set" && /^changes_/.test(x[2]))), "escribe requests/changes_*");
 
   console.log("\n== Crear: pedido y subida de videos ==");
-  await p.evaluate(() => { location.hash = "#crear/subir"; }); await wait(p, 700);
+  await nav(p, "#crear/subir", 350);
   const tmp = path.join(root, "capturas", "_tmp", "clip-prueba.mp4"); fs.mkdirSync(path.dirname(tmp), { recursive: true }); fs.copyFileSync(path.join(root, "app", "dev", "demo.mp4"), tmp);
   await p.setInputFiles("#crfile", tmp); await wait(p, 1200);
   ok(await p.evaluate(() => App.ui.files.length === 1 && App.ui.files[0].state === "done"), "sube un video y queda listo");
@@ -74,32 +82,57 @@ async function open(browser, url, init, viewport) {
   await p.fill("#crnotes", "Para el estilo de la semana"); await p.click("#crsend"); await wait(p, 900);
   const req = await p.evaluate(() => App.S.requests.filter((r) => r.kind === "new_video" && r.source === "material")[0]);
   ok(!!req && req.assets.length === 1 && req.assets[0].purpose === "crudo", "el pedido incluye el archivo subido", JSON.stringify(req && req.assets));
-  await p.evaluate(() => { location.hash = "#crear"; }); await wait(p, 600);
+  await nav(p, "#crear", 300);
   await p.fill("#crtopic", "Tres errores al empezar el dia"); await p.click(".sty >> nth=1"); await p.click("#crsend"); await wait(p, 800);
   ok(await p.evaluate(() => App.S.requests.some((r) => r.source === "idea" && /Tres errores/.test(r.topic) && r.style)), "pedido por idea con estilo elegido");
 
   console.log("\n== Biblioteca y Laboratorio ==");
-  await p.evaluate(() => { location.hash = "#biblioteca"; }); await wait(p, 700);
+  await p.evaluate(() => { location.hash = "#biblioteca"; }); await p.waitForFunction(() => document.querySelectorAll(".lib-card").length > 0, null, { timeout: 5000 }).catch(() => {}); await wait(p, 300);
   const nLib = await p.evaluate(() => document.querySelectorAll(".lib-card").length);
   ok(nLib >= 30, "la biblioteca lista el catalogo", String(nLib));
   await p.click('[data-act="libtype"][data-k="transiciones"]'); await wait(p, 500);
   ok(await p.evaluate(() => document.querySelectorAll(".lib-card").length >= 7 && App.route().args[0] === "transiciones"), "filtra por tipo");
   await p.click(".lib-card >> nth=0"); await wait(p, 500); await p.click('[data-act="libuse"]'); await wait(p, 600);
   ok(await p.evaluate(() => App.route().name === "crear" && !!App.ui.draft.notes), "Usar en un video nuevo lleva a Crear con el estilo");
-  await p.evaluate(() => { location.hash = "#laboratorio/ronda"; }); await wait(p, 700);
+  await nav(p, "#laboratorio/ronda", 350);
   await p.click('[data-act="labverd"][data-v="keep"] >> nth=3'); await wait(p, 400);
   ok(await p.evaluate(() => App.S.expCards.filter((c) => c.verdict === "keep").length >= 2), "calificar una tarjeta guarda el veredicto");
-  await p.evaluate(() => { location.hash = "#laboratorio/estilos"; }); await wait(p, 600);
+  await nav(p, "#laboratorio/estilos", 300);
   await p.click('[data-act="labdecide"][data-st="aprobado"] >> nth=0'); await wait(p, 500);
-  ok(await p.evaluate(() => App.S.expStyles.filter((s) => s.status === "aprobado").length >= 5), "aprobar un estilo lo pasa a la Biblioteca");
+  ok(await p.evaluate(() => App.S.expStyles.filter((s) => s.status === "aprobado").length >= 6), "aprobar un estilo lo pasa a la Biblioteca");
+
+  console.log("\n== Laboratorio: mesa, ADN y recreacion ==");
+  await nav(p, "#laboratorio", 400);
+  ok(await p.evaluate(() => !!document.querySelector("#lt") && document.querySelectorAll(".seed").length === 6 && document.querySelectorAll(".rt").length >= 4), "la mesa muestra la mesa de luz, referencias y 6 semillas");
+  const nRefs = await p.evaluate(() => App.S.refs.length);
+  await p.setInputFiles("#ltfile", path.join(root, "app", "dev", "demo.webm"));
+  await p.waitForFunction(() => App.route().args[0] === "ref", null, { timeout: 15000 }).catch(() => {}); await wait(p, 1500);
+  const newRef = await p.evaluate(() => { const r = App.S.refs.find((x) => x.id === App.route().args[1]); return r ? { pal: (r.dna && r.dna.palette || []).length, ax: r.dna && r.dna.axes, thumbs: (r.dna && r.dna.thumbs || []).length, rec: !!r.recipe, asset: !!r.assetId } : null; });
+  ok(newRef && newRef.pal >= 3 && newRef.ax && newRef.thumbs >= 3 && newRef.rec, "soltar un video lee su ADN (paleta, ejes, cuadros) y abre la Estacion", JSON.stringify(newRef));
+  ok(await p.evaluate((n) => App.S.refs.length === n + 1, nRefs), "la referencia queda guardada en refs");
+  ok(await p.evaluate(() => !!document.querySelector("#lab-stage .st-stage") && !!document.querySelector("#lab-radar svg .shape")), "la Estacion recrea en vivo con el motor del Estudio y dibuja el radar");
+  await p.click('#lab-ctl button[data-rk="font"][data-v="Inter"]'); await wait(p, 1700);
+  ok(await p.evaluate(() => { const r = App.S.refs.find((x) => x.id === App.route().args[1]); return r && r.recipe && r.recipe.font === "Inter"; }), "tocar la receta la guarda en la referencia");
+  await p.selectOption("#lab-mixwith", "seed:neon"); await wait(p, 400);
+  ok(await p.evaluate(() => !document.querySelector("#lab-mixrow").hidden), "mezclar con una semilla muestra el control de mezcla");
+  await p.click('[data-act="labsave"]'); await wait(p, 500); await p.fill("#lab-name", "Mi estilo de prueba"); await p.click("#lab-save-go"); await wait(p, 900);
+  ok(await p.evaluate(() => App.S.expStyles.some((s) => s.name === "Mi estilo de prueba" && s.recipe && s.status === "aprobado" && /^r-/.test(s.demo))), "guardar estilo lo deja aprobado con su receta");
+  await p.click("#lab-use"); await wait(p, 900);
+  ok(await p.evaluate(() => App.route().name === "crear" && !!document.querySelector(".sty.on .xd-rcp")), "Usar en un video nuevo lleva a Crear con el estilo elegido");
+  await nav(p, "#laboratorio/semilla/calma", 600);
+  ok(await p.evaluate(() => /Calma/.test(document.querySelector(".stn-h h1").textContent) && !!document.querySelector("#lab-stage .st-stage")), "una semilla abre su Estacion");
+  await p.click('[data-act="labclaude"]'); await wait(p, 400); await p.fill("#lab-cnote", "con mi foto de fondo"); await p.click("#lab-c-go"); await wait(p, 700);
+  ok(await p.evaluate(() => window.__auraLog.some((x) => x[1] === "requests" && /^recreate_/.test(x[2] || ""))), "Pedirle a Claude escribe requests/recreate_<ts>");
+  await nav(p, "#biblioteca", 400);
+  ok(await p.evaluate(() => document.querySelectorAll(".lib-card .xd-rcp").length >= 2), "los estilos del Laboratorio se ven en la Biblioteca");
 
   console.log("\n== Metricas y Logros ==");
-  await p.evaluate(() => { location.hash = "#metricas"; }); await wait(p, 900);
+  await nav(p, "#metricas", 450);
   ok(await p.evaluate(() => document.querySelectorAll(".stat").length === 4 && document.querySelectorAll(".top li").length >= 5), "metricas: tarjetas y mejores reels");
   await p.click('[data-act="mrange"][data-k="7"]'); await wait(p, 400); await p.click('[data-act="mscope"][data-k="kt-en"]'); await wait(p, 400);
   ok(await p.evaluate(() => /KT English/.test(document.querySelector(".vhead .eyebrow").textContent)), "filtra por cuenta");
   await p.click('[data-act="mscope"][data-k="total"]'); await wait(p, 300);
-  await p.evaluate(() => { location.hash = "#logros"; }); await wait(p, 1500);
+  await nav(p, "#logros", 750);
   ok(await p.evaluate(() => document.querySelectorAll(".tr").length >= 6 && !!document.querySelector(".lvlhero")), "logros: nivel y tarjetas");
   ok(await p.evaluate(() => document.querySelectorAll(".tr.fresh").length >= 1), "hay logros nuevos para celebrar");
 
@@ -126,12 +159,12 @@ async function open(browser, url, init, viewport) {
   ok(await p.evaluate(() => App.route().name === "estudio" && !App.studioOpen), "Esc cierra el editor");
 
   console.log("\n== Jarvis, tema y rutas ==");
-  await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 600);
+  await nav(p, "#hoy", 300);
   await p.keyboard.press("Control+k"); await wait(p, 1100);
   ok(await p.evaluate(() => App.jarvis.isOpen() && document.querySelectorAll("#jvcmds button").length >= 4), "Ctrl+K abre Jarvis con comandos");
   await p.fill("#jvbox", "aprobar"); await p.keyboard.press("Enter"); await p.waitForFunction(() => App.route().name === "aprobar" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
   ok(await p.evaluate(() => App.route().name === "aprobar" && !App.jarvis.isOpen()), "un comando lleva a la pantalla y cierra el panel");
-  await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 500); await p.click('[data-act="theme"]'); await p.waitForFunction(() => document.documentElement.getAttribute("data-aura") === "night", null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
+  await nav(p, "#hoy", 300); await p.click('[data-act="theme"]'); await p.waitForFunction(() => document.documentElement.getAttribute("data-aura") === "night", null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
   const th = await p.evaluate(() => document.documentElement.getAttribute("data-aura") + "|" + getComputedStyle(document.documentElement).getPropertyValue("--base").trim());
   ok(/^night\|#06100f/.test(th), "el boton cambia a noche", th);
   await p.reload(); await wait(p, 1500);
@@ -142,9 +175,9 @@ async function open(browser, url, init, viewport) {
   p = await open(browser, "?demo=1&preset=lumen#hoy");
   ok(await p.evaluate(() => App.config.id === "lumen" && App.S.brands.length === 3), "carga otro espacio con 3 cuentas");
   ok(!(await p.evaluate(() => /\bKT\b|Kevin|Trudeau|Teacher/.test(document.body.innerText))), "ninguna referencia a KT en el otro espacio");
-  await p.evaluate(() => { location.hash = "#crear"; }); await wait(p, 600);
+  await nav(p, "#crear", 300);
   ok(await p.evaluate(() => /Reel con voz en off/.test(document.querySelector("#crformat").innerText) && !document.querySelector("#crteacher")), "formatos propios y sin campo Teacher");
-  await p.evaluate(() => { location.hash = "#metricas"; }); await wait(p, 900);
+  await nav(p, "#metricas", 450);
   ok(await p.evaluate(() => document.querySelectorAll(".stat").length === 4), "metricas del otro espacio");
   ok(p.errs.length === 0, "sin errores en el preset Lumen", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
@@ -152,30 +185,122 @@ async function open(browser, url, init, viewport) {
   p = await open(browser, "?preset=kt#hoy", mockSrc); await wait(p, 600);
   ok(await p.evaluate(() => App.S.mode === "claude"), "con window.claude usa el adaptador real");
   ok(await p.evaluate(() => App.S.videos.length === 0), "una base vacia no inventa datos");
-  await p.evaluate(() => { location.hash = "#ajustes"; }); await wait(p, 600);
+  await nav(p, "#ajustes", 300);
   ok(await p.evaluate(() => !!document.querySelector('[data-act="seeddemo"]')), "ofrece cargar datos de ejemplo cuando esta vacia");
   await p.click('[data-act="seeddemo"]'); await wait(p, 5000);
   ok(await p.evaluate(() => App.S.videos.length > 20 && Object.keys(window.__mock.data.videos).length > 20), "los datos se escriben en la base y vuelven por onSnapshot");
-  await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 900);
+  await nav(p, "#hoy", 450);
   const vid = await p.evaluate(() => App.sel.pending()[0].id);
   await p.evaluate((id) => App.act.setStatus(App.sel.video(id), "approved"), vid); await wait(p, 5000);
   ok(await p.evaluate((id) => window.__mock.data.videos[id].status === "approved", vid), "aprobar escribe en videos/<id>");
   ok(await p.evaluate(() => !!window.__mock.data.requests.schedule_kt_es || Object.keys(window.__mock.data.requests).some((k) => /^schedule_/.test(k))), "escribe requests/schedule_<cuenta>");
   ok(await p.evaluate(() => window.__mock.tells.some((t) => /APROB/.test(t))), "avisa por comments.sendToClaude");
   ok(await p.evaluate(() => App.S.claudeState === "available"), "estado de Claude disponible");
-  await p.evaluate(() => { location.hash = "#metricas"; }); await wait(p, 1800);
+  await nav(p, "#metricas", 900);
   ok(await p.evaluate(() => window.__mock.calls.length >= 2 && window.__mock.calls.some((c) => c[0] === "metricool")), "Metricas llama a mcp.callTool(metricool)");
   ok(await p.evaluate(() => Object.keys(window.__mock.data.metrics || {}).length >= 1), "guarda copia de las metricas en la base");
-  await p.evaluate(() => { location.hash = "#crear/subir"; }); await wait(p, 600);
+  await nav(p, "#crear/subir", 300);
   await p.setInputFiles("#crfile", tmp); await wait(p, 1200);
   ok(await p.evaluate(() => window.__mock.uploads.length === 1 && App.ui.files[0].state === "done" && /^[0-9a-f]{32}$/.test(App.ui.files[0].id)), "subir usa assets.upload y guarda el id", JSON.stringify(await p.evaluate(() => window.__mock.uploads)));
   ok(p.errs.length === 0, "sin errores con el adaptador real", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
+  console.log("\n== Modelo e intensidad ==");
+  p = await open(browser, "?demo=1&preset=kt#hoy");
+  ok(await p.evaluate(() => { const c = App.ai.get(); return c.model === "claude-sonnet-5-5" && c.effort === "medium"; }), "el modelo de siempre es Sonnet 5.5 con intensidad media");
+  await p.evaluate(() => App.jarvis.open(null)); await wait(p, 1500);
+  ok(await p.evaluate(() => /Sonnet 5\.5/.test(document.querySelector("#jv .aipill").textContent)), "Jarvis muestra el modelo en la cabecera");
+  await p.click("#jv .aipill"); await wait(p, 500);
+  ok(await p.evaluate(() => !!document.querySelector(".aimenu") && document.querySelectorAll(".aimenu .aim-m").length === 4 && document.querySelectorAll(".aimenu .aim-seg button").length === 3), "el menu ofrece 4 modelos y 3 intensidades");
+  await p.click('.aimenu [data-m="claude-opus-5-5"]'); await p.click('.aimenu [data-e="high"]'); await wait(p, 200);
+  ok(await p.evaluate(() => { const c = App.ai.get(); return c.model === "claude-opus-5-5" && c.effort === "high" && /Opus 5\.5/.test(document.querySelector("#jv .aipill").textContent); }), "cambiar modelo e intensidad se guarda y se ve en la pastilla");
+  await p.keyboard.press("Escape"); await wait(p, 400);
+  ok(await p.evaluate(() => !document.querySelector(".aimenu") && App.jarvis.isOpen()), "Esc cierra solo el menu");
+  await p.evaluate(() => App.jarvis.close()); await wait(p, 1200);
+  await p.reload(); await wait(p, 1500);
+  ok(await p.evaluate(() => App.ai.get().model === "claude-opus-5-5" && App.ai.get().effort === "high"), "se recuerda al recargar");
+  await nav(p, "#ajustes", 400);
+  ok(await p.evaluate(() => /Opus 5\.5/.test(document.querySelector('.aipill[data-ai="global"]').textContent)), "Ajustes muestra y cambia el modelo de siempre");
+  await nav(p, "#crear", 450);
+  ok(await p.evaluate(() => /Opus 5\.5/.test(document.querySelector('#crform .aipill[data-ai="draft"]').textContent)), "Crear arranca con el modelo de siempre");
+  await p.click('#crform .aipill[data-ai="draft"]'); await wait(p, 300); await p.click('.aimenu [data-m="claude-haiku-5-5"]'); await p.keyboard.press("Escape"); await wait(p, 300);
+  ok(await p.evaluate(() => App.ai.get("global").model === "claude-opus-5-5" && App.ai.get("draft").model === "claude-haiku-5-5"), "en Crear el modelo cambia solo para ese pedido");
+  await p.fill("#crtopic", "Prueba del modelo por pedido"); await p.click("#crsend"); await wait(p, 900);
+  ok(await p.evaluate(() => { const r = window.__auraLog.filter((x) => x[0] === "set" && /^new_/.test(x[2])).pop(); return !!r && r[3].model === "claude-haiku-5-5" && r[3].effort === "high"; }), "el pedido de video lleva el modelo elegido");
+  ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "tell" && /Modelo pedido: Haiku 5\.5/.test(x[1]))), "el aviso a Claude dice con que modelo hacerlo");
+  ok(await p.evaluate(() => App.ai.get("draft").model === "claude-opus-5-5"), "despues de enviar, Crear vuelve al modelo de siempre");
+  await p.evaluate(() => { localStorage.removeItem("aura:ai"); });
+  const ed2 = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
+  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, ed2); await wait(p, 2200);
+  await p.click("#st-ask-btn"); await wait(p, 600);
+  ok(await p.evaluate(() => !!document.querySelector('#st-ipane .aipill') && /Sonnet 5\.5/.test(document.querySelector('#st-ipane .aipill').textContent)), "el chat del Estudio muestra el modelo");
+  await p.click('#st-ipane .aipill'); await wait(p, 300); await p.click('.aimenu [data-e="low"]'); await p.keyboard.press("Escape"); await wait(p, 200);
+  await p.fill("#st-ask-text", "Prueba de intensidad"); await p.click("#st-ask-go"); await wait(p, 900);
+  ok(await p.evaluate(() => { const r = App.S.studioRequests.find((x) => x.text === "Prueba de intensidad"); return !!r && r.model === "claude-sonnet-5-5" && r.effort === "low"; }), "el pedido del Estudio lleva modelo e intensidad");
+  ok(p.errs.length === 0, "sin errores con el selector de modelo", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
+  console.log("\n== Chats: modelo real y archivos adjuntos ==");
+  p = await open(browser, "?preset=kt#hoy", "window.__MOCK_SAMPLE = true;" + mockSrc); await wait(p, 500);
+  await p.click('[data-act="seeddemo"]').catch(() => {}); 
+  await nav(p, "#ajustes", 300); await p.click('[data-act="seeddemo"]'); await wait(p, 5000);
+  await nav(p, "#hoy", 500);
+  await p.evaluate(() => { const c = App.ai; c.contexts.global.set({ model: "claude-opus-5-5", effort: "high" }); c.paint(); });
+  await p.evaluate(() => App.jarvis.open(null)); await wait(p, 1600);
+  await p.fill("#jvbox", "cuantos videos tengo por aprobar"); await p.keyboard.press("Enter"); await wait(p, 1200);
+  ok(await p.evaluate(() => window.__mock.samples.length === 1 && window.__mock.samples[0].opts.model === "claude-opus-5-5" && window.__mock.samples[0].opts.effort === "high" && window.__mock.samples[0].opts.modelTier === "complex" && window.__mock.samples[0].opts.cache === false), "Jarvis le pide a Claude el modelo y la intensidad elegidos", JSON.stringify(await p.evaluate(() => window.__mock.samples.map((x) => x.opts))));
+  ok(await p.evaluate(() => !document.querySelector("#jvlog .msg-note")), "si el modelo respondio, no hay aviso de sustitucion");
+  const png = path.join(root, "capturas", "_tmp", "foto-prueba.png"); fs.writeFileSync(png, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"));
+  const vid2 = path.join(root, "app", "dev", "demo.webm");
+  await p.setInputFiles("#jv [data-att-in]", [vid2, png]); await wait(p, 1500);
+  ok(await p.evaluate(() => document.querySelectorAll("#jv .achip").length === 2 && document.querySelectorAll('#jv .achip[data-s="done"]').length === 2 && window.__mock.uploads.length === 2), "adjuntar un video y una imagen los sube con assets.upload");
+  await p.fill("#jvbox", "ponle subtitulos grandes a este video"); await p.keyboard.press("Enter"); await wait(p, 1500);
+  ok(await p.evaluate(() => document.querySelectorAll("#jvlog .msg.me .achip").length === 2 && document.querySelectorAll("#jv .atts:not(.sent) .achip").length === 0), "al enviar, los adjuntos quedan en la burbuja y se vacia el compositor");
+  ok(await p.evaluate(() => { const l = window.__mock.samples[1]; return l.opts.images === 1 && /ADJUNTOS DE ESTE MENSAJE/.test(l.last) && /demo\.webm/.test(l.last); }), "Claude recibe la lista de adjuntos y la imagen para verla", JSON.stringify(await p.evaluate(() => window.__mock.samples[1])));
+  const aid = await p.evaluate(() => window.__mock.uploads[0][2]);
+  const toolRes = await p.evaluate(async (id) => { const t = App.jarvis.tools().find((x) => x.name === "ask_claude"); return await t.execute({ task: "Subtitula este video con letra grande", attachments: [id] }); }, aid);
+  ok(/Claude/.test(String(toolRes)) && await p.evaluate((id) => { const r = Object.entries(window.__mock.data.requests).find(([k]) => /^jarvis_/.test(k)); return !!r && r[1].assets && r[1].assets[0].id === id && r[1].model === "claude-opus-5-5" && r[1].effort === "high"; }, aid), "ask_claude escribe requests/jarvis_* con los archivos y el modelo");
+  ok(await p.evaluate(() => window.__mock.tells.some((t) => /PEDIDO DESDE JARVIS/.test(t) && /archivo adjunto/.test(t) && /Opus 5\.5/.test(t))), "el aviso a Claude menciona los archivos y el modelo");
+  await p.evaluate(() => { document.querySelector("#jv [data-att-in]").dispatchEvent(new Event("change")); });
+  await p.setInputFiles("#jv [data-att-in]", { name: "documento.docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer: Buffer.from("x") }); await wait(p, 500);
+  ok(await p.evaluate(() => document.querySelectorAll("#jv .atts:not(.sent) .achip").length === 0 && /no se puede subir/.test(document.querySelector("#toasts").textContent)), "un tipo de archivo no permitido se rechaza con un aviso");
+  await p.setInputFiles("#jv [data-att-in]", { name: "enorme.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(20 * 1024 * 1024) }); await wait(p, 800);
+  ok(await p.evaluate(() => { const c = document.querySelector('#jv .atts:not(.sent) .achip'); return !!c && c.dataset.s === "err" && /19 MB/.test(c.textContent); }), "un archivo de mas de 19 MB se marca con error");
+  await p.click("#jv .atts:not(.sent) .atx"); await wait(p, 300);
+  ok(await p.evaluate(() => document.querySelectorAll("#jv .atts:not(.sent) .achip").length === 0), "se puede quitar un adjunto");
+  await p.evaluate(() => App.jarvis.close()); await wait(p, 1200);
+  const ed3 = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
+  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, ed3); await wait(p, 2400);
+  await p.click("#st-ask-btn"); await wait(p, 600);
+  await p.setInputFiles('#st-ipane [data-att-in]', png); await wait(p, 1000);
+  await p.fill("#st-ask-text", "Usa esta foto de fondo"); await p.click("#st-ask-go"); await wait(p, 1200);
+  ok(await p.evaluate(() => { const r = Object.values(window.__mock.data.studio_requests || {}).find((x) => x.text === "Usa esta foto de fondo"); return !!r && r.assets && r.assets.length === 1 && /^[0-9a-f]{32}$/.test(r.assets[0].id) && r.model === "claude-opus-5-5"; }), "el pedido del Estudio incluye el archivo adjunto y el modelo");
+  ok(p.errs.length === 0, "sin errores con adjuntos", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
+  console.log("\n== Hoy: logros y analiticas, y la celebracion ==");
+  p = await open(browser, "?demo=1&preset=kt#notas", null, null, { cel: true }); await wait(p, 2400);
+  ok(await p.evaluate(() => !!document.querySelector('.nv[data-nav="logros"] b') && !App.celebrate.isOpen()), "el riel marca los logros nuevos sin interrumpir otra pantalla");
+  await nav(p, "#hoy", 300);
+  ok(await p.evaluate(() => { const c = document.querySelector(".cards").children; return c[0].classList.contains("tcard") && c[1].classList.contains("an"); }), "Hoy abre con Logros y Analiticas");
+  ok(await p.evaluate(() => document.querySelectorAll(".an-s").length === 4 && document.querySelectorAll(".an-s .spk svg").length >= 3 && !!document.querySelector(".tcard .newchip")), "las cuatro cifras de la semana con su curva y la marca de nuevos");
+  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await wait(p, 2200);
+  ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity === "1"), "al entrar a Hoy se celebra el logro nuevo con la tarjeta de la gota");
+  ok(await p.evaluate(() => document.querySelectorAll(".cel-slide.level").length === 1 && /Nivel|nivel/.test(document.querySelector(".cel-slide.level").textContent)), "tambien celebra la subida de nivel");
+  for (let i = 0; i < 6 && (await p.evaluate(() => App.celebrate.isOpen())); i++) { await p.click("#celnext"); await wait(p, 1500); }
+  await wait(p, 1200);
+  ok(await p.evaluate(() => !App.celebrate.isOpen() && App.trophies.newIds(App.trophies.all(App.trophies.cards())).length === 0 && !document.querySelector('.nv[data-nav="logros"] b') && !document.querySelector(".tcard .newchip")), "al cerrar queda como visto y desaparecen las marcas");
+  ok(await p.evaluate(() => window.__auraLog.some((x) => (x[0] === "set" || x[0] === "update") && x[1] === "home" && x[2] === "trophies")), "guarda en la base cuales logros ya vio");
+  await nav(p, "#ajustes", 400); await p.click('[data-act="celebratetest"]'); await wait(p, 2800);
+  ok(await p.evaluate(() => App.celebrate.isOpen()), "Ajustes permite probar la animacion en modo demostracion");
+  await p.keyboard.press("Escape"); await wait(p, 1500);
+  ok(await p.evaluate(() => !App.celebrate.isOpen()), "Esc cierra la celebracion");
+  ok(p.errs.length === 0, "sin errores en la celebracion", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
   console.log("\n== Telefono ==");
   p = await open(browser, "?demo=1&preset=kt#hoy", null, { width: 390, height: 844 });
   ok(await p.evaluate(() => getComputedStyle(document.querySelector("#tabbar")).display !== "none" && getComputedStyle(document.querySelector("#rail")).display === "none"), "barra inferior en telefono y sin riel");
   ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Hoy no tiene scroll horizontal");
-  for (const r of ["aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) { await p.evaluate((h) => { location.hash = "#" + h; }, r); await wait(p, 600); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); }
+  // el contenedor principal recorta el desborde (overflow-x: clip), asi que ademas del scroll se revisa que nada visible se salga de la pantalla
+  const spill = () => document.querySelector("#main") && [...document.querySelectorAll("#main *")].filter((e) => { const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || r.right <= innerWidth + 2) return false; for (let a = e.parentElement; a && a.id !== "main"; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return false; } return getComputedStyle(e).position !== "fixed"; }).slice(0, 3).map((e) => e.tagName.toLowerCase() + "." + String(e.className).split(" ").slice(0, 2).join(".")).join(" | ");
+  for (const r of ["hoy", "aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
   await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#aprobar/ver/" + encodeURIComponent(v.id); }); await wait(p, 1200);
   ok(await p.evaluate(() => { const b = document.querySelector("#rvdecide").getBoundingClientRect(); return b.bottom <= innerHeight && b.top > 300; }), "la capsula de decision queda visible sobre la barra");
   ok(p.errs.length === 0, "sin errores en telefono", p.errs.slice(0, 3).join(" || ")); await p.context().close();

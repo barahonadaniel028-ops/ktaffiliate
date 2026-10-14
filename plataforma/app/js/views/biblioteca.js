@@ -36,6 +36,7 @@
     if (kind === "tx") return `<div class="xd xd-mock tx${mini}" data-m="${esc(name)}" aria-hidden="true"><div class="xd-bg"></div>${TXT_MOCK[name] || TXT_MOCK.titulo}</div>`;
     if (kind === "bg") return `<div class="xd xd-mock bg${mini}" data-m="${esc(name)}" aria-hidden="true">${BG_MOCK[name] || BG_MOCK.original}</div>`;
     if (kind === "sub") return `<div class="xd xd-mock sub${mini}" data-m="${esc(name)}" aria-hidden="true"><div class="xd-bg"></div><div class="sub-line">${name === "pequena" ? "" : ""}<span>so</span> <span class="k">this</span> <span>is</span></div></div>`;
+    if (kind === "r") return App.recipeMini ? App.recipeMini(name, o) : `<div class="xd xd-mock${mini}"><div class="xd-bg"></div></div>`;
     if (kind === "v") return `<div class="xd xd-vid${mini}"><video src="${esc(App.adapter().assetUrl(name))}" controls loop muted playsinline preload="metadata"></video></div>`;
     return `<div class="xd xd-mock${mini}"><div class="xd-bg"></div>${icon("link")}</div>`;
   }
