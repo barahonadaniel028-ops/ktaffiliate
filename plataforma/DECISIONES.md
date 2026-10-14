@@ -44,6 +44,10 @@ Reportados sin detalle específico ("varios bugs"). Hay que investigar el códig
 ### 8. Descargas no funcionan en el artefacto publicado
 "Exportar" y "Descargar SRT" no hacen nada en `dist/artifact.html` tal como se publicó en la fase 8: a esa vista le falta declarar la capacidad `downloads` del visor de artefactos (no es un bug del código de la app). **Estado: en curso.**
 
+### 9. Panel del predictor de viralidad: demasiado largo y con jerga técnica — **NO tocar la fórmula, solo la piel**
+Viendo la revisión de un video real, Daniel: *"la lista de su retroalimentacion es demasiado larga y con terminos raros, nombres de archivos, v1 'objeto' 'ritual' no tienen sentido, quizas para mi si, pero para otros no tiene sentido para nada."* `js/engine/pred.js` es una copia literal de la fórmula del portal (no se toca, regla #1 del `MASTER-PLAN.md`); el problema es solo cómo `aprobar-review.js` la muestra: hoy lista cada factor con su etiqueta cruda del modelo ("Objeto o ritual concreto (hoja, tinta, rutina, billetera)", "Promesa directa…") y su evidencia estadística completa ("13 de 29 con esto pasaron 1000 vistas…") siempre visible, todo junto.
+Pedido: el círculo con el score (el "termómetro circular") queda como lo único visible por default. Debajo, un enlace tipo **"¿Por qué este score?"** que al abrirse muestra factores en categorías simples y reconocibles por cualquiera — Daniel dio de ejemplo: *"la iluminacion... la claridad del mensaje, el hook, los subtitulos, la estrctura del reel etc."* — no las etiquetas internas del modelo. Es trabajo de presentación: agrupar/traducir los `parts` que ya devuelve `scoreVideo()` a esas categorías, no cambiar cómo se calculan. **Estado: pedido, no implementado todavía.**
+
 ---
 
 ## Cómo agregar una entrada nueva
