@@ -63,11 +63,15 @@
       if (v.bind) v.bind(main, r); App.countUp(main);
     };
     const old = main.firstElementChild;
-    if (!same && old && !App.reduceMotion() && !App.studioOpen) {
+    if (App._morphNav) {
+      // Jarvis ya está llevando al visitante acá con su propio vuelo + derrame: esta es la única
+      // transición visible. Sin esto, el fundido de pantalla normal corre a la vez y se pisan.
+      upd();
+    } else if (!same && old && !App.reduceMotion() && !App.studioOpen) {
       if (App._navFrom && document.startViewTransition) { App.morph.view(upd, App._navFrom); }
       else { old.style.pointerEvents = "none"; old.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px) scale(.996)" }], { duration: 140, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).finished.then(upd, upd); }
     } else upd();
-    App._navFrom = null; renderChrome();
+    App._navFrom = null; App._morphNav = false; renderChrome();
   }
   App.render = renderMain;
 
@@ -135,6 +139,7 @@
       <div class="stage"><header class="topbar" id="top"></header><main class="main" id="main" tabindex="-1"></main></div>
       <div id="floating" class="floating"></div>
       <nav class="tabbar lg" id="tabbar" aria-label="Secciones"></nav>
+      <button class="jv-fab" id="jvfab" type="button" data-act="jarvis" aria-label="Hablar con Jarvis"><span class="orb"></span></button>
       <div class="sendbar lg" id="sendbar" hidden role="region" aria-label="Cambios sin enviar"><b class="sendn" id="sendn"></b><span id="sendtxt"></span><button class="iconbtn sm" type="button" data-act="sendview" aria-expanded="false" aria-label="Ver y quitar">${icon("chevup")}</button><button class="btn sm pri" type="button" data-act="sendall">Enviar</button></div>
       <div class="sendlist lg solid-glass" id="sendlist" hidden role="region" aria-label="Cambios sin enviar, para quitar"></div>
       <div class="toasts" id="toasts" role="status" aria-live="polite"></div><div id="morph" aria-hidden="true"></div><div id="jvmount"></div><div id="stmount"></div>`;

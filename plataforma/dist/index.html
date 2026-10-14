@@ -320,6 +320,15 @@ button.orb:hover { filter: saturate(1.2) brightness(1.04); }
 .tabbar .tb b { position: absolute; top: 2px; right: 8px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--apricot); color: #3b1606; font: 600 10px/17px var(--font); text-align: center; }
 .tabbar .orb { width: 58px; height: 58px; margin-top: -26px; box-shadow: inset 0 -10px 22px rgba(13,60,62,.35), inset 0 6px 14px rgba(255,255,255,.55), 0 18px 34px -10px rgba(15,107,108,.6), 0 0 0 5px var(--base); }
 
+/* orbe flotante persistente: visible en cualquier pantalla, incluso con el Estudio abierto (la barra superior
+   queda tapada ahí). En teléfono el orbe del tabbar ya cumple este rol, así que este queda oculto. */
+.jv-fab { position: fixed; z-index: 210; right: 26px; bottom: 26px; width: 60px; height: 60px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; box-shadow: 0 18px 34px -10px rgba(15,107,108,.55), 0 0 0 1px var(--edge2); transition: transform .25s var(--ease), box-shadow .25s var(--ease), bottom .3s var(--ease); }
+body.has-send .jv-fab { bottom: 92px; } /* la barra de "cambios sin enviar" vive en esta misma esquina */
+.jv-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 22px 40px -8px rgba(15,107,108,.6), 0 0 0 1px var(--edge2); }
+.jv-fab:active { transform: translateY(0) scale(.97); }
+.jv-fab .orb { width: 100%; height: 100%; box-shadow: inset 0 -10px 20px rgba(13,60,62,.3), inset 0 6px 14px rgba(255,255,255,.5); }
+body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: opacity .2s; }
+
 /* hoja inferior (telefono) y modal */
 .sheet-wrap { position: fixed; inset: 0; z-index: 300; }
 .sheet-wrap .veil { position: absolute; inset: 0; background: var(--veil); backdrop-filter: blur(8px); animation: fadeIn .3s both; }
@@ -388,7 +397,7 @@ button.orb:hover { filter: saturate(1.2) brightness(1.04); }
   .rail { width: 68px; } .stage { margin-left: 96px; } .cols4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cols3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 820px) {
-  .rail { display: none; } .tabbar { display: flex; }
+  .rail { display: none; } .tabbar { display: flex; } .jv-fab { display: none; } /* el orbe del tabbar ya es el acceso persistente acá */
   .stage { margin-left: 0; }
   .topbar { padding: calc(12px + var(--safe-t)) 14px 8px; gap: 8px; }
   .topbar .ask { display: none; } .topbar .ws { padding-right: 4px; } .topbar .ws select { max-width: 140px; font-size: 14px; }
@@ -1339,9 +1348,14 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 })();
 
 /* ===== core/motion ===== */
-/* Aura · movimiento. La firma: el orbe se estira como una gota, vuela con cola (filtro SVG "goo"), aterriza aplastandose
-   y el panel florece desde ese punto (clip-path circular). Al cerrar, el panel se recoge en una gota que vuelve al orbe.
-   Todo es transform/opacity/clip-path (se compone en la GPU). Con "reducir movimiento": fundido simple. */
+/* Aura · movimiento. La firma: el orbe se estira como una gota liquida, vuela con cola (filtro SVG "goo"),
+   aterriza, hace una pausa breve (el golpe ya asento, lo que sigue es SU consecuencia) y esa misma
+   sustancia se derrama para revelar lo que sigue. Nunca un circulo geometrico aparte, nunca un
+   crossfade: todo seam necesita un carrier que el ojo pueda seguir, y la gota es el carrier en los
+   cuatro casos (abrir, cerrar, navegar, presentar) — un solo lenguaje de movimiento, no tres.
+   Todo es transform/opacity/clip-path (se compone en la GPU); el area del filtro goo se acota al
+   rectangulo real del vuelo, no al viewport entero. Con "reducir movimiento": fundido simple, sin cola.
+   Ver motion-doctrine (skills-para-la-nube) para el vocabulario: carrier, causa, quietud antes del climax. */
 (function () {
   "use strict";
   const App = window.App;
@@ -1354,7 +1368,9 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
   const ORB_BG = "radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 22%), radial-gradient(circle at 70% 75%, rgba(255,173,133,.95), rgba(255,173,133,0) 45%), radial-gradient(circle at 25% 70%, rgba(169,230,211,.95), rgba(169,230,211,0) 50%), conic-gradient(from 200deg at 50% 50%, #0f6b6c, #6fd1c0, #ffd0a8, #ff9a76, #f7a6bd, #0f6b6c)";
   const clean = () => { const L = layer(); if (L) L.innerHTML = ""; };
 
-  // una gota de diametro "s" vuela de a (centro) a b (centro) con estiramiento en la direccion del viaje y aplaste al llegar
+  // una gota de diametro "s" vuela de a (centro) a b (centro), se estira en la direccion del viaje y aplasta al llegar.
+  // con o.spread: despues del aplaste hace una pausa breve y se derrama (crece y se disuelve) en vez de solo
+  // desvanecerse — es lo que bloom() necesita para que el panel no "aparezca": la misma gota es la que lo trae.
   function fly(from, to, o) {
     o = o || {};
     return new Promise((resolve) => {
@@ -1362,8 +1378,16 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
       L.innerHTML = ""; const goo = document.createElement("div"); goo.className = "gooed"; L.appendChild(goo);
       const s = o.size || 64, end = o.endSize || s, K = end / s, dx = to.x - from.x, dy = to.y - from.y, dist = Math.hypot(dx, dy), ang = (Math.atan2(dy, dx) * 180) / Math.PI;
       const ms = o.ms || Math.max(520, Math.min(820, 420 + dist * 0.45));
+      const spreadK = o.spread ? Math.max(K, 1) * 3.4 : K;
+      // El filtro SVG "goo" recalcula TODO su rectangulo en cada cuadro: sobre el viewport entero es carisimo
+      // para una gota de unos 100px. Lo acotamos al area real que el vuelo (y el derrame) van a ocupar.
+      const peak = s * 1.9 * spreadK + end + 40;
+      const bx = Math.min(from.x, to.x) - peak, by = Math.min(from.y, to.y) - peak;
+      const bw = Math.abs(dx) + peak * 2, bh = Math.abs(dy) + peak * 2;
+      Object.assign(goo.style, { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px" });
+      const ox = from.x - bx, oy = from.y - by; // "from" expresado dentro de la caja acotada, no del viewport
       const mk = (size, bg) => { const d = document.createElement("div"); d.className = "drop"; Object.assign(d.style, { width: size + "px", height: size + "px", left: "0px", top: "0px", background: bg || ORB_BG }); goo.appendChild(d); return d; };
-      const at = (p, size, rot, sx, sy) => `translate(${(from.x + dx * p - size / 2).toFixed(1)}px, ${(from.y + dy * p - size / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+      const at = (p, size, rot, sx, sy) => `translate(${(ox + dx * p - size / 2).toFixed(1)}px, ${(oy + dy * p - size / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
       const k = (p) => 1 + (K - 1) * p; // el tamano crece/decrece en el camino
       const main = mk(s);
       const anim = main.animate([
@@ -1379,22 +1403,45 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
         t.animate([{ transform: at(0, sz, ang, 1, 1), opacity: 1 }, { transform: at(0.5, sz, ang, 1.3, 0.8), opacity: 1, offset: 0.55 }, { transform: at(0.96, sz, ang, 0.3, 0.3), opacity: 0 }], { duration: ms * 0.92, delay, easing: "cubic-bezier(.45,0,.2,1)", fill: "both" });
       });
       if (o.onLand) setTimeout(o.onLand, ms * 0.78);
-      anim.finished.then(() => resolve(main), () => resolve(main));
+      anim.finished.then(() => {
+        if (!o.spread) { resolve(main); return; }
+        // la quietud antes del climax: el golpe ya asento; el derrame es SU consecuencia, no algo a la vez
+        setTimeout(() => {
+          main.animate([{ transform: at(1, s, ang, K, K), offset: 0 }, { transform: at(1, s, ang, spreadK, spreadK), opacity: 0, offset: 1 }], { duration: o.spreadMs || 440, easing: OUT, fill: "forwards" });
+          resolve(main);
+        }, 90);
+      }, () => resolve(main));
     });
   }
 
-  // el panel florece desde un punto: clip-path circular que crece (y su contenido llega escalonado por CSS)
+  // el panel florece desde el punto de aterrizaje: el clip-path rebasa un poco su tamano final y vuelve
+  // (tension superficial asentandose), nunca un circulo que solo crece parejo. Mientras tanto la gota
+  // recien aterrizada se sigue derramando ahi mismo (fly con o.spread) asi el borde que el ojo sigue
+  // es siempre organico, no una geometria perfecta — nunca un circulo "flotando" solo.
   function bloom(panel, at, ms) {
+    ms = ms || 680;
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;
-    return panel.animate([{ clipPath: `circle(18px at ${x}px ${y}px)`, opacity: 0.9 }, { clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }], { duration: ms || 620, easing: OUT, fill: "both" }).finished.catch(() => {});
+    // clip-path animado junto con backdrop-filter activo recalcula el desenfoque del fondo en cada
+    // cuadro del crecimiento: el combo mas caro posible para una animacion tan rapida. El vidrio vuelve
+    // solo despues, cuando el panel ya esta quieto.
+    const had = panel.style.backdropFilter, hadWk = panel.style.webkitBackdropFilter;
+    panel.style.backdropFilter = "none"; panel.style.webkitBackdropFilter = "none";
+    return panel.animate([
+      { clipPath: `circle(16px at ${x}px ${y}px)`, opacity: 0.94, offset: 0 },
+      { clipPath: `circle(${(R * 1.05).toFixed(1)}px at ${x}px ${y}px)`, opacity: 1, offset: 0.82 }, // rebasa
+      { clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1, offset: 1 },
+    ], { duration: ms, easing: spring, fill: "both" }).finished.catch(() => {}).then(() => { panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
   }
   function wilt(panel, at, ms) {
+    ms = ms || 360;
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;
-    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.85 }], { duration: ms || 360, easing: IN, fill: "forwards" }).finished.catch(() => {});
+    const had = panel.style.backdropFilter, hadWk = panel.style.webkitBackdropFilter;
+    panel.style.backdropFilter = "none"; panel.style.webkitBackdropFilter = "none";
+    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.85 }], { duration: ms, easing: IN, fill: "forwards" }).finished.catch(() => {}).then(() => { panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
   }
   const pop = (el) => { if (el && el.animate) el.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(.96)" }, { transform: "scale(1)" }], { duration: 560, easing: spring }); };
 
-  // ---------- Jarvis: el orbe se vuelve panel ----------
+  // ---------- Jarvis: el orbe se vuelve panel (y vuelve a serlo). Un solo lenguaje para los tres casos. ----------
   async function open(fromEl, wrap, panel) {
     wrap.classList.add("open");
     if (App.reduceMotion() || !fromEl) { wrap.classList.add("in", "shown"); panel.style.opacity = 1; return; }
@@ -1403,8 +1450,8 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     const b = rectOf(panel); pc.x = b.x + b.w / 2; pc.y = b.y + Math.min(b.h * 0.42, 150);
     fromEl.style.visibility = "hidden";
     const land = { x: pc.x, y: pc.y };
-    await fly(center(a), land, { size: Math.min(a.w, a.h), endSize: Math.min(150, b.w * 0.24), onLand: () => { panel.style.opacity = 1; wrap.classList.add("shown"); bloom(panel, land, 640); } });
-    const L = layer(); if (L) L.firstChild && L.firstChild.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }).finished.then(clean, clean);
+    await fly(center(a), land, { size: Math.min(a.w, a.h), endSize: Math.min(150, b.w * 0.24), spread: true, onLand: () => { panel.style.opacity = 1; wrap.classList.add("shown"); bloom(panel, land, 680); } });
+    setTimeout(clean, 480); // le da tiempo al derrame (fly con spread) a terminar de disolverse antes de limpiar la capa
     open._land = land;
   }
   async function close(fromEl, wrap, panel) {
@@ -1417,12 +1464,19 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     await fly(pc, oc, { size: 46, endSize: Math.min(o.w, o.h), ms: 560 });
     el.style.visibility = ""; pop(el); wrap.classList.remove("open"); panel.style.opacity = ""; panel.getAnimations().forEach((x) => x.cancel()); clean();
   }
-  // la gota viaja hasta un destino y ahi florece la pantalla nueva (Jarvis navegando)
-  async function travel(fromEl, toRect, o) {
+  // la gota viaja hasta un destino y ahi florece lo que sigue (Jarvis navegando, presentando algo, o abriendo el chat
+  // en un lugar nuevo): SIEMPRE el mismo fly+derrame que open(), nunca un fundido de pantalla aparte corriendo en paralelo.
+  // target es el elemento que se revela en el punto de aterrizaje (bloom se encarga; si no hay target, solo limpia).
+  async function travel(fromEl, toPoint, o, target) {
     if (App.reduceMotion() || !fromEl) return;
+    o = o || {};
     const a = rectOf(fromEl), keep = fromEl.style.visibility; fromEl.style.visibility = "hidden";
-    await fly(center(a), center(toRect), Object.assign({ size: Math.min(a.w, a.h), endSize: 90 }, o || {}));
-    fromEl.style.visibility = keep; const L = layer(); if (L && L.firstChild) L.firstChild.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.6)" }], { duration: 280, fill: "forwards" }).finished.then(clean, clean); else clean();
+    const onLand = o.onLand;
+    await fly(center(a), toPoint, Object.assign({ size: Math.min(a.w, a.h), endSize: 90, spread: !!target }, o, {
+      onLand: () => { if (onLand) onLand(); if (target) bloom(target, toPoint, o.bloomMs || 620); },
+    }));
+    fromEl.style.visibility = keep;
+    setTimeout(clean, target ? 480 : 160);
   }
 
   // View Transition con elemento compartido (tarjeta -> pantalla)
@@ -1996,7 +2050,12 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     handle.rectOf = (id) => { const n = ctx.els[id]; if (!n) return null; const a = n.getBoundingClientRect(), s = stage.getBoundingClientRect(), k = handle.scale || 1; return { x: (a.left - s.left) / k, y: (a.top - s.top) / k, w: a.width / k, h: a.height / k }; };
     handle.destroy = () => { if (tl) tl.kill(); host.innerHTML = ""; };
     handle.spec = spec;
-    return Promise.all(fontsUsed(spec).map((f) => (document.fonts ? document.fonts.load(f).catch(() => null) : null))).then(() => { rebuild(spec); return handle; });
+    // Un font-family que nunca recibio su @font-face (como paso con "AstonScript" en este port) puede
+    // dejar a document.fonts.load() sin resolver nunca en vez de rechazar: sin este limite, rebuild()
+    // no corre jamas y la vista previa queda vacia para siempre, sin ningun error visible.
+    const fontsReady = Promise.all(fontsUsed(spec).map((f) => (document.fonts ? document.fonts.load(f).catch(() => null) : null)));
+    const noLaterThan = new Promise((r) => setTimeout(r, 2500));
+    return Promise.race([fontsReady, noLaterThan]).then(() => { rebuild(spec); return handle; });
   }
   root.StudioRenderer = { mount, IRIS_R };
 })(typeof globalThis !== "undefined" ? globalThis : this);
@@ -2893,11 +2952,15 @@ return PRED; })();
       if (v.bind) v.bind(main, r); App.countUp(main);
     };
     const old = main.firstElementChild;
-    if (!same && old && !App.reduceMotion() && !App.studioOpen) {
+    if (App._morphNav) {
+      // Jarvis ya está llevando al visitante acá con su propio vuelo + derrame: esta es la única
+      // transición visible. Sin esto, el fundido de pantalla normal corre a la vez y se pisan.
+      upd();
+    } else if (!same && old && !App.reduceMotion() && !App.studioOpen) {
       if (App._navFrom && document.startViewTransition) { App.morph.view(upd, App._navFrom); }
       else { old.style.pointerEvents = "none"; old.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-6px) scale(.996)" }], { duration: 140, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).finished.then(upd, upd); }
     } else upd();
-    App._navFrom = null; renderChrome();
+    App._navFrom = null; App._morphNav = false; renderChrome();
   }
   App.render = renderMain;
 
@@ -2965,6 +3028,7 @@ return PRED; })();
       <div class="stage"><header class="topbar" id="top"></header><main class="main" id="main" tabindex="-1"></main></div>
       <div id="floating" class="floating"></div>
       <nav class="tabbar lg" id="tabbar" aria-label="Secciones"></nav>
+      <button class="jv-fab" id="jvfab" type="button" data-act="jarvis" aria-label="Hablar con Jarvis"><span class="orb"></span></button>
       <div class="sendbar lg" id="sendbar" hidden role="region" aria-label="Cambios sin enviar"><b class="sendn" id="sendn"></b><span id="sendtxt"></span><button class="iconbtn sm" type="button" data-act="sendview" aria-expanded="false" aria-label="Ver y quitar">${icon("chevup")}</button><button class="btn sm pri" type="button" data-act="sendall">Enviar</button></div>
       <div class="sendlist lg solid-glass" id="sendlist" hidden role="region" aria-label="Cambios sin enviar, para quitar"></div>
       <div class="toasts" id="toasts" role="status" aria-live="polite"></div><div id="morph" aria-hidden="true"></div><div id="jvmount"></div><div id="stmount"></div>`;
@@ -3238,14 +3302,23 @@ Reglas:
   function nav(hash) { if (open) { navigateFrom(hash); } else App.go(hash.replace(/^#/, "")); }
   async function navigateFrom(hash) {
     const w = wrap(), p = panel(); open = false; App.aura.mood(null);
-    let went = false; const go = () => { if (!went) { went = true; App.go(hash.replace(/^#/, "")); } };
-    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); go(); return; }
+    let went = false;
+    const go = () => {
+      if (went) return; went = true;
+      // El morph es dueño de esta transición: renderMain no corre su propio fundido en paralelo
+      // (nunca dos transiciones compitiendo — motion-doctrine: un seam, un carrier, nunca un crossfade).
+      App._morphNav = true;
+      const unsub = App.on((ks) => { if (ks.has("route")) { unsub(); const m = $("#main"); if (m) App.morph.bloom(m, to, 620); } });
+      App.go(hash.replace(/^#/, ""));
+    };
+    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); App.go(hash.replace(/^#/, "")); return; }
     const r = App.morph.rectOf(p), main = $("#main").getBoundingClientRect(), from = { x: r.x + r.w / 2, y: r.y + r.h / 2 }, to = { x: main.left + Math.min(main.width, 900) / 2, y: Math.max(140, main.top + 120) };
-    // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues)
+    // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues),
+    // y la misma gota se derrama para revelarla — el mismo lenguaje que abrir Jarvis, no uno aparte.
     w.classList.remove("shown"); await App.morph.wilt(p, from, 240); w.classList.remove("in"); p.style.opacity = 0;
-    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, onLand: go }); go();
+    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, spread: true, onLand: go }); go();
     w.classList.remove("open"); p.style.opacity = ""; p.getAnimations().forEach((x) => x.cancel()); if (fromOrb()) fromOrb().style.visibility = "";
-    const L = document.getElementById("morph"); if (L && L.firstChild) L.firstChild.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(2.2)" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)", fill: "forwards" }).finished.then(App.morph.clean, App.morph.clean); else App.morph.clean();
+    setTimeout(App.morph.clean, 480);
   }
   const fromOrb = () => (from && from.isConnected ? from : null);
   async function openJv(fromEl) {
