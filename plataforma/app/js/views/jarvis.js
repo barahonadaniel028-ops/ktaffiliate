@@ -207,14 +207,23 @@ Reglas:
   function nav(hash) { if (open) { navigateFrom(hash); } else App.go(hash.replace(/^#/, "")); }
   async function navigateFrom(hash) {
     const w = wrap(), p = panel(); open = false; App.aura.mood(null);
-    let went = false; const go = () => { if (!went) { went = true; App.go(hash.replace(/^#/, "")); } };
-    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); go(); return; }
+    let went = false;
+    const go = () => {
+      if (went) return; went = true;
+      // El morph es dueño de esta transición: renderMain no corre su propio fundido en paralelo
+      // (nunca dos transiciones compitiendo — motion-doctrine: un seam, un carrier, nunca un crossfade).
+      App._morphNav = true;
+      const unsub = App.on((ks) => { if (ks.has("route")) { unsub(); const m = $("#main"); if (m) App.morph.bloom(m, to, 620); } });
+      App.go(hash.replace(/^#/, ""));
+    };
+    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); App.go(hash.replace(/^#/, "")); return; }
     const r = App.morph.rectOf(p), main = $("#main").getBoundingClientRect(), from = { x: r.x + r.w / 2, y: r.y + r.h / 2 }, to = { x: main.left + Math.min(main.width, 900) / 2, y: Math.max(140, main.top + 120) };
-    // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues)
+    // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues),
+    // y la misma gota se derrama para revelarla — el mismo lenguaje que abrir Jarvis, no uno aparte.
     w.classList.remove("shown"); await App.morph.wilt(p, from, 240); w.classList.remove("in"); p.style.opacity = 0;
-    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, onLand: go }); go();
+    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, spread: true, onLand: go }); go();
     w.classList.remove("open"); p.style.opacity = ""; p.getAnimations().forEach((x) => x.cancel()); if (fromOrb()) fromOrb().style.visibility = "";
-    const L = document.getElementById("morph"); if (L && L.firstChild) L.firstChild.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(2.2)" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)", fill: "forwards" }).finished.then(App.morph.clean, App.morph.clean); else App.morph.clean();
+    setTimeout(App.morph.clean, 480);
   }
   const fromOrb = () => (from && from.isConnected ? from : null);
   async function openJv(fromEl) {

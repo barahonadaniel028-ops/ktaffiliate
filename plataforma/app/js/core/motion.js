@@ -1,6 +1,11 @@
-/* Aura · movimiento. La firma: el orbe se estira como una gota, vuela con cola (filtro SVG "goo"), aterriza aplastandose
-   y el panel florece desde ese punto (clip-path circular). Al cerrar, el panel se recoge en una gota que vuelve al orbe.
-   Todo es transform/opacity/clip-path (se compone en la GPU). Con "reducir movimiento": fundido simple. */
+/* Aura · movimiento. La firma: el orbe se estira como una gota liquida, vuela con cola (filtro SVG "goo"),
+   aterriza, hace una pausa breve (el golpe ya asento, lo que sigue es SU consecuencia) y esa misma
+   sustancia se derrama para revelar lo que sigue. Nunca un circulo geometrico aparte, nunca un
+   crossfade: todo seam necesita un carrier que el ojo pueda seguir, y la gota es el carrier en los
+   cuatro casos (abrir, cerrar, navegar, presentar) — un solo lenguaje de movimiento, no tres.
+   Todo es transform/opacity/clip-path (se compone en la GPU); el area del filtro goo se acota al
+   rectangulo real del vuelo, no al viewport entero. Con "reducir movimiento": fundido simple, sin cola.
+   Ver motion-doctrine (skills-para-la-nube) para el vocabulario: carrier, causa, quietud antes del climax. */
 (function () {
   "use strict";
   const App = window.App;
@@ -13,7 +18,9 @@
   const ORB_BG = "radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 22%), radial-gradient(circle at 70% 75%, rgba(255,173,133,.95), rgba(255,173,133,0) 45%), radial-gradient(circle at 25% 70%, rgba(169,230,211,.95), rgba(169,230,211,0) 50%), conic-gradient(from 200deg at 50% 50%, #0f6b6c, #6fd1c0, #ffd0a8, #ff9a76, #f7a6bd, #0f6b6c)";
   const clean = () => { const L = layer(); if (L) L.innerHTML = ""; };
 
-  // una gota de diametro "s" vuela de a (centro) a b (centro) con estiramiento en la direccion del viaje y aplaste al llegar
+  // una gota de diametro "s" vuela de a (centro) a b (centro), se estira en la direccion del viaje y aplasta al llegar.
+  // con o.spread: despues del aplaste hace una pausa breve y se derrama (crece y se disuelve) en vez de solo
+  // desvanecerse — es lo que bloom() necesita para que el panel no "aparezca": la misma gota es la que lo trae.
   function fly(from, to, o) {
     o = o || {};
     return new Promise((resolve) => {
@@ -21,8 +28,16 @@
       L.innerHTML = ""; const goo = document.createElement("div"); goo.className = "gooed"; L.appendChild(goo);
       const s = o.size || 64, end = o.endSize || s, K = end / s, dx = to.x - from.x, dy = to.y - from.y, dist = Math.hypot(dx, dy), ang = (Math.atan2(dy, dx) * 180) / Math.PI;
       const ms = o.ms || Math.max(520, Math.min(820, 420 + dist * 0.45));
+      const spreadK = o.spread ? Math.max(K, 1) * 3.4 : K;
+      // El filtro SVG "goo" recalcula TODO su rectangulo en cada cuadro: sobre el viewport entero es carisimo
+      // para una gota de unos 100px. Lo acotamos al area real que el vuelo (y el derrame) van a ocupar.
+      const peak = s * 1.9 * spreadK + end + 40;
+      const bx = Math.min(from.x, to.x) - peak, by = Math.min(from.y, to.y) - peak;
+      const bw = Math.abs(dx) + peak * 2, bh = Math.abs(dy) + peak * 2;
+      Object.assign(goo.style, { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px" });
+      const ox = from.x - bx, oy = from.y - by; // "from" expresado dentro de la caja acotada, no del viewport
       const mk = (size, bg) => { const d = document.createElement("div"); d.className = "drop"; Object.assign(d.style, { width: size + "px", height: size + "px", left: "0px", top: "0px", background: bg || ORB_BG }); goo.appendChild(d); return d; };
-      const at = (p, size, rot, sx, sy) => `translate(${(from.x + dx * p - size / 2).toFixed(1)}px, ${(from.y + dy * p - size / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+      const at = (p, size, rot, sx, sy) => `translate(${(ox + dx * p - size / 2).toFixed(1)}px, ${(oy + dy * p - size / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
       const k = (p) => 1 + (K - 1) * p; // el tamano crece/decrece en el camino
       const main = mk(s);
       const anim = main.animate([
@@ -38,24 +53,47 @@
         t.animate([{ transform: at(0, sz, ang, 1, 1), opacity: 1 }, { transform: at(0.5, sz, ang, 1.3, 0.8), opacity: 1, offset: 0.55 }, { transform: at(0.96, sz, ang, 0.3, 0.3), opacity: 0 }], { duration: ms * 0.92, delay, easing: "cubic-bezier(.45,0,.2,1)", fill: "both" });
       });
       if (o.onLand) setTimeout(o.onLand, ms * 0.78);
-      anim.finished.then(() => resolve(main), () => resolve(main));
+      anim.finished.then(() => {
+        if (!o.spread) { resolve(main); return; }
+        // la quietud antes del climax: el golpe ya asento; el derrame es SU consecuencia, no algo a la vez
+        setTimeout(() => {
+          main.animate([{ transform: at(1, s, ang, K, K), offset: 0 }, { transform: at(1, s, ang, spreadK, spreadK), opacity: 0, offset: 1 }], { duration: o.spreadMs || 440, easing: OUT, fill: "forwards" });
+          resolve(main);
+        }, 90);
+      }, () => resolve(main));
     });
   }
 
-  // el panel florece desde un punto: clip-path circular que crece (y su contenido llega escalonado por CSS)
+  // el panel florece desde el punto de aterrizaje: el clip-path rebasa un poco su tamano final y vuelve
+  // (tension superficial asentandose), nunca un circulo que solo crece parejo. Mientras tanto la gota
+  // recien aterrizada se sigue derramando ahi mismo (fly con o.spread) asi el borde que el ojo sigue
+  // es siempre organico, no una geometria perfecta — nunca un circulo "flotando" solo.
   function bloom(panel, at, ms) {
+    ms = ms || 680;
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;
-    const a = panel.animate([{ clipPath: `circle(18px at ${x}px ${y}px)`, opacity: 0.9 }, { clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }], { duration: ms || 620, easing: OUT, fill: "both" });
-    // al terminar se suelta el recorte: si no, la sombra grande del panel queda cortada en un circulo
-    return a.finished.then(() => { try { a.cancel(); } catch (e) { /* ya cancelada */ } }).catch(() => {});
+    // clip-path animado junto con backdrop-filter activo recalcula el desenfoque del fondo en cada
+    // cuadro del crecimiento: el combo mas caro posible para una animacion tan rapida. El vidrio vuelve
+    // solo despues, cuando el panel ya esta quieto.
+    const had = panel.style.backdropFilter, hadWk = panel.style.webkitBackdropFilter;
+    panel.style.backdropFilter = "none"; panel.style.webkitBackdropFilter = "none";
+    const anim = panel.animate([
+      { clipPath: `circle(16px at ${x}px ${y}px)`, opacity: 0.94, offset: 0 },
+      { clipPath: `circle(${(R * 1.05).toFixed(1)}px at ${x}px ${y}px)`, opacity: 1, offset: 0.82 }, // rebasa
+      { clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1, offset: 1 },
+    ], { duration: ms, easing: spring, fill: "both" });
+    // al terminar se suelta el recorte (si no, la sombra grande del panel queda cortada en un circulo) y vuelve el vidrio
+    return anim.finished.catch(() => {}).then(() => { try { anim.cancel(); } catch (e) { /* ya cancelada */ } panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
   }
   function wilt(panel, at, ms) {
+    ms = ms || 360;
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;
-    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.85 }], { duration: ms || 360, easing: IN, fill: "forwards" }).finished.catch(() => {});
+    const had = panel.style.backdropFilter, hadWk = panel.style.webkitBackdropFilter;
+    panel.style.backdropFilter = "none"; panel.style.webkitBackdropFilter = "none";
+    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.85 }], { duration: ms, easing: IN, fill: "forwards" }).finished.catch(() => {}).then(() => { panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
   }
   const pop = (el) => { if (el && el.animate) el.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(.96)" }, { transform: "scale(1)" }], { duration: 560, easing: spring }); };
 
-  // ---------- Jarvis: el orbe se vuelve panel ----------
+  // ---------- Jarvis: el orbe se vuelve panel (y vuelve a serlo). Un solo lenguaje para los tres casos. ----------
   async function open(fromEl, wrap, panel) {
     wrap.classList.add("open");
     if (App.reduceMotion() || !fromEl) { wrap.classList.add("in", "shown"); panel.style.opacity = 1; return; }
@@ -64,8 +102,8 @@
     const b = rectOf(panel); pc.x = b.x + b.w / 2; pc.y = b.y + Math.min(b.h * 0.42, 150);
     fromEl.style.visibility = "hidden";
     const land = { x: pc.x, y: pc.y };
-    await fly(center(a), land, { size: Math.min(a.w, a.h), endSize: Math.min(150, b.w * 0.24), onLand: () => { panel.style.opacity = 1; wrap.classList.add("shown"); bloom(panel, land, 640); } });
-    const L = layer(); if (L) L.firstChild && L.firstChild.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }).finished.then(clean, clean);
+    await fly(center(a), land, { size: Math.min(a.w, a.h), endSize: Math.min(150, b.w * 0.24), spread: true, onLand: () => { panel.style.opacity = 1; wrap.classList.add("shown"); bloom(panel, land, 680); } });
+    setTimeout(clean, 480); // le da tiempo al derrame (fly con spread) a terminar de disolverse antes de limpiar la capa
     open._land = land;
   }
   async function close(fromEl, wrap, panel) {
@@ -78,12 +116,19 @@
     await fly(pc, oc, { size: 46, endSize: Math.min(o.w, o.h), ms: 560 });
     el.style.visibility = ""; pop(el); wrap.classList.remove("open"); panel.style.opacity = ""; panel.getAnimations().forEach((x) => x.cancel()); clean();
   }
-  // la gota viaja hasta un destino y ahi florece la pantalla nueva (Jarvis navegando)
-  async function travel(fromEl, toRect, o) {
+  // la gota viaja hasta un destino y ahi florece lo que sigue (Jarvis navegando, presentando algo, o abriendo el chat
+  // en un lugar nuevo): SIEMPRE el mismo fly+derrame que open(), nunca un fundido de pantalla aparte corriendo en paralelo.
+  // target es el elemento que se revela en el punto de aterrizaje (bloom se encarga; si no hay target, solo limpia).
+  async function travel(fromEl, toPoint, o, target) {
     if (App.reduceMotion() || !fromEl) return;
+    o = o || {};
     const a = rectOf(fromEl), keep = fromEl.style.visibility; fromEl.style.visibility = "hidden";
-    await fly(center(a), center(toRect), Object.assign({ size: Math.min(a.w, a.h), endSize: 90 }, o || {}));
-    fromEl.style.visibility = keep; const L = layer(); if (L && L.firstChild) L.firstChild.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.6)" }], { duration: 280, fill: "forwards" }).finished.then(clean, clean); else clean();
+    const onLand = o.onLand;
+    await fly(center(a), toPoint, Object.assign({ size: Math.min(a.w, a.h), endSize: 90, spread: !!target }, o, {
+      onLand: () => { if (onLand) onLand(); if (target) bloom(target, toPoint, o.bloomMs || 620); },
+    }));
+    fromEl.style.visibility = keep;
+    setTimeout(clean, target ? 480 : 160);
   }
 
   // View Transition con elemento compartido (tarjeta -> pantalla)

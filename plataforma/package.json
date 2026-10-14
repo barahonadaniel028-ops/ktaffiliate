@@ -1,0 +1,8 @@
+{
+  "name": "aura",
+  "private": true,
+  "description": "Herramientas de verificación de Aura (Playwright para screenshots y pruebas de interacción)",
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

@@ -546,7 +546,12 @@
     handle.rectOf = (id) => { const n = ctx.els[id]; if (!n) return null; const a = n.getBoundingClientRect(), s = stage.getBoundingClientRect(), k = handle.scale || 1; return { x: (a.left - s.left) / k, y: (a.top - s.top) / k, w: a.width / k, h: a.height / k }; };
     handle.destroy = () => { if (tl) tl.kill(); host.innerHTML = ""; };
     handle.spec = spec;
-    return Promise.all(fontsUsed(spec).map((f) => (document.fonts ? document.fonts.load(f).catch(() => null) : null))).then(() => { rebuild(spec); return handle; });
+    // Un font-family que nunca recibio su @font-face (como paso con "AstonScript" en este port) puede
+    // dejar a document.fonts.load() sin resolver nunca en vez de rechazar: sin este limite, rebuild()
+    // no corre jamas y la vista previa queda vacia para siempre, sin ningun error visible.
+    const fontsReady = Promise.all(fontsUsed(spec).map((f) => (document.fonts ? document.fonts.load(f).catch(() => null) : null)));
+    const noLaterThan = new Promise((r) => setTimeout(r, 2500));
+    return Promise.race([fontsReady, noLaterThan]).then(() => { rebuild(spec); return handle; });
   }
   root.StudioRenderer = { mount, IRIS_R };
 })(typeof globalThis !== "undefined" ? globalThis : this);

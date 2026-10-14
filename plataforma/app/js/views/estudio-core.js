@@ -81,9 +81,14 @@
   const video = () => (ST.SE ? sel.video(ST.SE.vid) : null);
   ST.video = video;
 
-  ST.open = function (vid) {
+  // GSAP se carga con un <script> bloqueante antes del bundle, asi que deberia estar listo siempre;
+  // si por lo que sea todavia no lo esta, reintenta un rato corto en vez de rendirse al toque.
+  ST.open = function (vid, _retries) {
     const v = sel.video(vid); if (!v) return;
-    if (!window.StudioModel || !window.gsap) { App.toast("El motor del Estudio no cargó. Revisa tu conexión y recarga."); App.go("estudio", { replace: true }); return; }
+    if (!window.StudioModel || !window.gsap) {
+      if ((_retries || 0) < 20) { setTimeout(() => ST.open(vid, (_retries || 0) + 1), 150); return; }
+      App.toast("El motor del Estudio no cargó. Revisa tu conexión y recarga."); App.go("estudio", { replace: true }); return;
+    }
     if (ST.SE) teardown();
     const doc = ver(vid), spec = doc && doc.spec ? SM().clone(doc.spec) : null;
     ST.SE = { vid, spec, rev: doc ? doc.rev || 0 : 0, hist: SM().createHistory(100), sel: null, t: 0, zoom: 64, safe: false, muted: false, tool: null, trSide: "in", handle: null, dirty: false, qa: null, log: doc && doc.log ? doc.log.slice() : [], raf: 0, saveT: 0, ruleT: 0, openedAt: Date.now() };
@@ -91,7 +96,15 @@
     el.animate([{ opacity: 0, transform: "scale(1.015)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
     if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
     ST.renderTop(); ST.renderDock(); ST.renderInspector(); ST.renderBanner();
-    (spec ? mountPreview() : mountLegacy()).then(() => { fit(); ST.renderTimeline(); runRules(); seek(spec ? Math.min(1.2, spec.duration / 3) : 0); }).catch((e) => { App.toast("No se pudo abrir la vista previa: " + (e && e.message ? e.message : e)); });
+    // Nunca dejar la vista previa en blanco para siempre y sin ningun aviso: si tarda demasiado
+    // (un asset que no carga, un video que nunca dispara loadedmetadata) se avisa con un boton
+    // de reintentar en vez de quedar "trabado" sin ninguna señal.
+    const openId = ST.SE.openedAt, stuck = setTimeout(() => {
+      if (!ST.SE || ST.SE.openedAt !== openId) return;
+      ST.renderBanner(`<span><b>Esto está tardando más de lo normal.</b> Puede ser el video o una fuente que no cargó.</span><button class="btn sm pri" id="st-retry" type="button">Reintentar</button>`);
+      const r = E("st-retry"); if (r) r.onclick = () => ST.open(vid);
+    }, 8000);
+    (spec ? mountPreview() : mountLegacy()).then(() => { clearTimeout(stuck); fit(); ST.renderTimeline(); runRules(); seek(spec ? Math.min(1.2, spec.duration / 3) : 0); }).catch((e) => { clearTimeout(stuck); App.toast("No se pudo abrir la vista previa: " + (e && e.message ? e.message : e)); });
   };
   function teardown() { const SE = ST.SE; if (!SE) return; saveNow(); cancelAnimationFrame(SE.raf); try { if (SE.handle && SE.handle.destroy) SE.handle.destroy(); } catch (e) { /* ya cerrado */ } const s = E("st-stage"); if (s) s.innerHTML = ""; ST.SE = null; }
   ST.close = function (silent) {

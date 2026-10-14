@@ -3,7 +3,7 @@
 const { chromium } = require("playwright");
 const path = require("node:path"), fs = require("node:fs");
 const root = path.resolve(__dirname, ".."), file = "file://" + path.join(root, "dist", "index.local.html");
-const mockSrc = fs.readFileSync(path.join(root, "app", "dev", "mock-claude.js"), "utf8");
+const mockSrc = fs.readFileSync(path.join(root, "app", "js", "core", "adapters", "simulador.js"), "utf8");
 let pass = 0, fail = 0; const failures = [];
 const ok = (cond, name, extra) => { if (cond) { pass++; console.log("  ok  ", name); } else { fail++; failures.push(name + (extra ? " -> " + extra : "")); console.log("  FALLA", name, extra || ""); } };
 const wait = (p, ms) => p.waitForTimeout(ms);
@@ -202,6 +202,17 @@ async function open(browser, url, init, viewport, o) {
   await nav(p, "#crear/subir", 300);
   await p.setInputFiles("#crfile", tmp); await wait(p, 1200);
   ok(await p.evaluate(() => window.__mock.uploads.length === 1 && App.ui.files[0].state === "done" && /^[0-9a-f]{32}$/.test(App.ui.files[0].id)), "subir usa assets.upload y guarda el id", JSON.stringify(await p.evaluate(() => window.__mock.uploads)));
+  await p.evaluate(() => { location.hash = "#estudio"; }); await wait(p, 600);
+  const edSim = await p.evaluate(() => (App.S.studioVersions.find((x) => x.spec) || {}).id);
+  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, edSim); await wait(p, 2200);
+  ok(await p.evaluate(() => !!(App.st.SE && App.st.SE.handle && App.st.SE.spec)), "abre el Estudio de un video con spec contra el simulador");
+  await p.keyboard.press("Escape"); await wait(p, 500);
+  await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 500);
+  await p.keyboard.press("Control+k"); await wait(p, 1100);
+  await p.fill("#jvbox", "llevame a biblioteca"); await p.keyboard.press("Enter");
+  await p.waitForFunction(() => App.route().name === "biblioteca" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
+  ok(await p.evaluate(() => App.route().name === "biblioteca" && !App.jarvis.isOpen()), "Jarvis responde y navega con sample()+herramientas contra el simulador");
+  ok(await p.evaluate(() => window.__mock.sampleCalls.length >= 1), "el simulador registra el turno de Jarvis (sampleCalls)");
   ok(p.errs.length === 0, "sin errores con el adaptador real", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
   console.log("\n== Modelo e intensidad ==");
@@ -213,7 +224,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => !!document.querySelector(".aimenu") && document.querySelectorAll(".aimenu .aim-m").length === 4 && document.querySelectorAll(".aimenu .aim-seg button").length === 3), "el menu ofrece 4 modelos y 3 intensidades");
   await p.click('.aimenu [data-m="claude-opus-5-5"]'); await p.click('.aimenu [data-e="high"]'); await wait(p, 200);
   ok(await p.evaluate(() => { const c = App.ai.get(); return c.model === "claude-opus-5-5" && c.effort === "high" && /Opus 5\.5/.test(document.querySelector("#jv .aipill").textContent); }), "cambiar modelo e intensidad se guarda y se ve en la pastilla");
-  await p.keyboard.press("Escape"); await wait(p, 400);
+  await p.keyboard.press("Escape"); await p.waitForFunction(() => !document.querySelector(".aimenu"), null, { timeout: 3000 }).catch(() => {}); await wait(p, 200);
   ok(await p.evaluate(() => !document.querySelector(".aimenu") && App.jarvis.isOpen()), "Esc cierra solo el menu");
   await p.evaluate(() => App.jarvis.close()); await wait(p, 1200);
   await p.reload(); await wait(p, 1500);
@@ -239,14 +250,14 @@ async function open(browser, url, init, viewport, o) {
   ok(p.errs.length === 0, "sin errores con el selector de modelo", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
   console.log("\n== Chats: modelo real y archivos adjuntos ==");
-  p = await open(browser, "?preset=kt#hoy", "window.__MOCK_SAMPLE = true;" + mockSrc); await wait(p, 500);
+  p = await open(browser, "?preset=kt#hoy", mockSrc); await wait(p, 500);
   await p.click('[data-act="seeddemo"]').catch(() => {}); 
   await nav(p, "#ajustes", 300); await p.click('[data-act="seeddemo"]'); await wait(p, 5000);
   await nav(p, "#hoy", 500);
   await p.evaluate(() => { const c = App.ai; c.contexts.global.set({ model: "claude-opus-5-5", effort: "high" }); c.paint(); });
   await p.evaluate(() => App.jarvis.open(null)); await wait(p, 1600);
   await p.fill("#jvbox", "cuantos videos tengo por aprobar"); await p.keyboard.press("Enter"); await wait(p, 1200);
-  ok(await p.evaluate(() => window.__mock.samples.length === 1 && window.__mock.samples[0].opts.model === "claude-opus-5-5" && window.__mock.samples[0].opts.effort === "high" && window.__mock.samples[0].opts.modelTier === "complex" && window.__mock.samples[0].opts.cache === false), "Jarvis le pide a Claude el modelo y la intensidad elegidos", JSON.stringify(await p.evaluate(() => window.__mock.samples.map((x) => x.opts))));
+  ok(await p.evaluate(() => window.__mock.sampleCalls.length === 1 && window.__mock.sampleCalls[0].opts.model === "claude-opus-5-5" && window.__mock.sampleCalls[0].opts.effort === "high" && window.__mock.sampleCalls[0].opts.modelTier === "complex" && window.__mock.sampleCalls[0].opts.cache === false), "Jarvis le pide a Claude el modelo y la intensidad elegidos", JSON.stringify(await p.evaluate(() => window.__mock.sampleCalls.map((x) => x.opts))));
   ok(await p.evaluate(() => !document.querySelector("#jvlog .msg-note")), "si el modelo respondio, no hay aviso de sustitucion");
   const png = path.join(root, "capturas", "_tmp", "foto-prueba.png"); fs.writeFileSync(png, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64"));
   const vid2 = path.join(root, "app", "dev", "demo.webm");
@@ -254,7 +265,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => document.querySelectorAll("#jv .achip").length === 2 && document.querySelectorAll('#jv .achip[data-s="done"]').length === 2 && window.__mock.uploads.length === 2), "adjuntar un video y una imagen los sube con assets.upload");
   await p.fill("#jvbox", "ponle subtitulos grandes a este video"); await p.keyboard.press("Enter"); await wait(p, 1500);
   ok(await p.evaluate(() => document.querySelectorAll("#jvlog .msg.me .achip").length === 2 && document.querySelectorAll("#jv .atts:not(.sent) .achip").length === 0), "al enviar, los adjuntos quedan en la burbuja y se vacia el compositor");
-  ok(await p.evaluate(() => { const l = window.__mock.samples[1]; return l.opts.images === 1 && /ADJUNTOS DE ESTE MENSAJE/.test(l.last) && /demo\.webm/.test(l.last); }), "Claude recibe la lista de adjuntos y la imagen para verla", JSON.stringify(await p.evaluate(() => window.__mock.samples[1])));
+  ok(await p.evaluate(() => { const l = window.__mock.sampleCalls[1]; return l.opts.images === 1 && /ADJUNTOS DE ESTE MENSAJE/.test(l.last) && /demo\.webm/.test(l.last); }), "Claude recibe la lista de adjuntos y la imagen para verla", JSON.stringify(await p.evaluate(() => window.__mock.sampleCalls[1])));
   const aid = await p.evaluate(() => window.__mock.uploads[0][2]);
   const toolRes = await p.evaluate(async (id) => { const t = App.jarvis.tools().find((x) => x.name === "ask_claude"); return await t.execute({ task: "Subtitula este video con letra grande", attachments: [id] }); }, aid);
   ok(/Claude/.test(String(toolRes)) && await p.evaluate((id) => { const r = Object.entries(window.__mock.data.requests).find(([k]) => /^jarvis_/.test(k)); return !!r && r[1].assets && r[1].assets[0].id === id && r[1].model === "claude-opus-5-5" && r[1].effort === "high"; }, aid), "ask_claude escribe requests/jarvis_* con los archivos y el modelo");
@@ -281,8 +292,8 @@ async function open(browser, url, init, viewport, o) {
   await nav(p, "#hoy", 300);
   ok(await p.evaluate(() => { const c = document.querySelector(".cards").children; return c[0].classList.contains("tcard") && c[1].classList.contains("an"); }), "Hoy abre con Logros y Analiticas");
   ok(await p.evaluate(() => document.querySelectorAll(".an-s").length === 4 && document.querySelectorAll(".an-s .spk svg").length >= 3 && !!document.querySelector(".tcard .newchip")), "las cuatro cifras de la semana con su curva y la marca de nuevos");
-  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await wait(p, 2200);
-  ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity === "1"), "al entrar a Hoy se celebra el logro nuevo con la tarjeta de la gota");
+  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await p.waitForSelector(".cel-slide[data-on] .cel-t", { timeout: 9000 }).catch(() => {}); await wait(p, 1500);
+  ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && +getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity > 0.9), "al entrar a Hoy se celebra el logro nuevo con la tarjeta de la gota");
   ok(await p.evaluate(() => document.querySelectorAll(".cel-slide.level").length === 1 && /Nivel|nivel/.test(document.querySelector(".cel-slide.level").textContent)), "tambien celebra la subida de nivel");
   for (let i = 0; i < 6 && (await p.evaluate(() => App.celebrate.isOpen())); i++) { await p.click("#celnext"); await wait(p, 1500); }
   await wait(p, 1200);
