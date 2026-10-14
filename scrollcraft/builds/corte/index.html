@@ -53,7 +53,15 @@
     <span class="tc nums" data-tc>00:00:00:00</span>
     <span class="bar__grade" data-grade-label>Abrir el bin</span>
   </button>
-  <a class="btn btn--sm bar__cta" href="#precio" data-buy>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="bar__right">
+    <div class="bar__offer" data-offer-wrap>
+      <s class="was nums"><span class="sr">Precio regular </span>$497</s>
+      <b class="nums"><span class="sr">Precio de oferta </span>$67</b>
+      <span class="bar__chip" data-countdown="chip"></span>
+    </div>
+    <a class="btn btn--sm bar__cta" href="#precio" data-buy>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <div class="strip" data-offer-wrap><span data-countdown="chip"></span></div>
 </header>
 
 <dialog class="bin" id="bin" aria-labelledby="bin-title">
@@ -92,7 +100,7 @@
           <div class="hero__actions">
             <a class="btn" href="#precio" data-buy>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             <a class="link" href="#estilos">Ver los 16 estilos</a>
-            <p class="hero__note"><span class="nums">$67</span> una vez. Tuyo para siempre.</p>
+            <p class="hero__note"><s class="was nums"><span class="sr">Precio regular </span>$497</s> <span class="nums now"><span class="sr">Precio de oferta </span>$67</span> una vez. Tuyo para siempre.</p>
           </div>
         </div>
       </div>
@@ -132,7 +140,7 @@
               <h3><i class="tally" aria-hidden="true"></i>CORTE</h3>
               <p>Un solo pago. Después, solo el plan de Claude que quizá ya tienes (de $20 a $200 al mes).</p>
             </div>
-            <p class="ledger__cost"><span class="nums">$67</span><small>una vez</small></p>
+            <p class="ledger__cost"><s class="was nums"><span class="sr">Precio regular </span>$497</s><span class="nums"><span class="sr">Precio de oferta </span>$67</span><small>una vez</small></p>
           </li>
         </ol>
 
@@ -152,7 +160,7 @@
           <div class="year__row year__row--pack" style="--v:0.0056">
             <span class="year__label">CORTE, un solo pago</span>
             <span class="year__track"><i></i></span>
-            <span class="year__value nums">$67</span>
+            <span class="year__value nums"><s class="was"><span class="sr">Precio regular </span>$497</s> <span class="sr">Precio de oferta </span>$67</span>
           </div>
           <div class="year__base" data-anchor="costo" aria-hidden="true"></div>
           <p class="footnote">El total del pack no incluye tu plan de Claude ni la transcripción de pago. Precios de lista mensuales de cada app publicados en octubre de 2026; cambian seguido. El rango del editor es un pago típico de freelance. Revisa cada proveedor.</p>
@@ -325,10 +333,18 @@
           <p class="label">Precio de lanzamiento</p>
           <h2 class="h2" id="precio-title" data-trat>Un solo pago. <em>Tuyo para siempre.</em></h2>
           <p class="lede">Pago único, sin suscripción. Te ahorra el uso y los créditos de construir un estilo desde cero.</p>
+          <div class="precio__timer"><div data-countdown="big"></div></div>
         </div>
         <div class="export" data-sc-in>
           <p class="export__head"><span>Pack completo</span><span class="nums">16 + 2</span></p>
-          <p class="export__price"><span class="export__cur">$</span><span class="nums">67</span><span class="export__unit">USD<br>una vez</span></p>
+          <div class="export__row">
+            <p class="export__was">
+              <s class="was nums"><span class="sr">Precio regular </span>$497</s>
+              <span class="export__was2"><span>o </span><s class="was nums">$16</s><span> al mes</span></span>
+            </p>
+            <p class="export__price"><span class="sr">Precio de oferta </span><span class="export__cur">$</span><span class="nums">67</span><span class="export__unit">USD<br>una vez</span></p>
+          </div>
+          <p class="export__save"><span class="nums">Ahorras $430</span> en el precio de lanzamiento</p>
           <dl class="export__spec">
             <div><dt>Estilos de edición</dt><dd class="nums">16</dd></div>
             <div><dt>Herramientas</dt><dd>Biblioteca de B-roll y video a texto</dd></div>
@@ -375,6 +391,7 @@
       <div class="cierre__copy">
         <h2 class="h2 h2--xl" id="cierre-title" data-trat data-sc-cue="0 1 0 0">Tu próximo video. <em>Un mejor punto de partida.</em></h2>
         <p class="lede" data-sc-cue="0.06">16 estilos probados. Tu material. Tu dirección.</p>
+        <p class="cierre__price" data-sc-cue="0.07"><s class="was nums"><span class="sr">Precio regular </span>$497</s> <b class="nums"><span class="sr">Precio de oferta </span>$67</b> <span>una vez</span><span class="cierre__timer" data-offer-wrap><span class="cierre__dot" aria-hidden="true"></span><span data-countdown="line"></span></span></p>
         <p class="cierre__grade" data-sc-cue="0.08">Estilo en el monitor: <strong data-close-name>Subtítulo ajustado</strong> · <a href="#estilos">cambiar</a></p>
         <a class="btn btn--lg" href="#precio" data-buy data-sc-cue="0.1" data-sc-rise="0" data-sc-magnet="0.22">Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
