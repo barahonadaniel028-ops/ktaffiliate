@@ -3,6 +3,8 @@
   "private": true,
   "description": "Verification tooling for the CORTE landing page",
   "devDependencies": {
-    "playwright-core": "^1.56.1"
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.56.1",
+    "three": "^0.160.0"
   }
 }

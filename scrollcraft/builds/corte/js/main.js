@@ -18,8 +18,16 @@ const phoneMQ = matchMedia('(max-width: 860px)');
 const coarse = matchMedia('(hover: none) and (pointer: coarse)').matches;
 const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
 const mobile = () => phoneMQ.matches || coarse;
+// Canvas backing stores and redraw rates are capped on phones: a 3x screen
+// would otherwise paint nine pixels for every one the eye can use.
+const dprCap = () => (mobile() ? 1.5 : 2);
+const animGap = () => (mobile() ? 42 : 0);
 
 const $ = (s, el = document) => el.querySelector(s);
+// <dialog> reached phones late (iOS 15.4). Without showModal the panel opens
+// as a plain fixed box instead of throwing and killing the button.
+function openDlg(d) { if (typeof d.showModal === 'function') { try { d.showModal(); return; } catch (e) { /* already open */ } } d.setAttribute('open', ''); }
+function closeDlg(d) { if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); }
 const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const easeOut = (x) => 1 - Math.pow(1 - clamp01(x), 3);
@@ -103,6 +111,8 @@ const gradeLabel = $('[data-grade-label]');
 const lineA = $('.hero__line--a');
 const heroStage = $('.hero__stage');
 
+addEventListener('keydown', (e) => { if (e.key === 'Escape') $$('dialog[open]').forEach(closeDlg); });
+
 // --------------------------------------------------------------- slate --
 function runSlate() {
   if (!root.classList.contains('slate-on')) {
@@ -169,7 +179,7 @@ function buildBin() {
     a.querySelector('.nm').textContent = sec.dataset.clip;
     a.addEventListener('click', (e) => {
       e.preventDefault();
-      binDlg.close();
+      closeDlg(binDlg);
       jumpTo(sec.getBoundingClientRect().top + scrollY + 2);
     });
     li.appendChild(a); binList.appendChild(li);
@@ -180,10 +190,10 @@ $('[data-open-bin]').addEventListener('click', () => {
   buildBin();
   const cur = currentSection();
   $$('a', binList).forEach((a) => a.setAttribute('aria-current', a.hash === '#' + cur ? 'true' : 'false'));
-  binDlg.showModal();
+  openDlg(binDlg);
 });
-$('[data-close-bin]').addEventListener('click', () => binDlg.close());
-binDlg.addEventListener('click', (e) => { if (e.target === binDlg) binDlg.close(); });
+$('[data-close-bin]').addEventListener('click', () => closeDlg(binDlg));
+binDlg.addEventListener('click', (e) => { if (e.target === binDlg) closeDlg(binDlg); });
 function currentSection() {
   const mid = innerHeight * 0.5;
   let id = clipSecs[0].id;
@@ -227,7 +237,7 @@ function showSample(videoEl, s) {
 function drawThumbs() {
   clips.forEach((btn) => {
     const cv = btn.querySelector('canvas');
-    fit(cv, 2);
+    fit(cv, dprCap());
     const s = byId[btn.dataset.style];
     drawFrame(cv, s, s.thumb);
   });
@@ -276,7 +286,7 @@ function setActive(id) {
   applyBtn.classList.toggle('is-on', root.dataset.estilo === id);
   applyBtn.textContent = root.dataset.estilo === id ? 'Aplicado a la página' : 'Aplicar a toda la página';
   monStart = performance.now();
-  requestAnimationFrame(() => fit(monCanvas, 2));
+  requestAnimationFrame(() => fit(monCanvas, dprCap()));
 }
 
 function railCenterP(btn) {
@@ -315,7 +325,7 @@ function buildAll() {
     b.querySelector('b').textContent = s.name;
     b.querySelector('small').textContent = s.line;
     b.addEventListener('click', () => {
-      allDlg.close();
+      closeDlg(allDlg);
       setActive(s.id); applyGrade(s.id);
       const btn = clips.find((c) => c.dataset.style === s.id);
       if (btn) scrollToClip(btn);
@@ -330,14 +340,14 @@ function buildAll() {
 }
 $('[data-open-all]').addEventListener('click', () => {
   buildAll();
-  allDlg.showModal();
+  openDlg(allDlg);
   $$('.all__item', allGrid).forEach((b) => {
-    const cv = b.querySelector('canvas'); fit(cv, 2); drawFrame(cv, byId[b.dataset.style], byId[b.dataset.style].thumb);
+    const cv = b.querySelector('canvas'); fit(cv, dprCap()); drawFrame(cv, byId[b.dataset.style], byId[b.dataset.style].thumb);
     b.setAttribute('aria-pressed', root.dataset.estilo === b.dataset.style ? 'true' : 'false');
   });
 });
-$('[data-close-all]').addEventListener('click', () => allDlg.close());
-allDlg.addEventListener('click', (e) => { if (e.target === allDlg) allDlg.close(); });
+$('[data-close-all]').addEventListener('click', () => closeDlg(allDlg));
+allDlg.addEventListener('click', (e) => { if (e.target === allDlg) closeDlg(allDlg); });
 
 // ---------------------------------------------------------------- close --
 const closeCanvas = $('[data-close-canvas]');
@@ -429,8 +439,8 @@ function measure() {
   $('.hero__tag').style.top = razorY + 'px';
   padRail();
   drawThumbs();
-  fit(monCanvas, 2);
-  fit(closeCanvas, 2);
+  fit(monCanvas, dprCap());
+  fit(closeCanvas, dprCap());
 }
 
 // ------------------------------------------------------------------ loop --
@@ -439,7 +449,7 @@ const sheetEl = $('[data-sheet]');
 const flashEl = $('.fx-flash');
 const estStage = $('.estilos__stage');
 let lastComoTop = Infinity, flashCool = 0;
-let lastReel = 0;
+let lastReel = 0, lastMon = 0, lastClose = 0;
 const heroAnchor = $('.hero__anchor');
 const costoAnchor = $('[data-anchor="costo"]');
 const trackEl = $('.track');
@@ -487,7 +497,7 @@ function loop(now) {
     const s = byId[active];
     const t = (now - monStart) / 1000;
     if (showSample(monVideo, s)) { /* the real sample is playing */ }
-    else if (!reduce) drawFrame(monCanvas, s, t);
+    else if (!reduce) { if (now - lastMon >= animGap()) { lastMon = now; drawFrame(monCanvas, s, t); } }
     else if (monCanvas.dataset.drawn !== active) { drawFrame(monCanvas, s, s.thumb); monCanvas.dataset.drawn = active; }
     monTc.textContent = '00:00:' + String(Math.floor(t % s.dur)).padStart(2, '0') + ':' + String(Math.floor(((t % s.dur) % 1) * 24)).padStart(2, '0');
     // whip out: in the last stretch of the pin the frame is thrown left
@@ -526,7 +536,7 @@ function loop(now) {
   if (ciCover > 0) {
     const s = byId[closeStyle] || byId[CONFIG.defaultClose];
     if (showSample(closeVideo, s)) { /* real sample */ }
-    else if (!reduce) drawFrame(closeCanvas, s, now / 1000);
+    else if (!reduce) { if (now - lastClose >= animGap()) { lastClose = now; drawFrame(closeCanvas, s, now / 1000); } }
     else if (closeCanvas.dataset.drawn !== s.id) { drawFrame(closeCanvas, s, s.thumb); closeCanvas.dataset.drawn = s.id; }
     const cp = A.cierre ? A.cierre.p : 0;
     renderLabel.textContent = cp >= 0.5 ? 'Listo para publicar' : 'Renderizando';
@@ -534,7 +544,7 @@ function loop(now) {
 
   // hero reels: their animatics play only while the hero is on screen
   const heroCover = cover(S.hero, vh);
-  if (glReady && heroCover > 0 && now - lastReel > 33) {
+  if (glReady && heroCover > 0 && now - lastReel > (mobile() ? 66 : 33)) {
     lastReel = now;
     reelCanvases.forEach((c, i) => drawFrame(c, byId[HERO_STYLES[i]], reduce ? byId[HERO_STYLES[i]].thumb : now / 1000 + i * 1.7));
   }

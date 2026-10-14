@@ -12,6 +12,7 @@
 <meta property="og:image" content="assets/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230B0C0E'/><rect x='7' y='7' width='7' height='7' fill='%23FF4A1C'/><rect x='7' y='17' width='18' height='2' fill='%23EEEAE2'/><rect x='7' y='22' width='12' height='2' fill='%23EEEAE2'/></svg>">
+<script src="js/diag.js"></script>
 <link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="scrollcraft.css">
@@ -73,6 +74,7 @@
     <button class="bin__close" type="button" data-close-bin aria-label="Cerrar el bin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
   <ol class="bin__list" data-bin-list></ol>
+  <p class="bin__foot"><button class="link link--btn" type="button" data-diag-toggle>Diagnóstico del dispositivo</button></p>
 </dialog>
 
 <dialog class="all" id="todos" aria-labelledby="todos-title">
