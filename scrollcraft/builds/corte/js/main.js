@@ -16,7 +16,9 @@ const CONFIG = {
   // The launch offer ends here (ISO 8601 with a time zone). A real deadline,
   // never reset by the page. Empty hides the timer everywhere; once the date
   // passes, the page says the offer ended.
-  offerEndsAt: '2026-10-21T23:59:59-05:00'
+  offerEndsAt: '2026-10-15T17:40:00Z',
+  // Length of the offer in hours: the inner ring of the dial shows what is left of it.
+  offerWindowHours: 24
 };
 
 const root = document.documentElement;
@@ -118,7 +120,7 @@ const A = { hero: actOf(S.hero), estilos: actOf(S.estilos), cierre: actOf(S.cier
 // ground colour that follows the scroll.
 const camera = createCamera(S.camara);
 const ground = createGround({ ids: ['inicio', 'costo', 'estilos', 'tuyos', 'camara', 'como', 'porque', 'necesitas', 'precio', 'faq', 'cierre'], reduce });
-initCountdowns({ endsAt: CONFIG.offerEndsAt, reduce, root: document });
+initCountdowns({ endsAt: CONFIG.offerEndsAt, reduce, root: document, windowHours: CONFIG.offerWindowHours });
 const bar = $('[data-bar]');
 const tcEl = $('[data-tc]');
 const gradeLabel = $('[data-grade-label]');
