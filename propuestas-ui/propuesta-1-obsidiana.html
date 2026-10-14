@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Propuesta 1 · Obsidiana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Montserrat:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/phone.css">
+<style>
+/* Obsidiana: un centro de mando oscuro y silencioso. Una sola luz (lima) para lo que se toca y lo que sube.
+   Todo cabe en una pantalla y todo se puede hacer con el teclado. */
+:root {
+  --canvas: #09090b; --surface: #111114; --raised: #18181c; --sunk: #0c0c0e;
+  --hair: rgba(255,255,255,.07); --hair2: rgba(255,255,255,.11); --edge: rgba(255,255,255,.06);
+  --ink: #ededf0; --ink2: #a3a3ad; --ink3: #6c6c78;
+  --accent: #d4ff3f; --accent-ink: #0d1003; --accent-soft: rgba(212,255,63,.1);
+  --down: #ff6b6b; --down-soft: rgba(255,107,107,.1); --warn: #f2c14e; --warn-soft: rgba(242,193,78,.1);
+  --es: #ff8a3d; --en: #6e9bff;
+  --r: 10px; --r-lg: 14px;
+  --font: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+  --e2: 0 1px 0 var(--edge) inset, 0 12px 32px -12px rgba(0,0,0,.6);
+}
+* { box-sizing: border-box; margin: 0; }
+ul, ol { padding: 0; }
+body { background: #050506; color: var(--ink); font: 400 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; padding: 40px; display: grid; gap: 40px; justify-content: center; }
+.ic { width: 16px; height: 16px; flex: none; }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.mono { font-family: var(--mono); }
+kbd { font: 500 11px/1 var(--mono); color: var(--ink2); border: 1px solid var(--hair2); border-bottom-width: 2px; border-radius: 5px; padding: 3px 5px; background: var(--raised); }
+.board { position: relative; width: 1440px; background: var(--canvas); overflow: hidden; border-radius: 18px; box-shadow: 0 0 0 1px var(--hair); }
+.board::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .045; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; background: var(--c, var(--ink3)); }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 9px; font: 500 13.5px/1 var(--font); color: var(--ink); background: var(--raised); border: 1px solid var(--hair2); white-space: nowrap; box-shadow: 0 1px 0 var(--edge) inset; }
+.btn.pri { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 6px 18px -8px rgba(212,255,63,.45); }
+.btn.pri kbd { background: rgba(0,0,0,.12); border-color: rgba(0,0,0,.18); color: var(--accent-ink); }
+.btn.ghost { background: transparent; box-shadow: none; }
+.up { color: var(--accent); } .dn { color: var(--down); }
+.delta { display: inline-flex; align-items: center; gap: 3px; font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; }
+.delta.up { background: var(--accent-soft); } .delta.dn { background: var(--down-soft); }
+.label { font: 500 12px/1.2 var(--font); color: var(--ink3); }
+h2.sec { font: 600 15px/1.2 var(--font); letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+h2.sec small { font: 400 13px/1 var(--font); color: var(--ink3); margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+
+/* ===== HOME ===== */
+#home { display: grid; grid-template-columns: 248px 1fr; }
+.side { border-right: 1px solid var(--hair); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; background: linear-gradient(180deg, #0b0b0d, #09090b); }
+.ws { display: flex; align-items: center; gap: 10px; padding: 4px 6px; }
+.logo { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: linear-gradient(160deg, #26262c, #141417); box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 0 0 1px var(--hair2); font: 700 12px/1 var(--font); letter-spacing: -.02em; }
+.ws b { font-weight: 600; font-size: 14px; } .ws small { display: block; color: var(--ink3); font-size: 12px; line-height: 1.2; }
+.ws .ic { margin-left: auto; color: var(--ink3); }
+.search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 9px; background: var(--surface); border: 1px solid var(--hair); color: var(--ink3); font-size: 13.5px; }
+.search kbd { margin-left: auto; }
+.nav { display: grid; gap: 2px; }
+.nav p { font: 500 11.5px/1 var(--font); color: var(--ink3); padding: 0 10px 8px; }
+.nav a { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px; color: var(--ink2); font-weight: 500; font-size: 14px; }
+.nav a .ic { color: var(--ink3); }
+.nav a b { margin-left: auto; font: 500 12px/1 var(--mono); color: var(--ink3); }
+.nav a.on { background: var(--raised); color: var(--ink); box-shadow: 0 1px 0 var(--edge) inset, 0 0 0 1px var(--hair); }
+.nav a.on .ic { color: var(--accent); }
+.nav a b.hot { color: var(--accent-ink); background: var(--accent); padding: 3px 6px; border-radius: 6px; }
+.jv { margin-top: auto; border-radius: 14px; padding: 14px; background: radial-gradient(120% 90% at 0% 0%, rgba(212,255,63,.09), transparent 60%), var(--surface); border: 1px solid var(--hair2); display: grid; gap: 10px; box-shadow: var(--e2); }
+.jv-h { display: flex; align-items: center; gap: 10px; }
+.orb { width: 30px; height: 30px; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 30%, #f4ffd0, #d4ff3f 30%, #5d7a12 70%, #1b2405); box-shadow: 0 0 0 4px rgba(212,255,63,.08), 0 6px 14px -4px rgba(212,255,63,.4); }
+.jv-h b { font-weight: 600; } .jv-h small { display: block; color: var(--ink3); font-size: 12px; line-height: 1.2; }
+.jv-in { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 10px; border-radius: 9px; background: var(--sunk); border: 1px solid var(--hair); color: var(--ink3); font-size: 13px; }
+.jv-in .mic { margin-left: auto; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: var(--raised); color: var(--ink2); }
+.jv-in .mic .ic { width: 14px; height: 14px; }
+.me { display: flex; align-items: center; gap: 10px; padding: 6px; }
+.av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(140deg, #ff8a3d, #b0386b); font: 600 13px/1 var(--font); color: #fff; flex: none; }
+.me b { font-weight: 500; font-size: 13.5px; } .me small { display: flex; align-items: center; gap: 6px; color: var(--ink3); font-size: 12px; line-height: 1.2; }
+.me small i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+.main { padding: 0 44px 48px; display: grid; align-content: start; gap: 30px; }
+.top { height: 64px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--hair); margin: 0 -44px; padding: 0 44px; }
+.crumb { display: flex; align-items: center; gap: 8px; color: var(--ink3); font-size: 13.5px; } .crumb b { color: var(--ink); font-weight: 500; }
+.top .sp { flex: 1; }
+.sync { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink2); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--hair); }
+.sync i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(212,255,63,.15); }
+.ibtn { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--ink2); border: 1px solid var(--hair); position: relative; }
+.ibtn .badge { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--down); box-shadow: 0 0 0 2px var(--canvas); }
+
+.hello { display: flex; align-items: flex-end; gap: 24px; padding-top: 14px; }
+.hello h1 { font: 600 36px/1.05 var(--font); letter-spacing: -.035em; }
+.hello p { margin-top: 10px; color: var(--ink2); font-size: 16px; }
+.hello p b { color: var(--ink); font-weight: 500; }
+.hello .when { margin-left: auto; text-align: right; color: var(--ink3); font-size: 13px; line-height: 1.5; }
+.hello .when b { display: block; font: 500 28px/1 var(--mono); color: var(--ink); letter-spacing: -.03em; }
+
+.now { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hair); box-shadow: var(--e2); overflow: hidden; }
+.now-h { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--hair); }
+.now-h h2 { font: 600 14px/1 var(--font); } .now-h span { color: var(--ink3); font-size: 13px; } .now-h .r { margin-left: auto; display: flex; gap: 6px; align-items: center; color: var(--ink3); font-size: 12.5px; }
+.task { display: grid; grid-template-columns: 30px minmax(0,1fr) auto auto; gap: 18px; align-items: center; padding: 18px; border-top: 1px solid var(--hair); }
+.task:first-of-type { border-top: 0; }
+.task.lead { background: linear-gradient(90deg, rgba(212,255,63,.05), transparent 55%); }
+.pri-i { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--c-soft); color: var(--c); }
+.task h3 { font: 600 15.5px/1.3 var(--font); letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+.task h3 em { font: 500 11px/1 var(--mono); font-style: normal; padding: 4px 6px; border-radius: 5px; color: var(--c); background: var(--c-soft); }
+.task p { color: var(--ink2); font-size: 13.5px; margin-top: 3px; }
+.stack { display: flex; }
+.stack .fr { width: 34px; height: 60px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 2px var(--surface), 0 6px 14px -6px #000; margin-left: -12px; }
+.stack .fr:first-child { margin-left: 0; } .fr svg { width: 100%; height: 100%; display: block; }
+.stack .more { width: 34px; height: 60px; border-radius: 6px; margin-left: -12px; display: grid; place-items: center; background: var(--raised); box-shadow: 0 0 0 2px var(--surface); font: 500 11px/1 var(--mono); color: var(--ink2); }
+
+.kpis { display: grid; grid-template-columns: 1.25fr 1fr 1fr 1fr; border: 1px solid var(--hair); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }
+.kpi { padding: 18px 20px 0; border-left: 1px solid var(--hair); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.kpi:first-child { border-left: 0; background: radial-gradient(90% 120% at 0% 0%, rgba(212,255,63,.07), transparent 60%); }
+.kpi .label { display: flex; align-items: center; gap: 6px; }
+.kpi .v { display: flex; align-items: baseline; gap: 10px; }
+.kpi .v b { font: 600 34px/1.1 var(--font); letter-spacing: -.04em; }
+.kpi .v b sup { font-size: 18px; vertical-align: 12px; margin-right: 1px; color: var(--ink2); font-weight: 500; }
+.kpi small { color: var(--ink3); font-size: 12.5px; }
+.kpi small b { color: var(--ink2); font-weight: 500; }
+.kpi .sp { height: 46px; margin: 4px -20px 0; color: var(--ink3); }
+.kpi:first-child .sp { color: var(--accent); }
+.kpi .sp svg { width: 100%; height: 100%; display: block; }
+.goal { height: 4px; border-radius: 2px; background: var(--hair2); overflow: hidden; margin-top: 4px; } .goal i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+
+.cols { display: grid; grid-template-columns: minmax(0,1.62fr) minmax(0,1fr); gap: 20px; }
+.panel { border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--hair); padding: 18px 20px; display: grid; gap: 16px; align-content: start; box-shadow: 0 1px 0 var(--edge) inset; min-width: 0; }
+
+/* calendario de contenido */
+.cal { display: grid; grid-template-columns: 112px repeat(14, minmax(0,1fr)); row-gap: 8px; column-gap: 4px; align-items: center; }
+.cal .dh { text-align: center; font: 500 11px/1.25 var(--mono); color: var(--ink3); padding-bottom: 4px; }
+.cal .dh b { display: block; font: 500 13px/1.3 var(--font); color: var(--ink2); }
+.cal .dh.today b { color: var(--accent); }
+.cal .rl { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 13.5px; }
+.cal .rl small { display: block; color: var(--ink3); font-size: 11.5px; font-weight: 400; }
+.cell { height: 54px; border-radius: 8px; background: var(--raised); border: 1px solid var(--hair); display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; padding: 5px; }
+.cell i { height: 6px; border-radius: 3px; background: var(--c); opacity: .9; }
+.cell i.ok { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); opacity: .9; }
+.cell.empty { background: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(255,107,107,.08) 5px 6px); border: 1px dashed rgba(255,107,107,.35); }
+.cell.empty.soft { background: transparent; border: 1px dashed var(--hair2); }
+.cal-l { display: flex; gap: 18px; color: var(--ink3); font-size: 12.5px; align-items: center; }
+.cal-l span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-l i { width: 14px; height: 6px; border-radius: 3px; background: var(--ink2); } .cal-l i.ok { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink2); }
+.cal-l i.no { height: 10px; width: 14px; border: 1px dashed rgba(255,107,107,.6); background: transparent; border-radius: 3px; }
+.alert { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: var(--down-soft); color: #ffc9c9; font-size: 13.5px; }
+.alert .ic { color: var(--down); } .alert b { color: #fff; font-weight: 600; } .alert .btn { margin-left: auto; height: 30px; }
+
+.upn { display: grid; gap: 0; }
+.upn-h { display: flex; justify-content: space-between; padding-bottom: 8px; }
+.upr { display: grid; grid-template-columns: 26px 1fr auto; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--hair); }
+.upr .fr { width: 26px; height: 46px; border-radius: 5px; overflow: hidden; }
+.upr b { font-weight: 500; font-size: 13.5px; display: block; } .upr small { display: flex; align-items: center; gap: 6px; color: var(--ink3); font-size: 12px; margin-top: 2px; } .upr small .dot { width: 6px; height: 6px; }
+.when2 { text-align: right; font: 500 12px/1.3 var(--mono); color: var(--ink3); } .when2 b { display: block; font: 500 13px/1.3 var(--font); color: var(--ink); }
+/* ventas */
+.money-big { display: flex; align-items: baseline; gap: 12px; }
+.money-big b { font: 600 44px/1 var(--font); letter-spacing: -.045em; }
+.money-big b span { color: var(--ink3); }
+.fresh { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--mono); color: var(--accent); padding: 4px 7px; border-radius: 6px; background: var(--accent-soft); }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+.trio div { padding: 12px 0; } .trio div + div { padding-left: 14px; border-left: 1px solid var(--hair); }
+.trio b { display: block; font: 600 17px/1.2 var(--font); letter-spacing: -.02em; margin-top: 4px; }
+.bars { height: 64px; color: var(--ink3); } .bars svg { width: 100%; height: 100%; display: block; } .bars rect { fill: #2c2c33; } .bars rect.hi { fill: var(--accent); }
+.feed { display: grid; gap: 0; }
+.feed li { list-style: none; display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--hair); }
+.feed li:first-child { border-top: 0; }
+.pf { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--raised); border: 1px solid var(--hair); font: 600 12px/1 var(--font); color: var(--ink2); }
+.feed b { font-weight: 500; } .feed small { display: block; color: var(--ink3); font-size: 12.5px; }
+.feed strong { font: 600 14px/1 var(--mono); color: var(--accent); }
+.new { font: 500 10.5px/1 var(--mono); color: var(--accent-ink); background: var(--accent); padding: 3px 5px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; }
+
+/* cuentas */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font: 500 12px/1 var(--font); color: var(--ink3); padding: 0 12px 12px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+th:first-child, td:first-child { padding-left: 0; } th.n, td.n { text-align: right; }
+td { padding: 14px 12px; border-bottom: 1px solid var(--hair); vertical-align: middle; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.acc { display: flex; align-items: center; gap: 12px; }
+.acc .avb { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 700 12px/1 var(--font); color: #111; background: var(--c); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--c); }
+.acc b { font-weight: 600; font-size: 14.5px; } .acc small { display: block; color: var(--ink3); font-size: 12.5px; }
+td .big { font: 600 20px/1 var(--font); letter-spacing: -.03em; display: block; }
+td .sub { font-size: 12px; color: var(--ink3); margin-top: 6px; display: block; }
+td .mini { width: 170px; height: 34px; } td .mini svg { width: 100%; height: 100%; display: block; }
+.best { display: flex; align-items: center; gap: 10px; max-width: 260px; } .best .fr { width: 26px; height: 46px; border-radius: 5px; overflow: hidden; flex: none; }
+.best b { font-weight: 500; font-size: 13px; white-space: normal; line-height: 1.3; display: block; } .best small { color: var(--ink3); font-size: 12px; }
+.insight { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: var(--sunk); border: 1px solid var(--hair); color: var(--ink2); font-size: 13.5px; }
+.insight .orb { width: 22px; height: 22px; box-shadow: none; } .insight b { color: var(--ink); font-weight: 500; }
+.insight .btn { margin-left: auto; height: 30px; flex: none; }
+
+/* nivel */
+.lvl { display: flex; gap: 18px; align-items: center; }
+.ringw { position: relative; width: 104px; height: 104px; flex: none; }
+.ringw svg { width: 100%; height: 100%; display: block; } .ring-trk { stroke: var(--hair2); } .ring-val { stroke: var(--accent); }
+.ringw .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ringw .in b { font: 600 30px/1 var(--font); letter-spacing: -.04em; } .ringw .in small { font: 500 10.5px/1.4 var(--mono); color: var(--ink3); }
+.lvl h3 { font: 600 18px/1.2 var(--font); letter-spacing: -.02em; } .lvl p { color: var(--ink2); font-size: 13px; margin-top: 4px; }
+.lvl .xp { font: 500 12px/1 var(--mono); color: var(--ink3); margin-top: 10px; display: block; }
+.near { display: grid; gap: 12px; }
+.near li { list-style: none; display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 12px; align-items: center; }
+.medal { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: var(--m); background: color-mix(in srgb, var(--m) 14%, transparent); grid-row: span 2; }
+.medal .ic { width: 15px; height: 15px; }
+.near b { font-weight: 500; font-size: 13.5px; } .near span { font: 500 12px/1 var(--mono); color: var(--ink2); text-align: right; }
+.near .pb { grid-column: 2 / 4; height: 4px; border-radius: 2px; background: var(--hair2); } .near .pb i { display: block; height: 100%; border-radius: 2px; background: var(--m); }
+
+.four { display: grid; grid-template-columns: 1.25fr 1fr 1fr 1fr; gap: 20px; }
+.four .lvl { flex-direction: column; align-items: flex-start; gap: 12px; } .four .lvl .ringw { width: 84px; height: 84px; } .four .lvl .ringw .in b { font-size: 26px; }
+.lvlrow { display: flex; gap: 14px; align-items: center; }
+.mp { display: grid; gap: 12px; }
+.mp li { list-style: none; display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; font-size: 13.5px; color: var(--ink2); }
+.mp li b { font: 600 14px/1 var(--mono); color: var(--ink); } .mp li b.dn { color: var(--down); }
+.mp li .pb { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; } .mp li .pb i { height: 6px; border-radius: 2px; background: var(--hair2); } .mp li .pb i.f { background: var(--ink2); } .mp li .pb i.w { background: var(--down); opacity: .7; }
+.lab-th { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.lab-th div { aspect-ratio: 9/16; border-radius: 7px; overflow: hidden; position: relative; }
+.lab-th div em { position: absolute; left: 5px; bottom: 5px; font: 500 10px/1 var(--mono); font-style: normal; padding: 3px 5px; border-radius: 4px; background: rgba(0,0,0,.65); color: #fff; }
+.lab-th div em.k { background: var(--accent); color: var(--accent-ink); }
+.progress { display: flex; align-items: center; gap: 10px; font: 500 12px/1 var(--mono); color: var(--ink3); } .progress .goal { flex: 1; margin: 0; }
+.fbq { padding: 14px; border-radius: 10px; background: var(--sunk); border: 1px solid var(--hair); display: grid; gap: 10px; }
+.fbq p { font-size: 14px; color: var(--ink); line-height: 1.45; }
+.fbq .st { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink3); }
+.chip { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font: 500 11.5px/1 var(--mono); padding: 5px 8px; border-radius: 6px; color: var(--warn); background: var(--warn-soft); }
+.fb-in { height: 38px; border-radius: 9px; border: 1px dashed var(--hair2); display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--ink3); font-size: 13.5px; }
+
+/* ===== TRIAGE ===== */
+#review { height: 940px; display: grid; grid-template-rows: 60px 1fr 84px; }
+.rv-top { display: flex; align-items: center; gap: 14px; padding: 0 22px; border-bottom: 1px solid var(--hair); }
+.rv-top .back { display: inline-flex; align-items: center; gap: 6px; color: var(--ink2); font-size: 13.5px; }
+.rv-top h1 { font: 600 15px/1 var(--font); display: flex; align-items: center; gap: 10px; }
+.pbar { display: flex; align-items: center; gap: 12px; margin-left: 28px; font: 500 12.5px/1 var(--mono); color: var(--ink2); }
+.pbar .goal { width: 220px; margin: 0; }
+.rv-top .r { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--ink3); font-size: 12.5px; }
+.seg { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--surface); border: 1px solid var(--hair); }
+.seg span { padding: 6px 10px; border-radius: 7px; font-size: 12.5px; color: var(--ink2); font-weight: 500; } .seg span.on { background: var(--raised); color: var(--ink); box-shadow: 0 1px 0 var(--edge) inset, 0 0 0 1px var(--hair); }
+.rv-body { display: grid; grid-template-columns: 320px 1fr 392px; min-height: 0; }
+.queue { border-right: 1px solid var(--hair); padding: 14px 12px; display: grid; align-content: start; gap: 6px; overflow: hidden; }
+.queue .qh { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 6px; color: var(--ink3); font-size: 12.5px; }
+.qi { display: grid; grid-template-columns: 38px 1fr; gap: 12px; padding: 10px; border-radius: 10px; border: 1px solid transparent; }
+.qi.on { background: var(--raised); border-color: var(--hair2); box-shadow: 0 1px 0 var(--edge) inset; }
+.qi .fr { width: 38px; height: 68px; border-radius: 6px; overflow: hidden; }
+.qi b { font-weight: 500; font-size: 13.5px; line-height: 1.3; display: block; }
+.qi .vs { display: flex; gap: 4px; margin-top: 8px; align-items: center; }
+.vchip { font: 500 10.5px/1 var(--mono); padding: 4px 5px; border-radius: 5px; color: var(--ink3); border: 1px solid var(--hair2); }
+.vchip.k { color: var(--accent); border-color: rgba(212,255,63,.4); background: var(--accent-soft); }
+.vchip.d { color: var(--down); border-color: rgba(255,107,107,.35); background: var(--down-soft); }
+.vchip.m { color: var(--warn); border-color: rgba(242,193,78,.35); background: var(--warn-soft); }
+.vchip.cur { color: var(--ink); border-color: var(--ink2); }
+.qi .sc { margin-left: auto; font: 600 11px/1 var(--mono); }
+.qi.done { opacity: .5; }
+.stage { display: grid; grid-template-rows: auto 1fr auto; padding: 18px 28px 16px; gap: 14px; min-width: 0; background: radial-gradient(60% 50% at 50% 45%, rgba(255,184,119,.06), transparent 70%); }
+.vtabs { display: flex; justify-content: center; gap: 8px; }
+.vt { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--hair); background: var(--surface); font-size: 13px; color: var(--ink2); }
+.vt b { font: 600 12px/1 var(--mono); color: var(--ink); } .vt em { font: 600 11px/1 var(--mono); font-style: normal; color: var(--sc); }
+.vt.on { border-color: var(--ink2); background: var(--raised); color: var(--ink); box-shadow: var(--e2); }
+.player { position: relative; justify-self: center; height: 100%; aspect-ratio: 9/16; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px -24px rgba(0,0,0,.85), 0 0 0 1px var(--hair2); }
+.player .fr { position: absolute; inset: 0; } .player .fr svg { width: 100%; height: 100%; }
+.safe { position: absolute; inset: 12% 15% 22% 7%; border: 1.5px dashed rgba(255,255,255,.55); border-radius: 6px; }
+.safe span { position: absolute; top: 6px; left: 8px; font: 600 10px/1 var(--mono); letter-spacing: .06em; color: rgba(255,255,255,.85); }
+.ig-r { position: absolute; right: 10px; bottom: 26%; display: grid; gap: 16px; color: rgba(255,255,255,.75); } .ig-r .ic { width: 20px; height: 20px; }
+.ig-b { position: absolute; left: 12px; right: 60px; bottom: 9%; display: grid; gap: 6px; color: rgba(255,255,255,.8); font-size: 11px; }
+.ig-b b { display: flex; align-items: center; gap: 6px; font-weight: 600; } .ig-b b i { width: 18px; height: 18px; border-radius: 50%; background: var(--en); }
+.ig-b span { height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); width: 80%; }
+.transport { display: grid; gap: 10px; width: min(100%, 560px); justify-self: center; }
+.tl { position: relative; height: 34px; border-radius: 8px; overflow: hidden; background: var(--surface); border: 1px solid var(--hair); display: flex; }
+.tl i { flex: 1; border-right: 1px solid rgba(0,0,0,.4); opacity: .55; }
+.tl .ph { position: absolute; top: -2px; bottom: -2px; left: 17.6%; width: 2px; background: var(--accent); box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
+.tl .nm { position: absolute; top: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); margin-left: -3px; box-shadow: 0 0 0 2px rgba(0,0,0,.5); }
+.tl .nm.ok { background: var(--accent); }
+.ctl { display: flex; align-items: center; gap: 10px; font: 500 13px/1 var(--mono); color: var(--ink3); }
+.ctl .play { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: #000; } .ctl .play .ic { width: 14px; height: 14px; fill: currentColor; }
+.ctl b { color: var(--ink); font-weight: 500; } .ctl .sp { flex: 1; }
+.tog { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--hair2); font: 500 12px/1 var(--font); color: var(--ink2); }
+.tog.on { color: var(--accent); border-color: rgba(212,255,63,.4); background: var(--accent-soft); }
+.insp { border-left: 1px solid var(--hair); padding: 18px 20px; display: grid; align-content: start; gap: 18px; overflow: hidden; }
+.insp h4 { font: 600 13px/1 var(--font); color: var(--ink2); display: flex; align-items: center; gap: 8px; }
+.insp h4 small { margin-left: auto; color: var(--ink3); font: 500 11.5px/1 var(--mono); }
+.score { display: flex; gap: 16px; align-items: center; padding: 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hair); }
+.score .ringw { width: 86px; height: 86px; } .score .ringw .in b { font-size: 28px; color: var(--accent); }
+.score h3 { font: 600 16px/1.25 var(--font); } .score p { color: var(--ink2); font-size: 13px; margin-top: 4px; }
+.fx { display: grid; gap: 10px; }
+.fx li { list-style: none; display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; font-size: 13px; }
+.fx li span { font: 600 12px/1 var(--mono); } .fx li.p span { color: var(--accent); } .fx li.n span { color: var(--down); }
+.fx li .pb { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--hair2); } .fx li .pb i { display: block; height: 100%; border-radius: 2px; } .fx li.p .pb i { background: var(--accent); } .fx li.n .pb i { background: var(--down); }
+.notes { display: grid; gap: 8px; }
+.note { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--hair); font-size: 13.5px; }
+.note .tc { font: 500 11.5px/1 var(--mono); color: var(--warn); padding: 4px 6px; border-radius: 5px; background: var(--warn-soft); align-self: start; }
+.note.ok .tc { color: var(--accent); background: var(--accent-soft); } .note.ok p { color: var(--ink3); text-decoration: line-through; text-decoration-color: var(--hair2); }
+.note .rep { grid-column: 2; font-size: 12.5px; color: var(--ink2); padding-left: 8px; border-left: 2px solid var(--accent); }
+.composer { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 12px; border-radius: 10px; border: 1px solid var(--hair2); background: var(--sunk); color: var(--ink3); font-size: 13.5px; }
+.composer .tc { font: 500 11.5px/1 var(--mono); color: var(--accent); } .composer kbd { margin-left: auto; }
+.rv-act { border-top: 1px solid var(--hair); display: flex; align-items: center; gap: 12px; padding: 0 22px; background: linear-gradient(0deg, #0b0b0d, var(--canvas)); }
+.rv-act .hint { color: var(--ink3); font-size: 12.5px; display: flex; align-items: center; gap: 8px; }
+.rv-act .acts { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.act { height: 48px; padding: 0 18px; border-radius: 12px; display: inline-flex; align-items: center; gap: 12px; font: 600 15px/1 var(--font); border: 1px solid; }
+.act kbd { font-size: 11px; }
+.act.d { color: var(--down); border-color: rgba(255,107,107,.35); background: var(--down-soft); }
+.act.m { color: var(--warn); border-color: rgba(242,193,78,.35); background: var(--warn-soft); }
+.act.k { color: var(--accent-ink); background: var(--accent); border-color: transparent; padding: 0 22px; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 10px 26px -10px rgba(212,255,63,.55); }
+.act.k kbd { background: rgba(0,0,0,.12); border-color: rgba(0,0,0,.2); color: var(--accent-ink); }
+
+
+/* ===== SISTEMA (ajustes del espacio, multi marca) ===== */
+#system { display: grid; grid-template-columns: 248px 1fr; height: 1040px; }
+#system .side { position: relative; }
+.pop { position: absolute; z-index: 5; top: 60px; left: 10px; width: 228px; border-radius: 14px; background: #16161a; border: 1px solid var(--hair2); box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 30px 60px -12px rgba(0,0,0,.8); padding: 8px; display: grid; gap: 2px; }
+.pop p { font: 500 11.5px/1 var(--font); color: var(--ink3); padding: 8px 10px 6px; }
+.wsr { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 9px; }
+.wsr.on { background: var(--raised); }
+.wsr b { font-weight: 500; font-size: 13.5px; display: block; } .wsr small { color: var(--ink3); font-size: 12px; }
+.wsr .logo { width: 30px; height: 30px; font-size: 11px; }
+.wsr .ic { color: var(--accent); }
+.pop hr { border: 0; border-top: 1px solid var(--hair); margin: 6px 0; }
+.pop .act2 { display: flex; align-items: center; gap: 10px; padding: 8px 10px; color: var(--ink2); font-size: 13.5px; }
+.set-h { display: flex; align-items: flex-end; gap: 20px; padding-top: 22px; }
+.set-h h1 { font: 600 30px/1.1 var(--font); letter-spacing: -.035em; }
+.set-h p { color: var(--ink2); margin-top: 6px; font-size: 14.5px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--hair); margin: 0 -44px; padding: 0 44px; }
+.tabs span { padding: 12px 12px; font-size: 13.5px; color: var(--ink3); font-weight: 500; position: relative; }
+.tabs span.on { color: var(--ink); } .tabs span.on::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--accent); }
+.sgrid { display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 20px; align-items: start; }
+.brandc { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--hair); }
+.brandc:first-of-type { border-top: 0; padding-top: 0; }
+.brandc .avb { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font: 700 13px/1 var(--font); color: #111; background: var(--c); }
+.brandc b { font-weight: 600; font-size: 14.5px; } .brandc small { display: block; color: var(--ink3); font-size: 12.5px; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.chips span { font: 500 11px/1 var(--mono); padding: 4px 6px; border-radius: 5px; border: 1px solid var(--hair2); color: var(--ink2); }
+.addb { height: 46px; border-radius: 12px; border: 1px dashed var(--hair2); display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--ink2); font-size: 13.5px; font-weight: 500; }
+.conn { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cn { display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; align-items: center; padding: 12px; border-radius: 12px; background: var(--sunk); border: 1px solid var(--hair); }
+.cn .mk { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 700 12px/1 var(--font); color: #fff; background: var(--c); grid-row: span 2; }
+.cn b { font-weight: 500; font-size: 13.5px; } .cn small { font-size: 12px; color: var(--ink3); display: flex; align-items: center; gap: 6px; }
+.cn small i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); } .cn.off small i { background: var(--ink3); } .cn.off { opacity: .75; }
+.mods { display: grid; gap: 0; }
+.mod { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--hair); }
+.mod:first-child { border-top: 0; padding-top: 0; }
+.mod .mi { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--raised); color: var(--ink2); border: 1px solid var(--hair); }
+.mod b { font-weight: 500; font-size: 13.5px; display: block; } .mod small { color: var(--ink3); font-size: 12px; line-height: 1.35; display: block; }
+.sw { width: 34px; height: 20px; border-radius: 10px; background: var(--hair2); position: relative; flex: none; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #8a8a94; }
+.sw.on { background: var(--accent); } .sw.on::after { left: 16px; background: var(--accent-ink); }
+.team li { list-style: none; display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--hair); }
+.team li:first-child { border-top: 0; padding-top: 0; }
+.team .av { width: 32px; height: 32px; font-size: 12px; }
+.team b { font-weight: 500; font-size: 13.5px; display: block; } .team small { color: var(--ink3); font-size: 12px; }
+.role { font: 500 11px/1 var(--mono); padding: 5px 7px; border-radius: 6px; border: 1px solid var(--hair2); color: var(--ink2); }
+.role.own { color: var(--accent); border-color: rgba(212,255,63,.35); }
+.wl { display: grid; gap: 14px; }
+.wl .row { display: grid; gap: 8px; }
+.sws { display: flex; gap: 8px; } .sws i { width: 28px; height: 28px; border-radius: 8px; background: var(--c); box-shadow: 0 0 0 1px var(--hair2); }
+.sws i.on { box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--c); }
+.field { height: 38px; border-radius: 9px; border: 1px solid var(--hair2); background: var(--sunk); display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 13.5px; }
+.field small { color: var(--ink3); margin-left: auto; font: 500 11.5px/1 var(--mono); }
+.prodmark { display: flex; align-items: center; gap: 8px; color: var(--ink3); font-size: 12px; padding: 6px; }
+.prodmark b { color: var(--ink2); font-weight: 600; letter-spacing: -.01em; }
+.prodmark i { width: 16px; height: 16px; border-radius: 5px; background: linear-gradient(135deg, var(--accent), #6f8f12); display: inline-block; }
+
+/* ===== MOVIL ===== */
+#mobile { height: 1060px; display: flex; align-items: center; justify-content: center; gap: 44px; background: radial-gradient(60% 60% at 50% 40%, #15151a, var(--canvas)); }
+.ph-col { display: grid; gap: 18px; justify-items: center; }
+.ph-col > p { color: var(--ink3); font-size: 14px; } .ph-col > p b { color: var(--ink); font-weight: 500; }
+.scr { background: var(--canvas); color: var(--ink); }
+.m-in { position: absolute; inset: 54px 0 0; padding: 10px 18px 0; display: grid; align-content: start; gap: 16px; }
+.m-h { display: flex; align-items: center; justify-content: space-between; } .m-h .av { width: 34px; height: 34px; }
+.m-h h1 { font: 600 28px/1.1 var(--font); letter-spacing: -.035em; } .m-h p { color: var(--ink2); font-size: 14px; margin-top: 6px; }
+.m-card { border-radius: 18px; background: var(--surface); border: 1px solid var(--hair); padding: 14px; display: grid; gap: 12px; }
+.m-task { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; }
+.m-task + .m-task { padding-top: 12px; border-top: 1px solid var(--hair); }
+.m-task b { font-weight: 600; font-size: 14.5px; line-height: 1.25; display: block; } .m-task small { color: var(--ink3); font-size: 12.5px; }
+.m-task .ic.chev { color: var(--ink3); }
+.m-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.m-kpi { border-radius: 16px; background: var(--surface); border: 1px solid var(--hair); padding: 12px 14px 0; overflow: hidden; }
+.m-kpi b { display: block; font: 600 24px/1.15 var(--font); letter-spacing: -.04em; margin-top: 4px; }
+.m-kpi .sp { height: 34px; margin: 6px -14px 0; color: var(--ink3); } .m-kpi .sp svg { width: 100%; height: 100%; display: block; }
+.m-kpi.lime .sp { color: var(--accent); }
+.tabbar { position: absolute; left: 14px; right: 14px; bottom: 26px; height: 64px; border-radius: 22px; background: rgba(24,24,28,.86); backdrop-filter: blur(16px); border: 1px solid var(--hair2); display: flex; align-items: center; justify-content: space-around; padding: 0 6px; box-shadow: 0 16px 32px -12px #000; }
+.tabbar span { display: grid; justify-items: center; gap: 4px; font-size: 10.5px; color: var(--ink3); font-weight: 500; position: relative; }
+.tabbar span .ic { width: 21px; height: 21px; } .tabbar span.on { color: var(--accent); }
+.tabbar span b { position: absolute; top: -5px; right: -2px; font: 600 10px/1 var(--mono); background: var(--accent); color: var(--accent-ink); padding: 2px 4px; border-radius: 5px; }
+.tabbar .orbb { width: 46px; height: 46px; border-radius: 16px; display: grid; place-items: center; background: var(--raised); border: 1px solid var(--hair2); } .tabbar .orbb .orb { width: 26px; height: 26px; }
+.m-full { position: absolute; inset: 0; }
+.m-full .fr { position: absolute; inset: 0; } .m-full .fr svg { width: 100%; height: 100%; }
+.m-full .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55), transparent 22%, transparent 55%, rgba(0,0,0,.85)); }
+.m-top { position: absolute; top: 58px; left: 16px; right: 16px; display: flex; align-items: center; gap: 10px; }
+.m-top .pg { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; } .m-top .pg i { height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); } .m-top .pg i.on { background: #fff; }
+.m-top .x { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.4); }
+.m-meta { position: absolute; left: 18px; right: 18px; bottom: 156px; display: grid; gap: 8px; }
+.m-meta .tag { display: inline-flex; width: fit-content; align-items: center; gap: 6px; font: 600 11px/1 var(--mono); padding: 5px 8px; border-radius: 7px; background: rgba(0,0,0,.5); backdrop-filter: blur(8px); }
+.m-meta .tag.s { color: var(--accent-ink); background: var(--accent); }
+.m-meta h3 { font: 600 19px/1.25 var(--font); letter-spacing: -.02em; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
+.m-acts { position: absolute; left: 18px; right: 18px; bottom: 46px; display: grid; grid-template-columns: 64px 1fr 64px; gap: 12px; align-items: center; }
+.m-acts span { height: 64px; border-radius: 22px; display: grid; place-items: center; backdrop-filter: blur(12px); }
+.m-acts .d { background: rgba(255,107,107,.18); color: var(--down); border: 1px solid rgba(255,107,107,.4); }
+.m-acts .m { background: rgba(242,193,78,.16); color: var(--warn); border: 1px solid rgba(242,193,78,.4); }
+.m-acts .k { background: var(--accent); color: var(--accent-ink); font: 600 17px/1 var(--font); display: flex; gap: 8px; justify-content: center; align-items: center; box-shadow: 0 12px 30px -10px rgba(212,255,63,.6); }
+.m-acts .ic { width: 24px; height: 24px; }
+.m-swipe { position: absolute; left: 0; right: 0; bottom: 122px; text-align: center; font-size: 12px; color: rgba(255,255,255,.6); }
+.jvs { position: absolute; inset: 0; background: radial-gradient(70% 45% at 50% 34%, rgba(212,255,63,.16), transparent 70%), #08080a; }
+.jv-orb { position: absolute; top: 150px; left: 50%; width: 170px; height: 170px; margin-left: -85px; border-radius: 50%; background: radial-gradient(circle at 36% 30%, #f7ffe0, #d4ff3f 26%, #6a8a14 62%, #121a03); box-shadow: 0 0 0 14px rgba(212,255,63,.05), 0 0 0 30px rgba(212,255,63,.03), 0 40px 80px -20px rgba(212,255,63,.45); }
+.wave { position: absolute; top: 360px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 4px; height: 40px; }
+.wave i { width: 4px; border-radius: 2px; background: var(--accent); opacity: .8; }
+.jv-txt { position: absolute; top: 424px; left: 26px; right: 26px; text-align: center; }
+.jv-txt small { color: var(--ink3); font-size: 13px; } .jv-txt p { font: 500 21px/1.35 var(--font); letter-spacing: -.02em; margin-top: 10px; }
+.jv-txt p span { color: var(--ink3); }
+.jv-card { position: absolute; left: 16px; right: 16px; bottom: 112px; border-radius: 18px; background: var(--surface); border: 1px solid var(--hair2); padding: 14px; display: grid; gap: 10px; }
+.jv-card p { font-size: 14px; color: var(--ink2); } .jv-card p b { color: var(--ink); font-weight: 600; }
+.jv-card .row { display: flex; gap: 8px; } .jv-card .btn { flex: 1; justify-content: center; height: 40px; }
+.jv-bot { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; justify-content: center; gap: 18px; align-items: center; }
+.jv-bot span { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--raised); border: 1px solid var(--hair2); color: var(--ink2); }
+.jv-bot span.mic { width: 64px; height: 64px; background: var(--accent); color: var(--accent-ink); border: 0; } .jv-bot .ic { width: 22px; height: 22px; }
+
+/* ===== MOVIL 2 ===== */
+#mobile2 { height: 1060px; display: flex; align-items: center; justify-content: center; gap: 44px; background: radial-gradient(60% 60% at 50% 40%, #15151a, var(--canvas)); }
+.m-hd { display: flex; align-items: center; gap: 10px; } .m-hd h2 { font: 600 24px/1.1 var(--font); letter-spacing: -.03em; } .m-hd .ibtn { margin-left: auto; }
+.m-seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; border-radius: 11px; background: var(--surface); border: 1px solid var(--hair); }
+.m-seg span { text-align: center; padding: 7px 0; border-radius: 8px; font-size: 13px; color: var(--ink2); font-weight: 500; } .m-seg span.on { background: var(--raised); color: var(--ink); box-shadow: 0 0 0 1px var(--hair2); }
+.m-money b { display: block; font: 600 46px/1 var(--font); letter-spacing: -.05em; margin-top: 8px; } .m-money b span { color: var(--ink3); }
+.m-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.m-trio div { border-radius: 14px; background: var(--surface); border: 1px solid var(--hair); padding: 10px 12px; } .m-trio b { display: block; font: 600 15px/1.2 var(--font); letter-spacing: -.02em; margin-top: 4px; }
+.m-goal { display: grid; gap: 8px; } .m-goal .r { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink2); } .m-goal .r b { color: var(--ink); font-weight: 600; }
+.trc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tro { position: relative; border-radius: 16px; padding: 12px 10px; background: radial-gradient(100% 80% at 50% 0%, color-mix(in srgb, var(--m) 18%, transparent), transparent 70%), var(--surface); border: 1px solid color-mix(in srgb, var(--m) 35%, transparent); display: grid; justify-items: center; gap: 6px; text-align: center; }
+.tro .md { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #111; background: radial-gradient(circle at 35% 30%, #fff, var(--m) 45%, color-mix(in srgb, var(--m) 60%, #000)); box-shadow: 0 6px 14px -6px var(--m); }
+.tro .md .ic { width: 20px; height: 20px; }
+.tro b { font: 600 12.5px/1.2 var(--font); } .tro small { font: 500 10.5px/1 var(--mono); color: var(--m); }
+.tro.isnew::before { content: "NUEVO"; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); font: 600 9px/1 var(--mono); color: var(--accent-ink); background: var(--accent); padding: 3px 5px; border-radius: 4px; }
+.boss { border-radius: 18px; padding: 14px; background: var(--surface); border: 1px solid var(--hair); display: grid; gap: 10px; }
+.boss .trk { position: relative; height: 8px; border-radius: 4px; background: var(--hair2); } .boss .trk i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent); }
+.boss .ms { display: flex; justify-content: space-between; font: 500 11px/1.3 var(--mono); color: var(--ink3); } .boss .ms b { color: var(--ink); display: block; font-family: var(--font); font-size: 13px; }
+.labv { position: relative; height: 410px; border-radius: 22px; overflow: hidden; box-shadow: 0 0 0 1px var(--hair2); }
+.labv .fr { position: absolute; inset: 0; } .labv .fr svg { width: 100%; height: 100%; }
+.labv .lt { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 12px; border-radius: 14px; background: rgba(10,10,12,.72); backdrop-filter: blur(12px); border: 1px solid var(--hair2); }
+.labv .lt b { font-weight: 600; font-size: 15px; display: block; } .labv .lt small { color: var(--ink2); font-size: 12.5px; }
+.labv .tagx { position: absolute; top: 12px; left: 12px; font: 600 11px/1 var(--mono); padding: 5px 8px; border-radius: 7px; background: rgba(0,0,0,.55); }
+.vote { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.vote span { height: 52px; border-radius: 16px; display: grid; place-items: center; font: 600 14px/1 var(--font); border: 1px solid; }
+.vote .d { color: var(--down); border-color: rgba(255,107,107,.35); background: var(--down-soft); } .vote .m { color: var(--warn); border-color: rgba(242,193,78,.35); background: var(--warn-soft); } .vote .k { color: var(--accent-ink); background: var(--accent); border-color: transparent; }
+</style>
+</head>
+<body>
+
+<!-- ============================== HOME ============================== -->
+<section class="board" id="home">
+  <aside class="side">
+    <div class="ws"><div class="logo">KT</div><div><b>KT Media</b><small>Plan Estudio · 2 marcas</small></div><i data-i="chevdown"></i></div>
+    <div class="search"><i data-i="search"></i>Buscar o pedir algo<kbd>⌘K</kbd></div>
+    <nav class="nav">
+      <a class="on"><i data-i="home2"></i>Hoy</a>
+      <a><i data-i="inbox"></i>Bandeja<b class="hot">70</b></a>
+      <a><i data-i="calendar"></i>Calendario</a>
+      <a><i data-i="chart"></i>Métricas</a>
+      <a><i data-i="dollar"></i>Ventas</a>
+      <a><i data-i="flask"></i>Laboratorio<b>7</b></a>
+      <a><i data-i="trophy"></i>Trofeos</a>
+      <a><i data-i="message"></i>Feedback<b>1</b></a>
+    </nav>
+    <nav class="nav">
+      <p>Marcas</p>
+      <a><span class="dot" style="--c:var(--es)"></span>KT Español<b>10</b></a>
+      <a><span class="dot" style="--c:var(--en)"></span>KT English<b>60</b></a>
+      <a style="color:var(--ink3)"><i data-i="plus"></i>Agregar marca</a>
+    </nav>
+    <div class="jv">
+      <div class="jv-h"><div class="orb"></div><div><b>Jarvis</b><small>Te escucha. Pedile lo que sea.</small></div></div>
+      <div class="jv-in">¿Cómo van las ventas?<span class="mic"><i data-i="mic"></i></span></div>
+    </div>
+    <div class="me"><div class="av">D</div><div><b>Daniel</b><small><i></i>Metricool al día</small></div></div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="crumb">KT Media<span>/</span><b>Hoy</b><span>/</span>Martes 13 de octubre</div>
+      <span class="sp"></span>
+      <span class="sync"><i></i>Sincronizado hace 4 min</span>
+      <span class="ibtn"><i data-i="bell"></i><i class="badge"></i></span>
+      <span class="btn pri"><i data-i="plus"></i>Pedir video</span>
+    </div>
+
+    <div class="hello">
+      <div><h1>Buenas noches, Daniel.</h1><p><b>Tres cosas necesitan tu mano hoy.</b> El resto está en orden.</p></div>
+      <div class="when"><b class="num">23:38</b>Mar 13 oct</div>
+    </div>
+
+    <section class="now">
+      <div class="now-h"><h2>Ahora</h2><span>ordenado por lo que más mueve el negocio</span><span class="r">Navegá con <kbd>J</kbd><kbd>K</kbd> y abrí con <kbd>↵</kbd></span></div>
+      <div class="task lead" style="--c:var(--down);--c-soft:var(--down-soft)">
+        <span class="pri-i"><i data-i="zap"></i></span>
+        <div><h3>Aprobá videos de KT English <em>URGENTE</em></h3><p>Inglés se queda sin contenido el jueves 15. Hay 60 versiones esperando, 14 con puntaje alto.</p></div>
+        <div class="stack"><div class="fr" data-frame data-tone="cool" data-cap="Your words"></div><div class="fr" data-frame data-tone="teal" data-pose="1" data-cap="still broke"></div><div class="fr" data-frame data-tone="studio" data-cap="2 words"></div><div class="more">+57</div></div>
+        <span class="btn pri">Empezar triage<kbd>↵</kbd></span>
+      </div>
+      <div class="task" style="--c:var(--warn);--c-soft:var(--warn-soft)">
+        <span class="pri-i"><i data-i="mic"></i></span>
+        <div><h3>Grabá 3 intros en inglés <em>HOY</em></h3><p>Quedan 0 intros para KT English. Según tus datos, arrancá con una promesa directa y una cifra.</p></div>
+        <span></span>
+        <span class="btn">Ver guía</span>
+      </div>
+      <div class="task" style="--c:var(--warn);--c-soft:var(--warn-soft)">
+        <span class="pri-i"><i data-i="flask"></i></span>
+        <div><h3>Votá la ronda de estilo 3 <em>HOY</em></h3><p>Te faltan 7 de 12 estilos. Lo que apruebes aparece al pedir videos nuevos.</p></div>
+        <span></span>
+        <span class="btn">Abrir ronda</span>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <div class="kpi">
+        <span class="label"><i data-i="dollar" class="ic"></i>Comisión, 30 días</span>
+        <div class="v"><b class="num"><sup>$</sup>412.80</b><span class="delta up">▲ 18%</span></div>
+        <small>Te faltan <b>$87.20</b> para la primera meta de $500 al mes</small>
+        <div class="goal"><i style="width:83%"></i></div>
+        <div class="sp" data-spark="8,12,10,16,14,22,19,25,24,31,28,36,41,39" data-w="300" data-h="46" data-dot="2.5"></div>
+      </div>
+      <div class="kpi">
+        <span class="label"><i data-i="eye" class="ic"></i>Vistas, 7 días</span>
+        <div class="v"><b class="num">7,814</b><span class="delta up">▲ 9%</span></div>
+        <small>Español <b>7,028</b> · English <b>786</b></small>
+        <div class="sp" data-spark="22,25,21,30,28,34,31,38,36,35,41,39,44,46" data-w="300" data-h="46"></div>
+      </div>
+      <div class="kpi">
+        <span class="label"><i data-i="users" class="ic"></i>Seguidores nuevos</span>
+        <div class="v"><b class="num">+34</b><span class="delta up">▲ 6%</span></div>
+        <small><b>4,331</b> en total entre las dos cuentas</small>
+        <div class="sp" data-spark="2,3,1,4,3,5,2,6,4,5,7,3,6,5" data-w="300" data-h="46"></div>
+      </div>
+      <div class="kpi">
+        <span class="label"><i data-i="calendar" class="ic"></i>Contenido asegurado</span>
+        <div class="v"><b class="num dn">2 días</b><span class="delta dn">meta 14</span></div>
+        <small>English hasta el <b>15 oct</b> · Español hasta el <b>21 oct</b></small>
+        <div class="sp" data-spark="12,11,10,10,9,8,8,7,6,5,4,4,3,2" data-w="300" data-h="46" data-min="0" style="color:var(--down)"></div>
+      </div>
+    </section>
+
+    <div class="cols">
+      <section class="panel">
+        <h2 class="sec">Calendario de contenido<small>próximos 14 días</small></h2>
+        <div class="cal">
+          <span></span>
+          <div class="dh today"><b>14</b>MIÉ</div><div class="dh"><b>15</b>JUE</div><div class="dh"><b>16</b>VIE</div><div class="dh"><b>17</b>SÁB</div><div class="dh"><b>18</b>DOM</div><div class="dh"><b>19</b>LUN</div><div class="dh"><b>20</b>MAR</div><div class="dh"><b>21</b>MIÉ</div><div class="dh"><b>22</b>JUE</div><div class="dh"><b>23</b>VIE</div><div class="dh"><b>24</b>SÁB</div><div class="dh"><b>25</b>DOM</div><div class="dh"><b>26</b>LUN</div><div class="dh"><b>27</b>MAR</div>
+          <div class="rl"><span class="dot" style="--c:var(--es)"></span><div>Español<small>11 agendados</small></div></div>
+          <div class="cell" style="--c:var(--es)"><i></i><i></i></div><div class="cell" style="--c:var(--es)"><i></i></div><div class="cell" style="--c:var(--es)"><i></i><i></i></div><div class="cell" style="--c:var(--es)"><i></i></div><div class="cell" style="--c:var(--es)"><i></i></div><div class="cell" style="--c:var(--es)"><i></i><i></i></div><div class="cell" style="--c:var(--es)"><i></i></div><div class="cell" style="--c:var(--es)"><i></i><i class="ok"></i></div><div class="cell" style="--c:var(--es)"><i class="ok"></i></div><div class="cell empty soft"></div><div class="cell empty soft"></div><div class="cell empty soft"></div><div class="cell empty soft"></div><div class="cell empty soft"></div>
+          <div class="rl"><span class="dot" style="--c:var(--en)"></span><div>English<small>3 agendados</small></div></div>
+          <div class="cell" style="--c:var(--en)"><i></i><i></i></div><div class="cell" style="--c:var(--en)"><i></i></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div><div class="cell empty"></div>
+        </div>
+        <div class="cal-l"><span><i></i>Agendado en Metricool</span><span><i class="ok"></i>Aprobado, Claude lo agenda</span><span><i class="no"></i>Sin contenido</span></div>
+        <div class="upn">
+          <div class="upn-h"><span class="label">Próximo en salir</span><span class="label">hora de publicación</span></div>
+          <div class="upr"><div class="fr" data-frame data-tone="olive" data-cap=""></div><div><b>Meditar no te relaja. Te cambia de canal.</b><small><span class="dot" style="--c:var(--es)"></span>KT Español · v2 · Reel</small></div><span class="when2"><b>Mañana</b>9:00</span></div>
+          <div class="upr"><div class="fr" data-frame data-tone="cool" data-pose="1" data-cap=""></div><div><b>Meditation doesn't relax you. It changes the channel.</b><small><span class="dot" style="--c:var(--en)"></span>KT English · v1 · Reel</small></div><span class="when2"><b>Mañana</b>12:30</span></div>
+          <div class="upr"><div class="fr" data-frame data-tone="rose" data-cap=""></div><div><b>Tenía un plan por si intentaban desaparecerlo</b><small><span class="dot" style="--c:var(--es)"></span>KT Español · v3 · Trial Reel</small></div><span class="when2"><b>Jue 15</b>19:00</span></div>
+        </div>
+        <div class="alert"><i data-i="zap"></i><span><b>English se corta el viernes 16.</b> Con 5 aprobados hoy cubrís hasta el 20.</span><span class="btn pri">Aprobar ahora</span></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="sec">Ventas de afiliado<small><span class="fresh">● EN VIVO</span></small></h2>
+        <div><span class="label">Comisión acumulada</span><div class="money-big" style="margin-top:8px"><b class="num">$3,482<span>.60</span></b><span class="delta up">▲ $96 hoy</span></div></div>
+        <div class="trio"><div><span class="label">Pagado</span><b class="num">$2,150.00</b></div><div><span class="label">En camino</span><b class="num">$904.20</b></div><div><span class="label">Para cobrar</span><b class="num">$428.40</b></div></div>
+        <div class="bars" data-bars="12,0,24,36,0,18,0,48,12,0,30,24,0,60,36,0,12,48,24,0,36,72,24,0,48,36,96,24,48,96" data-hi="26,29" data-h="64" data-w="400"></div>
+        <ul class="feed">
+          <li><span class="pf">MG</span><div><b>María G.</b><span class="new">NUEVA</span><small>Natural Cures · hace 2 h</small></div><strong>+$48.00</strong></li>
+          <li><span class="pf">JR</span><div><b>Jorge R.</b><span class="new">NUEVA</span><small>Debt Cures · hace 5 h</small></div><strong>+$48.00</strong></li>
+          <li><span class="pf">AL</span><div><b>Ana L.</b><small>Your Wish Is Your Command · ayer</small></div><strong>+$72.00</strong></li>
+        </ul>
+      </section>
+    </div>
+
+    <section class="panel">
+        <h2 class="sec">Instagram<small>últimos 7 días, hasta el 12 oct</small></h2>
+        <table>
+          <thead><tr><th>Cuenta</th><th class="n">Vistas</th><th class="n">Interacciones</th><th class="n">Seguidores</th><th>Tendencia</th><th>Mejor reel</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="acc" style="--c:var(--es)"><span class="avb">ES</span><div><b>KT Español</b><small>@ktespanol</small></div></div></td>
+              <td class="n"><span class="big num">7,028</span><span class="sub up">▲ 33%</span></td>
+              <td class="n"><span class="big num">267</span><span class="sub up">▲ 685%</span></td>
+              <td class="n"><span class="big num">+35</span><span class="sub">2,796 total</span></td>
+              <td><div class="mini" data-spark="12,14,13,18,16,22,25,24,30,28,35,40" data-w="170" data-h="34" style="color:var(--es)"></div></td>
+              <td><div class="best"><div class="fr" data-frame data-tone="cool" data-pose="1" data-cap="Meditar"></div><div><b>Meditar no te relaja. Te cambia de canal.</b><small>2.1K vistas</small></div></div></td>
+            </tr>
+            <tr>
+              <td><div class="acc" style="--c:var(--en)"><span class="avb">EN</span><div><b>KT English</b><small>@kevintrudeaubeststudent</small></div></div></td>
+              <td class="n"><span class="big num">786</span><span class="sub dn">▼ 81%</span></td>
+              <td class="n"><span class="big num">3</span><span class="sub dn">▼ 92%</span></td>
+              <td class="n"><span class="big num">−1</span><span class="sub">1,535 total</span></td>
+              <td><div class="mini" data-spark="30,34,31,28,26,20,16,12,9,7,5,4" data-w="170" data-h="34" style="color:var(--en)"></div></td>
+              <td><div class="best"><div class="fr" data-frame data-tone="studio" data-cap="Your words"></div><div><b>Your words are programming your brain</b><small>312 vistas</small></div></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="insight"><span class="orb"></span><span><b>English cayó porque no publica desde el 9 oct,</b> no por el contenido. Sus últimos 5 reels promediaron 410 vistas.</span><span class="btn">Ver por qué</span></div>
+      </section>
+
+    <div class="four">
+      <section class="panel">
+        <h2 class="sec">Tu progreso<small>Trofeos <i data-i="chevron" class="ic"></i></small></h2>
+        <div class="lvlrow">
+          <div class="ringw" data-ring=".78" data-r="44" data-sw="7" style="width:84px;height:84px"><div class="in"><b class="num" style="font-size:26px">7</b><small>NIVEL</small></div></div>
+          <div class="lvl" style="display:block"><h3>Estratega</h3><span class="xp" style="margin-top:6px">2,340 / 3,000 XP</span></div>
+        </div>
+        <ul class="near">
+          <li style="--m:#ffcf6e"><span class="medal"><i data-i="dollar"></i></span><b>Comisión de 30 días · $500</b><span>83%</span><div class="pb"><i style="width:83%"></i></div></li>
+          <li style="--m:#c9d2dc"><span class="medal"><i data-i="users"></i></span><b>Seguidores · 5,000</b><span>87%</span><div class="pb"><i style="width:87%"></i></div></li>
+          <li style="--m:#d9904f"><span class="medal"><i data-i="eye"></i></span><b>Vistas en 7 días · 10K</b><span>78%</span><div class="pb"><i style="width:78%"></i></div></li>
+        </ul>
+      </section>
+      <section class="panel">
+        <h2 class="sec">Materia prima<small>para producir</small></h2>
+        <ul class="mp">
+          <li>Teachers<b>14</b><div class="pb"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></li>
+          <li>Reactions<b>6</b><div class="pb"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i></div></li>
+          <li>Intros Español<b>4</b><div class="pb"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i><i></i></div></li>
+          <li>Intros English<b class="dn">0</b><div class="pb"><i class="w"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></li>
+        </ul>
+      </section>
+      <section class="panel">
+        <h2 class="sec">Laboratorio<small>ronda 3 · subtítulos</small></h2>
+        <div class="lab-th">
+          <div data-frame data-tone="rose" data-cap="Tenía un plan" data-hl="2"><em class="k">KEEP</em></div>
+          <div data-frame data-tone="olive" data-pose="1" data-cap="2 palabras" data-hl="0"><em class="k">KEEP</em></div>
+          <div data-frame data-tone="warm" data-cap="es tu boca" data-hl="2"><em>DROP</em></div>
+          <div data-frame data-tone="teal" data-pose="1" data-cap="?"><em>VOTAR</em></div>
+        </div>
+        <div class="progress"><span>5 de 12</span><div class="goal"><i style="width:42%"></i></div></div><p class="label">7 estilos aprobados para pedir videos</p>
+      </section>
+      <section class="panel">
+        <h2 class="sec">Feedback<small>1 abierta</small></h2>
+        <div class="fbq"><p>“Que el portal me avise cuando inglés baje de 5 días de contenido.”</p><div class="st"><span class="chip">● EN CURSO</span>Claude lo está armando · enviado ayer</div></div>
+        <div class="fb-in"><i data-i="plus"></i>Escribí una idea o un cambio</div>
+      </section>
+    </div>
+  </main>
+</section>
+
+<!-- ============================== TRIAGE ============================== -->
+<section class="board" id="review">
+  <div class="rv-top">
+    <span class="back"><i data-i="chevleft"></i>Bandeja</span>
+    <h1><span class="dot" style="--c:var(--en)"></span>Triage · KT English</h1>
+    <div class="pbar"><span>12 de 70</span><div class="goal"><i style="width:17%"></i></div><span style="color:var(--ink3)">≈ 9 min</span></div>
+    <div class="r"><div class="seg"><span class="on">Puntaje alto primero</span><span>Más viejos</span><span>Por pieza</span></div><span class="ibtn"><i data-i="keyboard"></i></span></div>
+  </div>
+  <div class="rv-body">
+    <aside class="queue">
+      <div class="qh"><span>Pieza · versiones</span><span>Puntaje</span></div>
+      <div class="qi done"><div class="fr" data-frame data-tone="olive" data-cap=""></div><div><b>Meditation doesn't relax you. It changes the channel.</b><div class="vs"><span class="vchip k">v1</span><span class="vchip k">v2</span><span class="vchip d">v3</span><span class="vchip k">v4</span><span class="sc up">✓</span></div></div></div>
+      <div class="qi on"><div class="fr" data-frame data-tone="warm" data-cap=""></div><div><b>It's not your salary keeping you broke. It's your mouth.</b><div class="vs"><span class="vchip k">v1</span><span class="vchip cur">v2</span><span class="vchip">v3</span><span class="vchip">v4</span><span class="sc up">82</span></div></div></div>
+      <div class="qi"><div class="fr" data-frame data-tone="cool" data-pose="1" data-cap=""></div><div><b>Your words are programming your brain</b><div class="vs"><span class="vchip">v1</span><span class="vchip">v2</span><span class="vchip">v3</span><span class="vchip">v4</span><span class="sc up">78</span></div></div></div>
+      <div class="qi"><div class="fr" data-frame data-tone="rose" data-cap=""></div><div><b>He had a plan in case they tried to make him disappear</b><div class="vs"><span class="vchip">v1</span><span class="vchip">v2</span><span class="vchip">v3</span><span class="sc" style="color:var(--warn)">64</span></div></div></div>
+      <div class="qi"><div class="fr" data-frame data-tone="teal" data-pose="1" data-cap=""></div><div><b>Every beep in your car is conditioning you like a dog</b><div class="vs"><span class="vchip">v1</span><span class="vchip">v2</span><span class="vchip">v3</span><span class="vchip">v4</span><span class="sc" style="color:var(--warn)">57</span></div></div></div>
+      <div class="qi"><div class="fr" data-frame data-tone="studio" data-cap=""></div><div><b>The 2 words ruining your life</b><div class="vs"><span class="vchip">v1</span><span class="vchip">v2</span><span class="sc dn">38</span></div></div></div>
+    </aside>
+    <div class="stage">
+      <div class="vtabs">
+        <span class="vt" style="--sc:var(--accent)"><b>v1</b>Promesa<em>✓</em></span>
+        <span class="vt on" style="--sc:var(--accent)"><b>v2</b>Cifra<em>82</em></span>
+        <span class="vt" style="--sc:var(--warn)"><b>v3</b>Pregunta<em>61</em></span>
+        <span class="vt" style="--sc:var(--down)"><b>v4</b>Historia<em>44</em></span>
+      </div>
+      <div class="player">
+        <div class="fr" data-frame data-tone="warm" data-cap="it's your MOUTH" data-hl="2" data-max="12"></div>
+        <div class="safe"><span>ZONA SEGURA</span></div>
+        <div class="ig-r"><i data-i="heart"></i><i data-i="message"></i><i data-i="send"></i><i data-i="more"></i></div>
+        <div class="ig-b"><b><i></i>kevintrudeaubeststudent</b><span></span></div>
+      </div>
+      <div class="transport">
+        <div class="tl" id="tl"><span class="ph"></span><span class="nm" style="left:7.6%"></span><span class="nm ok" style="left:28%"></span><span class="nm" style="left:61%"></span></div>
+        <div class="ctl"><span class="play"><i data-i="pause"></i></span><b class="num">00:07.4</b>/ 00:42.0<span class="sp"></span><span class="tog on"><i data-i="phone" class="ic"></i>Zona segura</span><span class="tog"><i data-i="type" class="ic"></i>Subtítulos</span><span class="tog">1×</span></div>
+      </div>
+    </div>
+    <aside class="insp">
+      <div class="score">
+        <div class="ringw" data-ring=".82" data-r="36" data-sw="6"><div class="in"><b class="num">82</b></div></div>
+        <div><h3>Puntaje alto</h3><p>Se parece a los ganchos que pasaron 1,000 vistas en tus cuentas.</p></div>
+      </div>
+      <div>
+        <h4>Por qué<small>de 125 ganchos reales</small></h4>
+        <ul class="fx" style="margin-top:12px">
+          <li class="p">Promesa directa en el primer segundo<span>+14</span><div class="pb"><i style="width:70%"></i></div></li>
+          <li class="p">Cifra o tiempo concreto<span>+9</span><div class="pb"><i style="width:45%"></i></div></li>
+          <li class="n">Gancho de más de 12 palabras<span>−6</span><div class="pb"><i style="width:30%"></i></div></li>
+        </ul>
+      </div>
+      <div class="notes">
+        <h4>Notas por cuadro<small>3</small></h4>
+        <div class="note"><span class="tc">00:03.2</span><p>Cortar la respiración antes de “mouth”.</p></div>
+        <div class="note ok"><span class="tc">00:11.8</span><p>El subtítulo tapa la cara.</p><span class="rep">Claude: subido 40 px. Listo.</span></div>
+        <div class="note"><span class="tc">00:25.6</span><p>Probar un zoom más lento acá.</p></div>
+        <div class="composer"><span class="tc">00:07.4</span>Escribí una nota en este cuadro<kbd>N</kbd></div>
+      </div>
+    </aside>
+  </div>
+  <div class="rv-act">
+    <span class="hint"><kbd>←</kbd><kbd>→</kbd> versión <kbd>Espacio</kbd> pausa <kbd>⌘Z</kbd> deshacer</span>
+    <div class="acts">
+      <span class="act d"><i data-i="x" class="ic"></i>Rechazar<kbd>R</kbd></span>
+      <span class="act m">Quizás<kbd>Q</kbd></span>
+      <span class="act k"><i data-i="check" class="ic"></i>Aprobar v2<kbd>A</kbd></span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================== SISTEMA ============================== -->
+<section class="board" id="system">
+  <aside class="side">
+    <div class="ws"><div class="logo">KT</div><div><b>KT Media</b><small>Plan Estudio · 2 marcas</small></div><i data-i="chevdown"></i></div>
+    <div class="pop">
+      <p>Tus espacios</p>
+      <div class="wsr on"><div class="logo">KT</div><div><b>KT Media</b><small>2 marcas · Estudio</small></div><i data-i="check"></i></div>
+      <div class="wsr"><div class="logo" style="background:linear-gradient(160deg,#3a5c4a,#15241c)">PR</div><div><b>Dra. Paula Ríos</b><small>Nutrición · 1 marca</small></div><span></span></div>
+      <div class="wsr"><div class="logo" style="background:linear-gradient(160deg,#6b4a2c,#2a1a0e)">CO</div><div><b>Café Origen</b><small>3 marcas · Estudio</small></div><span></span></div>
+      <div class="wsr"><div class="logo" style="background:linear-gradient(160deg,#3d3f7a,#16172e)">LS</div><div><b>Lumen Studio</b><small>Agencia · 12 marcas</small></div><span></span></div>
+      <hr>
+      <div class="act2"><i data-i="plus" class="ic"></i>Crear un espacio nuevo</div>
+      <div class="act2"><i data-i="link" class="ic"></i>Invitar a un cliente</div>
+    </div>
+    <nav class="nav" style="margin-top:368px">
+      <p>Ajustes</p>
+      <a class="on"><i data-i="grid"></i>Espacio</a>
+      <a><i data-i="layers"></i>Marcas<b>2</b></a>
+      <a><i data-i="link"></i>Conexiones<b>5</b></a>
+      <a><i data-i="box"></i>Módulos</a>
+      <a><i data-i="users"></i>Equipo<b>4</b></a>
+      <a><i data-i="wand"></i>Marca blanca</a>
+      <a><i data-i="dollar"></i>Plan y facturación</a>
+    </nav>
+    <div class="prodmark" style="margin-top:auto"><i></i>Hecho con <b>Mando</b> · v2.0</div>
+  </aside>
+  <main class="main">
+    <div class="top"><div class="crumb">KT Media<span>/</span><b>Ajustes</b></div><span class="sp"></span><span class="btn ghost">Ver como cliente</span><span class="btn pri">Guardar cambios</span></div>
+    <div class="set-h"><div><h1>Tu espacio, a tu manera.</h1><p>Cada marca tiene sus cuentas, sus reglas y su asistente. Prendé solo los módulos que usás.</p></div></div>
+    <div class="tabs"><span class="on">General</span><span>Marcas</span><span>Conexiones</span><span>Módulos</span><span>Equipo</span><span>Marca blanca</span><span>Plan</span></div>
+    <div class="sgrid">
+      <div style="display:grid;gap:20px">
+        <section class="panel">
+          <h2 class="sec">Marcas<small>cada una con su idioma y su calendario</small></h2>
+          <div>
+            <div class="brandc" style="--c:var(--es)"><span class="avb">ES</span><div><b>KT Español</b><small>@ktespanol · Español · meta 14 días de contenido</small><div class="chips"><span>Instagram</span><span>Metricool</span><span>14 reglas</span><span>7 estilos</span></div></div><i data-i="chevron" class="ic" style="color:var(--ink3)"></i></div>
+            <div class="brandc" style="--c:var(--en)"><span class="avb">EN</span><div><b>KT English</b><small>@kevintrudeaubeststudent · English · meta 14 días</small><div class="chips"><span>Instagram</span><span>Metricool</span><span>14 reglas</span><span>7 estilos</span></div></div><i data-i="chevron" class="ic" style="color:var(--ink3)"></i></div>
+          </div>
+          <div class="addb"><i data-i="plus" class="ic"></i>Agregar marca o cuenta</div>
+        </section>
+        <section class="panel">
+          <h2 class="sec">Conexiones<small>5 de 8 activas</small></h2>
+          <div class="conn">
+            <div class="cn" style="--c:#c13584"><span class="mk">IG</span><b>Instagram</b><small><i></i>2 cuentas</small></div>
+            <div class="cn" style="--c:#2d6cdf"><span class="mk">MC</span><b>Metricool</b><small><i></i>Agenda y métricas</small></div>
+            <div class="cn" style="--c:#c9772b"><span class="mk">$</span><b>Afiliados</b><small><i></i>Ventas cada hora</small></div>
+            <div class="cn" style="--c:#b8623f"><span class="mk">AI</span><b>Claude</b><small><i></i>Produce los videos</small></div>
+            <div class="cn" style="--c:#1f8a5a"><span class="mk">GD</span><b>Google Drive</b><small><i></i>Materia prima</small></div>
+            <div class="cn off" style="--c:#2a2a30"><span class="mk">TT</span><b>TikTok</b><small><i></i>Conectar</small></div>
+          </div>
+        </section>
+      </div>
+      <section class="panel">
+        <h2 class="sec">Módulos<small>8 de 9</small></h2>
+        <div class="mods">
+          <div class="mod"><span class="mi"><i data-i="inbox" class="ic"></i></span><div><b>Aprobación</b><small>Versiones, puntaje, notas por cuadro</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="calendar" class="ic"></i></span><div><b>Calendario</b><small>Días de contenido y huecos</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="chart" class="ic"></i></span><div><b>Métricas</b><small>Qué versión y qué gancho funciona</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="dollar" class="ic"></i></span><div><b>Ventas</b><small>Comisiones de afiliado en vivo</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="flask" class="ic"></i></span><div><b>Laboratorio</b><small>Rondas de estilo y referencias</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="box" class="ic"></i></span><div><b>Materia prima</b><small>Tipos de clip que define cada marca</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="trophy" class="ic"></i></span><div><b>Trofeos</b><small>Niveles y metas como un juego</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="mic" class="ic"></i></span><div><b>Asistente de voz</b><small>Navega, responde y propone acciones</small></div><span class="sw on"></span></div>
+          <div class="mod"><span class="mi"><i data-i="users" class="ic"></i></span><div><b>Portal de cliente</b><small>Link para que tu cliente apruebe</small></div><span class="sw"></span></div>
+        </div>
+      </section>
+      <div style="display:grid;gap:20px">
+        <section class="panel">
+          <h2 class="sec">Equipo<small>4 personas</small></h2>
+          <ul class="team">
+            <li><span class="av">D</span><div><b>Daniel</b><small>Todo el espacio</small></div><span class="role own">DUEÑO</span></li>
+            <li><span class="av" style="background:linear-gradient(140deg,#d97757,#8a3b22)">C</span><div><b>Claude</b><small>Produce y agenda</small></div><span class="role">IA</span></li>
+            <li><span class="av" style="background:linear-gradient(140deg,#6e9bff,#2b3f8f)">E</span><div><b>Editor</b><small>Sube y corrige notas</small></div><span class="role">EDITOR</span></li>
+            <li><span class="av" style="background:linear-gradient(140deg,#8a8a94,#3a3a40)">K</span><div><b>Cliente</b><small>Solo KT English</small></div><span class="role">APRUEBA</span></li>
+          </ul>
+        </section>
+        <section class="panel">
+          <h2 class="sec">Marca blanca</h2>
+          <div class="wl">
+            <div class="row"><span class="label">Color de acento</span><div class="sws"><i class="on" style="--c:#d4ff3f"></i><i style="--c:#ff8a3d"></i><i style="--c:#6e9bff"></i><i style="--c:#c084fc"></i><i style="--c:#f4f4f5"></i></div></div>
+            <div class="row"><span class="label">Nombre del asistente</span><div class="field">Jarvis<small>voz: es-AR</small></div></div>
+            <div class="row"><span class="label">Dominio propio</span><div class="field">mando.ktmedia.com<small>SSL ✓</small></div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ============================== MOVIL ============================== -->
+<section class="board" id="mobile">
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:38</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <div class="m-h"><div><h1>Buenas noches,<br>Daniel.</h1><p>Tres cosas necesitan tu mano.</p></div><div class="av">D</div></div>
+        <div class="m-card">
+          <div class="m-task" style="--c:var(--down);--c-soft:var(--down-soft)"><span class="pri-i"><i data-i="zap"></i></span><div><b>Aprobá videos de English</b><small>60 esperan · se corta el jueves</small></div><i data-i="chevron" class="chev"></i></div>
+          <div class="m-task" style="--c:var(--warn);--c-soft:var(--warn-soft)"><span class="pri-i"><i data-i="mic"></i></span><div><b>Grabá 3 intros en inglés</b><small>Quedan 0</small></div><i data-i="chevron" class="chev"></i></div>
+          <div class="m-task" style="--c:var(--warn);--c-soft:var(--warn-soft)"><span class="pri-i"><i data-i="flask"></i></span><div><b>Votá la ronda 3</b><small>Faltan 7 de 12</small></div><i data-i="chevron" class="chev"></i></div>
+        </div>
+        <div class="m-kpis">
+          <div class="m-kpi lime"><span class="label">Comisión 30 d</span><b class="num">$412.80</b><div class="sp" data-spark="8,12,10,16,14,22,19,25,24,31,28,36,41,39" data-w="160" data-h="34"></div></div>
+          <div class="m-kpi"><span class="label">Vistas 7 d</span><b class="num">7,814</b><div class="sp" data-spark="22,25,21,30,28,34,31,38,36,35,41,39,44,46" data-w="160" data-h="34"></div></div>
+          <div class="m-kpi"><span class="label">Seguidores</span><b class="num">+34</b><div class="sp" data-spark="2,3,1,4,3,5,2,6,4,5,7,3,6,5" data-w="160" data-h="34"></div></div>
+          <div class="m-kpi"><span class="label">Contenido</span><b class="num dn">2 días</b><div class="sp" data-spark="12,11,10,10,9,8,8,7,6,5,4,4,3,2" data-w="160" data-h="34" data-min="0" style="color:var(--down)"></div></div>
+        </div>
+        <div class="m-card" style="grid-template-columns:32px 1fr auto;align-items:center;gap:12px"><span class="pf">MG</span><div><b style="font-weight:500">Nueva venta · María G.</b><small style="display:block;color:var(--ink3);font-size:12.5px">Natural Cures · hace 2 h</small></div><strong class="mono up">+$48</strong></div>
+      </div>
+      <div class="tabbar"><span class="on"><i data-i="home2"></i>Hoy</span><span><i data-i="inbox"></i>Bandeja<b>70</b></span><span class="orbb"><span class="orb"></span></span><span><i data-i="dollar"></i>Ventas</span><span><i data-i="trophy"></i>Trofeos</span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Hoy</b> · lo urgente arriba, números abajo</p>
+  </div>
+
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="m-full"><div class="fr" data-frame data-tone="warm" data-cap="it's your MOUTH" data-hl="2" data-max="12" data-cy="104"></div><div class="shade"></div></div>
+      <div class="island"></div><div class="sbar"><span>23:41</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-top"><span class="x"><i data-i="x"></i></span><div class="pg"><i class="on"></i><i class="on"></i><i></i><i></i></div><span class="mono" style="font-size:12px;color:rgba(255,255,255,.75)">12/70</span></div>
+      <div class="m-meta"><span class="tag s">82 · PUNTAJE ALTO</span><span class="tag"><span class="dot" style="--c:var(--en)"></span>KT English · v2 de 4</span></div>
+      <div class="m-swipe">Deslizá a la derecha para aprobar, a la izquierda para rechazar</div>
+      <div class="m-acts"><span class="d"><i data-i="x"></i></span><span class="k"><i data-i="check"></i>Aprobar</span><span class="m"><i data-i="clock"></i></span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Triage</b> · un video a la vez, a pantalla completa</p>
+  </div>
+
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="jvs"></div>
+      <div class="island"></div><div class="sbar"><span>23:44</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="jv-orb"></div>
+      <div class="wave"><i style="height:10px"></i><i style="height:22px"></i><i style="height:34px"></i><i style="height:18px"></i><i style="height:28px"></i><i style="height:40px"></i><i style="height:24px"></i><i style="height:14px"></i><i style="height:30px"></i><i style="height:20px"></i><i style="height:12px"></i></div>
+      <div class="jv-txt"><small>Jarvis</small><p>Entraron 2 ventas hoy, $96 en total. <span>Con una más de $48 esta semana pasás la primera meta.</span></p></div>
+      <div class="jv-card"><p>¿Querés que pida <b>5 videos nuevos</b> para English con los estilos aprobados?</p><div class="row"><span class="btn">Ahora no</span><span class="btn pri">Pedirlos</span></div></div>
+      <div class="jv-bot"><span><i data-i="keyboard"></i></span><span class="mic"><i data-i="mic"></i></span><span><i data-i="x"></i></span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Jarvis</b> · hablale y te confirma antes de actuar</p>
+  </div>
+</section>
+
+<!-- ============================== MOVIL 2 ============================== -->
+<section class="board" id="mobile2">
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:46</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <div class="m-hd"><h2>Ventas</h2><span class="fresh">● EN VIVO</span><span class="ibtn"><i data-i="refresh"></i></span></div>
+        <div class="m-seg"><span>7 días</span><span class="on">30 días</span><span>Todo</span></div>
+        <div class="m-money"><span class="label">Comisión acumulada</span><b class="num">$3,482<span>.60</span></b><span class="delta up" style="margin-top:10px">▲ $96 hoy</span></div>
+        <div class="bars" data-bars="12,0,24,36,0,18,0,48,12,0,30,24,0,60,36,0,12,48,24,0,36,72,24,0,48,36,96,24,48,96" data-hi="26,29" data-h="70" data-w="354" style="height:70px"></div>
+        <div class="m-trio"><div><span class="label">Pagado</span><b class="num">$2,150</b></div><div><span class="label">En camino</span><b class="num">$904</b></div><div><span class="label">Para cobrar</span><b class="num">$428</b></div></div>
+        <div class="m-card m-goal"><div class="r"><span>Primera meta · $500 al mes</span><b>83%</b></div><div class="goal" style="height:6px"><i style="width:83%"></i></div><small style="color:var(--ink3);font-size:12.5px">Te faltan $87.20. A tu ritmo, la pasás el viernes.</small></div>
+        <ul class="feed m-card" style="gap:0;padding:4px 14px">
+          <li><span class="pf">MG</span><div><b>María G.</b><span class="new">NUEVA</span><small>Natural Cures</small></div><strong>+$48</strong></li>
+          <li><span class="pf">JR</span><div><b>Jorge R.</b><small>Debt Cures</small></div><strong>+$48</strong></li>
+        </ul>
+      </div>
+      <div class="tabbar"><span><i data-i="home2"></i>Hoy</span><span><i data-i="inbox"></i>Bandeja<b>70</b></span><span class="orbb"><span class="orb"></span></span><span class="on"><i data-i="dollar"></i>Ventas</span><span><i data-i="trophy"></i>Trofeos</span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Ventas</b> · la plata primero, con la meta a la vista</p>
+  </div>
+
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:47</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <div class="m-hd"><h2>Trofeos</h2><span class="ibtn"><i data-i="more"></i></span></div>
+        <div class="m-card" style="grid-template-columns:auto 1fr;align-items:center;gap:16px">
+          <div class="ringw" data-ring=".78" data-r="44" data-sw="7" style="width:92px;height:92px"><div class="in"><b class="num" style="font-size:28px">7</b><small>NIVEL</small></div></div>
+          <div><b style="font:600 19px/1.2 var(--font);letter-spacing:-.02em">Estratega</b><p style="color:var(--ink2);font-size:13px;margin-top:4px">660 XP para nivel 8</p><span class="xp mono" style="font-size:12px;color:var(--ink3)">2,340 / 3,000 XP</span></div>
+        </div>
+        <span class="label">Desbloqueados esta semana</span>
+        <div class="trc">
+          <div class="tro isnew" style="--m:#ffcf6e"><span class="md"><i data-i="eye"></i></span><b>100K vistas</b><small>ORO</small></div>
+          <div class="tro" style="--m:#c9d2dc"><span class="md"><i data-i="users"></i></span><b>2,500 seguidores</b><small>PLATA</small></div>
+          <div class="tro" style="--m:#d9904f"><span class="md"><i data-i="dollar"></i></span><b>Venta de $50+</b><small>BRONCE</small></div>
+        </div>
+        <div class="boss">
+          <div class="m-goal"><div class="r"><span>Camino a la meta final</span><b>$412 / mes</b></div></div>
+          <div class="trk"><i style="width:14%"></i></div>
+          <div class="ms"><span><b>$500</b>primera meta</span><span style="text-align:center"><b>$5K</b></span><span style="text-align:right"><b>$30K</b>meta final</span></div>
+        </div>
+        <ul class="near m-card">
+          <li style="--m:#c9d2dc"><span class="medal"><i data-i="users"></i></span><b>Seguidores · 5,000</b><span>87%</span><div class="pb"><i style="width:87%"></i></div></li>
+          <li style="--m:#d9904f"><span class="medal"><i data-i="eye"></i></span><b>Vistas en 7 días · 10K</b><span>78%</span><div class="pb"><i style="width:78%"></i></div></li>
+        </ul>
+      </div>
+      <div class="tabbar"><span><i data-i="home2"></i>Hoy</span><span><i data-i="inbox"></i>Bandeja<b>70</b></span><span class="orbb"><span class="orb"></span></span><span><i data-i="dollar"></i>Ventas</span><span class="on"><i data-i="trophy"></i>Trofeos</span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Trofeos</b> · el progreso como un juego</p>
+  </div>
+
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:49</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <div class="m-hd"><span class="ibtn" style="margin-left:0"><i data-i="chevleft"></i></span><div><h2 style="font-size:19px">Ronda 3 · Subtítulos</h2><small style="color:var(--ink3);font-size:12.5px">Laboratorio · estilo 6 de 12</small></div></div>
+        <div class="progress"><div class="goal"><i style="width:42%"></i></div><span>5/12</span></div>
+        <div class="labv" style="height:372px"><div class="fr" data-frame data-tone="olive" data-pose="1" data-cap="2 palabras que ARRUINAN tu vida" data-hl="3" data-cy="114"></div><span class="tagx">ESTILO F · PALABRA CLAVE</span></div>
+        <div><b style="font-weight:600;font-size:15px">Palabra clave en amarillo</b><p style="color:var(--ink2);font-size:13px">Una palabra por frase, la que carga la emoción.</p></div>
+        <div class="vote"><span class="d">Drop</span><span class="m">Quizás</span><span class="k">Keep</span></div>
+        <div class="fb-in"><i data-i="mic"></i>Dictá por qué te gusta o no</div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Laboratorio</b> · votá estilos en segundos</p>
+  </div>
+</section>
+
+<script src="shared/kit.js"></script>
+<script>
+  // tira de cuadros en la linea de tiempo del triage
+  const tl = document.getElementById("tl"), tones = ["#6b4428", "#5a3a22", "#7a5030", "#4a2f1d", "#6b4428", "#80583a", "#5b3b24", "#6b4428", "#4f3220", "#74502f", "#5f3d25", "#6b4428"];
+  tl.insertAdjacentHTML("afterbegin", tones.map((c) => `<i style="background:linear-gradient(180deg, ${c}, #1c120c)"></i>`).join(""));
+</script>
+</body>
+</html>
