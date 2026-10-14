@@ -48,6 +48,11 @@ for name in CSS:
             "::view-transition-old(shared), ::view-transition-new(shared) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2,.9,.25,1); }\n"
         )
     css_parts.append(f"/* ===== {name} ===== */\n{t}")
+# fuente Aston Script: es la misma del Portal de Aprobacion (alla era un archivo subido al artefacto, /_blob/0b478836...). Va embebida
+# para que el Estudio muestre lo mismo que se exporta y el artefacto no dependa del almacen de archivos del Portal viejo.
+aston = app / "assets" / "AstonScript.ttf"
+if aston.exists():
+    css_parts.append("/* ===== AstonScript ===== */\n@font-face{font-family:'AstonScript';src:url(data:font/ttf;base64,%s) format('truetype');font-display:block}" % base64.b64encode(aston.read_bytes()).decode())
 css = "\n".join(css_parts)
 
 # ---- js ----

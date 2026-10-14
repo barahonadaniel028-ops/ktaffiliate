@@ -117,7 +117,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => !document.querySelector("#lab-mixrow").hidden), "mezclar con una semilla muestra el control de mezcla");
   await p.click('[data-act="labsave"]'); await wait(p, 500); await p.fill("#lab-name", "Mi estilo de prueba"); await p.click("#lab-save-go"); await wait(p, 900);
   ok(await p.evaluate(() => App.S.expStyles.some((s) => s.name === "Mi estilo de prueba" && s.recipe && s.status === "aprobado" && /^r-/.test(s.demo))), "guardar estilo lo deja aprobado con su receta");
-  await p.click("#lab-use"); await wait(p, 900);
+  await p.click("#lab-use"); await p.waitForSelector(".sty.on .xd-rcp", { timeout: 8000 }).catch(() => {}); await wait(p, 300);
   ok(await p.evaluate(() => App.route().name === "crear" && !!document.querySelector(".sty.on .xd-rcp")), "Usar en un video nuevo lleva a Crear con el estilo elegido");
   await nav(p, "#laboratorio/semilla/calma", 600);
   ok(await p.evaluate(() => /Calma/.test(document.querySelector(".stn-h h1").textContent) && !!document.querySelector("#lab-stage .st-stage")), "una semilla abre su Estacion");

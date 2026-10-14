@@ -16,7 +16,7 @@ const ROUTES = [["hoy", "hoy"], ["aprobar", "aprobar"], ["revision", "aprobar/ve
     const page = await ctx.newPage();
     page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning" && /Uncaught|Error/.test(m.text())) errors.push(`[${name}] console ${m.type()}: ${m.text().slice(0, 300)}`); });
     page.on("pageerror", (e) => errors.push(`[${name}] pageerror: ${e.message.slice(0, 300)}`));
-    await page.goto(page_ + `?preset=${preset}&demo=1#hoy`, { waitUntil: "load" });
+    await page.goto(page_ + `?preset=${preset}&demo=1&nocel=1#hoy`, { waitUntil: "load" });
     await page.waitForFunction(() => window.App && window.App.S && window.App.S.ready && window.App.S.ready.videos, null, { timeout: 8000 }).catch(() => errors.push(`[${name}] datos no cargaron`));
     await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(1300);
     const ids = await page.evaluate(() => { const S = App.S; const first = S.videos.find((v) => !v.published && (!v.status || v.status === "pending")); const edit = S.studioVersions.find((x) => x.spec); return { first: first && first.id, edit: edit && edit.id }; });
