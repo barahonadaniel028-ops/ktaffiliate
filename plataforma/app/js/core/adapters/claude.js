@@ -1,5 +1,7 @@
 /* Aura · adaptador claude (real). Habla con las capacidades reales del artefacto (window.claude.use). Interfaz igual a los demas adaptadores de esta carpeta:
-   connect(emit) update set add remove upload(file) assetUrl(id) deleteAsset(id) metrics(brand, q) sample() canTell() tell(text) userId() download(name, data).
+   connect(emit) update set add remove upload(file) assetUrl(id) deleteAsset(id) metrics(brand, q) sample() canTell() tell(text) userId() download(name, data) hasDownloads().
+   hasDownloads() refleja si el artefacto declaro la capacidad `downloads` al publicarse (capabilities:{downloads:true}, ver DECISIONES.md #8): si no la declaro,
+   use("downloads") resuelve null para siempre en esta vista y download() devuelve false -- la UI debe ocultar o deshabilitar el boton en vez de dejarlo fallar sin aviso.
    Este mismo codigo, sin cambios, es lo que corre contra el simulador de la fase 7 (ver adapters/simulador.js): el simulador solo reemplaza lo que hay
    detras de window.claude, nunca esta funcion. */
 (function () {
@@ -20,6 +22,7 @@
         });
         cap("mcp", 12000).then((m) => { mcp = m; App.emit("mcp"); });
         cap("comments", 12000).then((c) => { comments = c; App.refreshClaudeState(); setInterval(App.refreshClaudeState, 120000); });
+        cap("downloads", 12000).then((d) => { dl = d; App.emit("downloads"); });
         return true;
       },
       async userId() { return uid; },
@@ -37,6 +40,7 @@
         return { payload: res.payload, at: (res.cache && res.cache.storedAt) || Date.now() };
       },
       async sample() { sampleP = sampleP || (await cap("sample", 10000)); return sampleP; },
+      hasDownloads: () => !!dl,
       async canTell() { return comments ? await comments.canSendToClaude() : "off"; },
       async tell(text) {
         if (!comments) return false;

@@ -3,7 +3,15 @@ Uso:
   python3 plataforma/tools/build.py                 -> dist/index.html (autonomo, CDN) y dist/artifact.html (fragmento para artefacto)
   python3 plataforma/tools/build.py --local VENDOR   -> dist/index.html con fuentes y GSAP locales (pruebas sin internet)
   python3 plataforma/tools/build.py --demo           -> ademas dist/preview.html: fragmento de artefacto que arranca siempre en modo demostracion (vista previa privada)
-El bloque oscuro de tokens.css (entre @DARK y @END) se repite bajo tres selectores: sistema oscuro, data-theme del anfitrion y data-aura="night"."""
+El bloque oscuro de tokens.css (entre @DARK y @END) se repite bajo tres selectores: sistema oscuro, data-theme del anfitrion y data-aura="night".
+
+IMPORTANTE al publicar dist/artifact.html como artefacto de claude.ai (Artifact tool, accion "publish"): las capacidades del visor
+(db/assets/comments/downloads/mcp/sample/user) NO se declaran dentro de este HTML -- no existe un <meta> para eso en el contrato de
+artefactos (ver skill artifact-capabilities). Se declaran aparte, en el parametro `capabilities` de esa llamada de publicacion. Si se
+omite `downloads`, "Exportar" y "Descargar SRT" en el Estudio quedan sin hacer nada aunque el codigo este bien (ver DECISIONES.md #8).
+Pasar en cada publicacion/republicacion de este artefacto:
+  capabilities: {"db": {}, "assets": {}, "comments": {}, "downloads": True, "mcp": {"servers": [...Metricool...]}, "sample": {}, "user": {}}
+Ver MASTER-PROMPT.md §5 para la lista completa (debe coincidir)."""
 import base64, re, sys
 from pathlib import Path
 
@@ -101,3 +109,6 @@ page = ("<!doctype html>\n<html lang=\"es\"><head><meta charset=\"utf-8\"><meta 
         + fragment(fonts, gsap).replace("<div id=\"aura-root\"></div>", "</head><body style=\"margin:0\"><div id=\"aura-root\"></div>") + "</body></html>\n")
 (dist / ("index.html" if not local else "index.local.html")).write_text(page)
 print("ok", {"artifact": (dist / "artifact.html").stat().st_size, "page": len(page)})
+print("\nAl publicar dist/artifact.html como artefacto de claude.ai, pasar explicitamente (parametro `capabilities` del publish, NO va en el HTML):")
+print('  capabilities: {"db": {}, "assets": {}, "comments": {}, "downloads": True, "mcp": {"servers": [...]}, "sample": {}, "user": {}}')
+print("Si falta \"downloads\": true, Exportar y Descargar SRT en el Estudio no hacen nada (DECISIONES.md #8).")

@@ -31,6 +31,7 @@
       async deleteAsset(id) { delete files[id]; },
       assetUrl: (v) => (files[v] ? files[v] : assetUrl(v)),
       hasMetrics: () => true,
+      hasDownloads: () => true,
       async metrics(brand, q) {
         await new Promise((r) => setTimeout(r, 450));
         const dm = window.AuraDemo; if (!dm) throw Object.assign(new Error("sin datos"), { code: "server_not_connected" });

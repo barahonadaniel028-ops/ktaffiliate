@@ -362,6 +362,7 @@
     if (kinds.has("studio_versions")) { if (SE.spec) ST.remoteChanged(); else if (hasSpec(SE.vid) && Date.now() - SE.openedAt > 4000) { const id = SE.vid; teardown(); ST.open(id); App.toast("Claude dejó listo el editor completo. Ya puedes editar a mano."); return true; } }
     if (kinds.has("studio_transcripts")) { ST.renderTimeline(); if (SE.tool === "transcripcion") ST.renderInspector(); }
     if (kinds.has("studio_requests") || kinds.has("studio_media_feedback")) ST.refreshPanes();
+    if (kinds.has("downloads") && SE.tool === "exportar") ST.refreshPanes(); // la capacidad downloads puede resolver despues de abrir el panel
     ST.renderTop(); return true;
   };
 })();
