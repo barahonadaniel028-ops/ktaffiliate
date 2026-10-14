@@ -15,7 +15,7 @@ if "--local" in sys.argv:
     local = Path(sys.argv[sys.argv.index("--local") + 1]).resolve()
 
 CSS = ["tokens", "base", "shell", "v-hoy", "v-aprobar", "v-crear", "v-biblioteca", "v-lab", "v-metricas", "v-notas", "studio"]
-JS = ["core/util", "core/config", "core/state", "core/adapters", "core/theme", "core/router", "core/motion",
+JS = ["core/util", "core/config", "core/state", "core/adapters/util", "core/adapters/claude", "core/adapters/demo", "core/theme", "core/router", "core/motion",
       "engine/studio-engine", "engine/pred-data", "engine/pred",
       "domain/select", "domain/actions", "domain/library", "domain/trophies",
       "views/shell", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/biblioteca",

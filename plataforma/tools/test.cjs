@@ -3,7 +3,7 @@
 const { chromium } = require("playwright");
 const path = require("node:path"), fs = require("node:fs");
 const root = path.resolve(__dirname, ".."), file = "file://" + path.join(root, "dist", "index.local.html");
-const mockSrc = fs.readFileSync(path.join(root, "app", "dev", "mock-claude.js"), "utf8");
+const mockSrc = fs.readFileSync(path.join(root, "app", "js", "core", "adapters", "simulador.js"), "utf8");
 let pass = 0, fail = 0; const failures = [];
 const ok = (cond, name, extra) => { if (cond) { pass++; console.log("  ok  ", name); } else { fail++; failures.push(name + (extra ? " -> " + extra : "")); console.log("  FALLA", name, extra || ""); } };
 const wait = (p, ms) => p.waitForTimeout(ms);
@@ -169,6 +169,17 @@ async function open(browser, url, init, viewport) {
   await p.evaluate(() => { location.hash = "#crear/subir"; }); await wait(p, 600);
   await p.setInputFiles("#crfile", tmp); await wait(p, 1200);
   ok(await p.evaluate(() => window.__mock.uploads.length === 1 && App.ui.files[0].state === "done" && /^[0-9a-f]{32}$/.test(App.ui.files[0].id)), "subir usa assets.upload y guarda el id", JSON.stringify(await p.evaluate(() => window.__mock.uploads)));
+  await p.evaluate(() => { location.hash = "#estudio"; }); await wait(p, 600);
+  const edSim = await p.evaluate(() => (App.S.studioVersions.find((x) => x.spec) || {}).id);
+  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, edSim); await wait(p, 2200);
+  ok(await p.evaluate(() => !!(App.st.SE && App.st.SE.handle && App.st.SE.spec)), "abre el Estudio de un video con spec contra el simulador");
+  await p.keyboard.press("Escape"); await wait(p, 500);
+  await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 500);
+  await p.keyboard.press("Control+k"); await wait(p, 1100);
+  await p.fill("#jvbox", "llevame a biblioteca"); await p.keyboard.press("Enter");
+  await p.waitForFunction(() => App.route().name === "biblioteca" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
+  ok(await p.evaluate(() => App.route().name === "biblioteca" && !App.jarvis.isOpen()), "Jarvis responde y navega con sample()+herramientas contra el simulador");
+  ok(await p.evaluate(() => window.__mock.sampleCalls.length >= 1), "el simulador registra el turno de Jarvis (sampleCalls)");
   ok(p.errs.length === 0, "sin errores con el adaptador real", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
   console.log("\n== Telefono ==");
