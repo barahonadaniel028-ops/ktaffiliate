@@ -23,6 +23,8 @@
     var seen = false;
     try { seen = sessionStorage.getItem('corte-slate') === '1'; } catch (e) {}
     if (!reduce && !seen) d.classList.add('slate-on');
+    // If the page script never arrives, the headline must not stay masked.
+    setTimeout(function () { d.classList.add('hero-in'); }, 3200);
   })();
 </script>
 <a class="skip" href="#contenido">Saltar al contenido</a>
@@ -75,8 +77,8 @@
       <img class="hero__poster" src="assets/img/hero-poster.webp" alt="" aria-hidden="true" decoding="async">
       <div class="hero__copy">
         <h1 class="hero__title" id="hero-title">
-          <span class="hero__line hero__line--a">Suelta el video.</span>
-          <span class="hero__line hero__line--b">Elige el <em>corte.</em></span>
+          <span class="hero__line hero__line--a"><span class="hero__in">Suelta el video.</span></span>
+          <span class="hero__line hero__line--b"><span class="hero__in">Elige el <em>corte.</em></span></span>
         </h1>
         <div class="hero__foot">
           <p class="hero__sub">16 estilos de edición listos para Claude Code. Tú diriges; Claude hace el corte, los subtítulos, los gráficos y el render.</p>
@@ -170,7 +172,7 @@
 
       <figure class="monitor" data-monitor data-fmt="9:16">
         <figcaption class="monitor__bar"><span>Programa</span><span class="nums" data-mon-tc>00:00:00</span></figcaption>
-        <div class="monitor__screen"><canvas data-mon-canvas role="img" aria-label="Vista previa animada del estilo"></canvas></div>
+        <div class="monitor__screen"><canvas data-mon-canvas role="img" aria-label="Vista previa animada del estilo"></canvas><video data-mon-video muted loop playsinline preload="none" hidden></video></div>
       </figure>
 
       <div class="track" data-anchor="estilos">
@@ -356,7 +358,7 @@
   <section id="cierre" class="cierre" data-sc-act="pin" data-sc-span="1.5" data-clip="Render final" aria-labelledby="cierre-title">
     <div data-sc-stage class="cierre__stage">
       <div class="render" data-anchor="cierre">
-        <div class="render__monitor"><canvas data-close-canvas role="img" aria-label="Vista previa del estilo elegido"></canvas></div>
+        <div class="render__monitor"><canvas data-close-canvas role="img" aria-label="Vista previa del estilo elegido"></canvas><video data-close-video muted loop playsinline preload="none" hidden></video></div>
         <div class="render__bar" aria-hidden="true">
           <span class="render__label" data-render-label>Renderizando</span>
           <span class="render__pct nums"><span data-sc-count="0 100" data-sc-count-at="0.04 0.5">0</span>%</span>

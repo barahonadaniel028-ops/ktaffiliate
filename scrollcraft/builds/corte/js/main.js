@@ -104,7 +104,10 @@ const heroStage = $('.hero__stage');
 
 // --------------------------------------------------------------- slate --
 function runSlate() {
-  if (!root.classList.contains('slate-on')) return;
+  if (!root.classList.contains('slate-on')) {
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add('hero-in')));
+    return;
+  }
   const tc = $('[data-slate-tc]');
   const t0 = performance.now();
   let fontsOk = false;
@@ -114,6 +117,7 @@ function runSlate() {
     tc.textContent = fmtTC(e / 1000);
     if (e < 1050 || (!fontsOk && e < 2200)) { requestAnimationFrame(tick); return; }
     root.classList.add('slate-out');
+    setTimeout(() => root.classList.add('hero-in'), 380);
     try { sessionStorage.setItem('corte-slate', '1'); } catch (err) { /* ignore */ }
     setTimeout(() => root.classList.remove('slate-on', 'slate-out'), 950);
   };
@@ -129,7 +133,10 @@ let glReady = false;
 async function initGL() {
   try {
     const probe = document.createElement('canvas');
-    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) throw new Error('no webgl');
+    const gl = probe.getContext('webgl2') || probe.getContext('webgl');
+    if (!gl) throw new Error('no webgl');
+    const lose = gl.getExtension('WEBGL_lose_context');
+    if (lose) lose.loseContext();
     const { createStage } = await import('./ribbon.js');
     const n = mobile() ? 3 : 5;
     reelCanvases = HERO_STYLES.slice(0, n).map(() => {
@@ -189,6 +196,7 @@ const rail = $('[data-rail]');
 const monitor = $('[data-monitor]');
 const monCanvas = $('[data-mon-canvas]');
 const monTc = $('[data-mon-tc]');
+const monVideo = $('[data-mon-video]');
 const info = $('[data-info]');
 const infoName = $('[data-info-name]'), infoLine = $('[data-info-line]'), infoFmt = $('[data-info-fmt]'), infoGroup = $('[data-info-group]');
 const applyBtn = $('[data-apply]');
@@ -201,6 +209,19 @@ clips.forEach((btn) => {
   btn.setAttribute('aria-label', `${s.name}, ${s.tool ? 'herramienta' : s.fmt}. ${s.line} Aplicar a la página.`);
   btn.setAttribute('aria-pressed', 'false');
 });
+
+// A real sample, when the catalogue has one, replaces the animatic on screen.
+function showSample(videoEl, s) {
+  const src = s.video || '';
+  if (!src || reduce) {
+    if (!videoEl.hidden) { videoEl.pause(); videoEl.hidden = true; }
+    return false;
+  }
+  if (videoEl.dataset.src !== src) { videoEl.dataset.src = src; videoEl.src = src; }
+  if (videoEl.hidden) videoEl.hidden = false;
+  if (videoEl.paused) { const p = videoEl.play(); if (p && p.catch) p.catch(() => {}); }
+  return true;
+}
 
 function drawThumbs() {
   clips.forEach((btn) => {
@@ -317,6 +338,12 @@ $('[data-open-all]').addEventListener('click', () => {
 $('[data-close-all]').addEventListener('click', () => allDlg.close());
 allDlg.addEventListener('click', (e) => { if (e.target === allDlg) allDlg.close(); });
 
+// ---------------------------------------------------------------- close --
+const closeCanvas = $('[data-close-canvas]');
+const closeVideo = $('[data-close-video]');
+const renderLabel = $('[data-render-label]');
+let closeStyle = CONFIG.defaultClose;
+
 // -------------------------------------------------------------- El Grade --
 const GRADES = {
   acento: { heat: 1.15, sheen: 0.6, twist: 1.35, speed: 1.0 },
@@ -382,10 +409,6 @@ function applyGrade(id, opts = {}) {
   else rearmHeadings();
 })();
 
-// ---------------------------------------------------------------- close --
-const closeCanvas = $('[data-close-canvas]');
-let closeStyle = root.dataset.estilo || CONFIG.defaultClose;
-const renderLabel = $('[data-render-label]');
 
 // ------------------------------------------------------------- pointer --
 let ptr = { x: innerWidth / 2, y: innerHeight / 2, on: false };
@@ -462,7 +485,8 @@ function loop(now) {
     if (best) setActive(best.dataset.style);
     const s = byId[active];
     const t = (now - monStart) / 1000;
-    if (!reduce) drawFrame(monCanvas, s, t);
+    if (showSample(monVideo, s)) { /* the real sample is playing */ }
+    else if (!reduce) drawFrame(monCanvas, s, t);
     else if (monCanvas.dataset.drawn !== active) { drawFrame(monCanvas, s, s.thumb); monCanvas.dataset.drawn = active; }
     monTc.textContent = '00:00:' + String(Math.floor(t % s.dur)).padStart(2, '0') + ':' + String(Math.floor(((t % s.dur) % 1) * 24)).padStart(2, '0');
     // whip out: in the last stretch of the pin the frame is thrown left
@@ -500,7 +524,8 @@ function loop(now) {
   const ciCover = cover(S.cierre, vh);
   if (ciCover > 0) {
     const s = byId[closeStyle] || byId[CONFIG.defaultClose];
-    if (!reduce) drawFrame(closeCanvas, s, now / 1000);
+    if (showSample(closeVideo, s)) { /* real sample */ }
+    else if (!reduce) drawFrame(closeCanvas, s, now / 1000);
     else if (closeCanvas.dataset.drawn !== s.id) { drawFrame(closeCanvas, s, s.thumb); closeCanvas.dataset.drawn = s.id; }
     const cp = A.cierre ? A.cierre.p : 0;
     renderLabel.textContent = cp >= 0.5 ? 'Listo para publicar' : 'Renderizando';

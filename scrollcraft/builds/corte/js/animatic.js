@@ -352,6 +352,9 @@ class Kit {
 
 // ---------------------------------------------------------------- styles --
 // fmt: '9:16' | '16:9'. trat: caption treatment the page borrows under El Grade.
+// video: optional path to a real, silent sample of the style (mp4, H.264).
+// When set, the monitor and the close plate play it instead of the animatic.
+// Example: video: 'assets/samples/reel-negocio.mp4'
 export const STYLES = [
   {
     id: 'reel-negocio', name: 'Reel de negocio', fmt: '9:16', trat: 'apilado', dur: 7.2, thumb: 1.1,

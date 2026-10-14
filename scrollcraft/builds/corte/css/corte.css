@@ -172,9 +172,19 @@ main { position: relative; z-index: 2; }
   font-size: clamp(3.2rem, 1rem + 6.9vw, 9.4rem);
   line-height: .9; letter-spacing: -.05em;
 }
-.hero__line { display: block; will-change: transform; }
-.hero__line--a { transform: translate3d(calc(var(--cut, 0) * -82vw), calc(var(--cut, 0) * -5vh), 0); }
-.hero__line--b { padding-left: 13vw; transform: translate3d(calc(var(--cut, 0) * 82vw), calc(var(--cut, 0) * 5vh), 0); }
+.hero__line { display: block; will-change: transform; overflow: clip; padding-bottom: .1em; margin-bottom: -.1em; }
+.hero__in { display: inline-block; }
+/* Load sequence: once the slate opens, the two lines rise out of their masks
+   and the foot follows. */
+.js:not(.hero-in) .hero__in { transform: translate3d(0, 108%, 0); }
+.js:not(.hero-in) .hero__foot > * { opacity: 0; transform: translate3d(0, 14px, 0); }
+.hero__in { transition: transform 1150ms var(--ease-cut); }
+.hero__line--b .hero__in { transition-delay: 110ms; }
+.hero__foot > * { transition: opacity 800ms var(--ease-cut), transform 800ms var(--ease-cut); }
+.hero__foot > :nth-child(1) { transition-delay: 380ms; }
+.hero__foot > :nth-child(2) { transition-delay: 480ms; }
+.hero__line--a { transform: translate3d(calc(var(--cut, 0) * -112vw), calc(var(--cut, 0) * -5vh), 0); }
+.hero__line--b { padding-left: 13vw; transform: translate3d(calc(var(--cut, 0) * 112vw), calc(var(--cut, 0) * 5vh), 0); }
 .hero__title em { font-style: italic; font-weight: 520; font-stretch: 100%; color: var(--sc-accent); letter-spacing: -.04em; }
 .hero__foot {
   margin-top: clamp(1.6rem, 4.2vh, 3rem);
@@ -266,7 +276,7 @@ main { position: relative; z-index: 2; }
 }
 .monitor__bar { display: flex; justify-content: space-between; font: 600 .66rem/1 var(--sc-font-text); letter-spacing: .16em; text-transform: uppercase; color: var(--sc-ink-soft); }
 .monitor__screen { position: relative; background: #000; border-radius: var(--sc-r-md); overflow: hidden; box-shadow: 0 0 0 1px rgb(238 234 226 / .14), 0 30px 80px -20px rgb(0 0 0 / .8), 0 10px 30px -10px rgb(0 0 0 / .6); }
-.monitor__screen canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.monitor__screen canvas, .monitor__screen video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .monitor[data-fmt="9:16"] .monitor__screen { height: min(56svh, calc(100svh - var(--bar-h) - var(--track-h) - 7rem)); aspect-ratio: 9 / 16; }
 .monitor[data-fmt="16:9"] .monitor__screen { width: min(44vw, 46rem); aspect-ratio: 16 / 9; }
 
@@ -422,7 +432,7 @@ main { position: relative; z-index: 2; }
 .cierre__stage { background: transparent; }
 .render { position: absolute; z-index: 2; right: clamp(4vw, 9vw, 12vw); top: 50%; translate: 0 -52%; width: min(25vw, 21rem); display: grid; gap: 1rem; }
 .render__monitor { position: relative; aspect-ratio: 9 / 16; border-radius: var(--sc-r-md); overflow: hidden; background: #000; box-shadow: 0 0 0 1px rgb(238 234 226 / .16), 0 40px 90px -30px rgb(0 0 0 / .9); }
-.render__monitor canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.render__monitor canvas, .render__monitor video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .render__bar { display: grid; grid-template-columns: 1fr auto; gap: .55rem; font: 600 .7rem/1 var(--sc-font-text); letter-spacing: .14em; text-transform: uppercase; color: var(--sc-ink-soft); }
 .render__pct { color: var(--sc-ink); }
 .render__bar i { grid-column: 1 / -1; height: 2px; background: var(--hair); position: relative; overflow: hidden; }
@@ -577,7 +587,7 @@ h2[data-trat] .w { display: inline-block; }
 
 /* ------------------------------------------------------ reduced motion -- */
 @media (prefers-reduced-motion: reduce) {
-  .hero__line--a, .hero__line--b, .hero__foot { transform: none !important; }
+  .hero__line--a, .hero__line--b, .hero__foot, .hero__in, .hero__foot > * { transform: none !important; }
   .hero__tag { display: none; }
   .hero__razor, .fx-flash, .fx-grade { display: none; }
   .sheet { transform: none !important; }
