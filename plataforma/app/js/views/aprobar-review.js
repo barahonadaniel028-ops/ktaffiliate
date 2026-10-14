@@ -7,6 +7,45 @@
   const CAP_FONTS = [["aston", "Aston (especial)"], ["normal", "Normal"], ["cursive", "Cursiva"]];
   const CAP_COLORS = [["#FFFFFF", "Blanco"], ["#FFD84D", "Amarillo"], ["#4FD8FF", "Cian"], ["#5DFFB8", "Verde"], ["#FF6A5E", "Rojo"], ["#FFB54A", "Naranja"]];
   const V = () => (RV ? sel.video(RV.id) : null);
+
+  // ---------- predictor: traduce los "parts" crudos de scoreVideo() a categorias simples (DECISIONES.md #9) ----------
+  // No toca pred.js ni la formula: solo agrupa y renombra en espanol llano lo que ya calculo scoreVideo(). El predictor
+  // de hoy solo mide el texto del gancho y que tan distinta es esta version de sus hermanas -- no hay datos de iluminacion
+  // o subtitulos que agrupar, asi que esas categorias no aparecen (no se inventan datos que el modelo no produce).
+  const FACTOR_GROUPS = [
+    { key: "claridad", title: "Claridad del mensaje" },
+    { key: "evitar", title: "Qué evitar en el gancho" },
+    { key: "nueva", title: "Qué tan nueva se ve esta versión" },
+  ];
+  const FACTOR_MAP = {
+    "Largo ideal": ["claridad", "El gancho tiene el largo justo para leerse rápido."],
+    "Largo justo": ["claridad", "El gancho entra en dos líneas, al límite."],
+    "Muy largo": ["claridad", "El gancho es muy largo: no entra cómodo en dos líneas."],
+    "Muy corto": ["claridad", "El gancho es muy corto: casi no promete nada."],
+    "Palabras simples (ninguna de 11 letras o más)": ["claridad", "Usa palabras simples, fáciles de entender rápido."],
+    "Rompe una creencia (no, nunca, nadie, deja de)": ["claridad", "Rompe una creencia (no, nunca, nadie), algo que suele atrapar."],
+    "Pregunta directa con signo de interrogación": ["evitar", "Termina en pregunta: en los datos, eso no funcionó."],
+    "Le habla al espectador con 'tú/vos/you'": ["evitar", "Le habla directo a la persona (tú/vos/you)."],
+    "Nombra a Kevin Trudeau en el gancho": ["evitar", "Nombra a Kevin Trudeau en el gancho."],
+    "Anuncio de evento (join, free, reto, gratis)": ["evitar", "Suena a anuncio de evento o promoción."],
+    "Cliché de ley de atracción (tus palabras crean tu realidad)": ["evitar", "Usa una frase muy repetida de autoayuda."],
+    "Palabra muy repetida": ["nueva", "Repite una palabra que ya usaste en muchos ganchos."],
+    "Se ve distinta a las otras versiones": ["nueva", "Se ve distinta a las otras versiones de la pieza."],
+    "Se parece demasiado a las otras versiones": ["nueva", "Se parece mucho a otra versión de esta pieza."],
+    "Intro repetido en otra pieza": ["nueva", "Este intro ya se usó en otra pieza."],
+  };
+  const factorOf = (label) => {
+    if (FACTOR_MAP[label]) return FACTOR_MAP[label];
+    if (/^Promesa directa/.test(label)) return ["claridad", "Abre con una promesa directa."];
+    if (/^Objeto o ritual concreto/.test(label)) return ["claridad", "Usa un objeto o dato bien concreto."];
+    if (/^Tiempo o cifra concreta/.test(label)) return ["claridad", "Da un tiempo o una cifra concreta."];
+    return ["claridad", label]; // factor nuevo sin traducir todavia: no lo escondemos, pero avisa en consola para agregarlo
+  };
+  function friendlyGroups(parts) {
+    const byKey = {};
+    parts.forEach((p) => { const [key, text] = factorOf(p.label); (byKey[key] = byKey[key] || []).push({ text, pts: p.pts }); });
+    return FACTOR_GROUPS.map((g) => { const items = byKey[g.key] || []; if (!items.length) return null; return { title: g.title, net: items.reduce((a, x) => a + x.pts, 0), items }; }).filter(Boolean);
+  }
   const safeSvg = () => { const P = (window.StudioModel && StudioModel.SAFE) || [[91, 237], [990, 237], [990, 997], [899, 997], [899, 1650], [366, 1650], [366, 1479], [91, 1479]]; return `<svg class="safe" viewBox="0 0 1080 1920" preserveAspectRatio="none" aria-hidden="true"><path fill-rule="evenodd" d="M0 0H1080V1920H0Z M${P.map((p) => p.join(" ")).join(" L")}Z" fill="rgba(0,0,0,.5)"/><path d="M${P.map((p) => p.join(" ")).join(" L")}Z" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="4" stroke-dasharray="14 10"/></svg>`; };
 
   // ---------- esqueleto (no cambia mientras se revisa; los paneles se pintan aparte) ----------
@@ -41,12 +80,14 @@
   }
   function paintRight() {
     const v = V(); if (!v) return; const sibs = sel.siblings(v), r = App.pred.scoreVideo(v), notes = sel.notesOf(v);
-    const factors = r ? r.parts.slice().sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts)).slice(0, 6).map((p) => `<li data-k="${p.pts >= 0 ? "pos" : "neg"}"><i>${p.pts >= 0 ? "✓" : "!"}</i><div><b>${esc(p.label)}</b><small>${esc(p.why)}</small></div><span>${p.pts >= 0 ? "+" : "−"}${Math.abs(p.pts)}</span></li>`).join("") : "";
+    // circulo del score: unico visible por default. Los factores van agrupados en espanol llano detras de "¿Por qué este score?" (DECISIONES.md #9)
+    const groups = r ? friendlyGroups(r.parts) : [];
+    const groupsHtml = groups.map((g) => { const dn = Math.round(g.net), sign = dn > 0 ? "+" : dn < 0 ? "−" : "±"; return `<li data-k="${g.net >= 0 ? "pos" : "neg"}"><i>${g.net >= 0 ? "✓" : "!"}</i><div><b>${esc(g.title)}</b><small>${g.items.map((x) => esc(x.text)).join(" ")}</small></div><span>${sign}${Math.abs(dn)}</span></li>`; }).join("");
     const fix = r && (r.fb.length || r.fbClaude.length) ? `<div class="fixes"><b>${r.fb.length ? "Lo que puedes hacer" : "Lo ajusta Claude solo"}</b><ul>${(r.fb.length ? r.fb : r.fbClaude).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
     const tags = App.config.tags.map((t) => `<button type="button" class="chip tg" data-act="rvtag" data-t="${esc(t)}" aria-pressed="${(v.tags || []).includes(t)}">${esc(t)}</button>`).join("");
     const noteRows = notes.map((n) => `<li class="${sel.closedNote(n) ? "done" : ""}"><button class="chip tcb" type="button" data-act="rvseek" data-t="${n.t || 0}">${esc(n.tc || mmss(n.t))}</button><span>${esc(n.text)}</span>${n.sent === false ? `<button class="x" type="button" data-act="rvnotedel" data-id="${esc(n.id)}" aria-label="Borrar nota">${icon("x")}</button>` : `<em class="chip ${sel.closedNote(n) ? "good" : ""}">${sel.closedNote(n) ? "Resuelta" : "Enviada"}</em>`}</li>`).join("");
     $("#rvright").innerHTML = `<div class="say"><div class="who"><span class="orb"></span><b>Jarvis</b></div><div class="msg lg">${opinion(v, sibs)}</div></div>
-      ${r ? `<section class="factors"><div class="fh">${ring(r.score / 100, 64, { r: 40, sw: 8, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num" style="font:500 20px/1">${r.score}</b>` })}<div><b>${esc(App.pred.TIER_TXT[r.tier])}</b><small class="muted">Aprox. ${r.prob}% de chance de pasar ${App.config.viralThreshold} vistas</small></div></div><ul class="why">${factors}</ul>${fix}</section>` : ""}
+      ${r ? `<section class="factors"><div class="fh">${ring(r.score / 100, 64, { r: 40, sw: 8, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num" style="font:500 20px/1">${r.score}</b>` })}<div><b>${esc(App.pred.TIER_TXT[r.tier])}</b><small class="muted">Aprox. ${r.prob}% de chance de pasar ${App.config.viralThreshold} vistas</small></div></div>${groupsHtml || fix ? `<details class="why-toggle"><summary>¿Por qué este score?</summary><ul class="why">${groupsHtml}</ul>${fix}</details>` : ""}</section>` : ""}
       <section class="fb"><h4>Qué falla</h4><div class="tags">${tags}</div>
         <div class="field"><label for="rvfb">Cambio para esta versión</label><textarea id="rvfb" rows="2" maxlength="2000" placeholder="${esc(App.say("Qué querés que cambie. Queda guardado y se envía con Enviar cambios.", "Qué quieres que cambie. Queda guardado y se envía con Enviar cambios."))}">${esc(v.feedback || "")}</textarea><span class="hint" id="rvfbstat">${v.feedbackDirty ? "Guardado. Se envía con Enviar cambios." : ""}</span></div></section>
       <section class="notes"><h4>Notas por cuadro <small id="rvnotet">en <b class="num">${mmss(vEl ? vEl.currentTime : 0)}</b></small></h4>
