@@ -86,7 +86,8 @@ if (reduce) {
   document.getElementById('estilos').setAttribute('data-sc-span', '1.3');
 }
 
-const sc = window.ScrollCraft.mount(document.body);
+window.__corte = true;
+const sc = window.ScrollCraft.instances[0] || window.ScrollCraft.mount(document.body);
 const actOf = (el) => sc.acts.find((a) => a.el === el);
 
 // ---------------------------------------------------------------- refs --

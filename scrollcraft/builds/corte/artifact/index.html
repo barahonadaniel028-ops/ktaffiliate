@@ -383,4 +383,15 @@
 <canvas class="gl gl--front" id="gl-front" aria-hidden="true"></canvas>
 
 <script src="scrollcraft.js"></script>
+<script>
+  // Safety net: if the page module never boots (an old browser, a blocked
+  // file), mount the engine anyway so no copy stays hidden behind a cue.
+  setTimeout(function () {
+    if (window.__corte) return;
+    var d = document.documentElement;
+    d.classList.remove('slate-on', 'slate-out');
+    d.classList.add('hero-in', 'no-webgl');
+    try { if (!ScrollCraft.instances.length) ScrollCraft.mount(document.body); } catch (e) {}
+  }, 4500);
+</script>
 <script type="module" src="js/main.js"></script>
