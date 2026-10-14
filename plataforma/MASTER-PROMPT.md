@@ -1,6 +1,6 @@
 # Master prompt · Aura (plataforma de redes sociales para marcas)
 
-> Este documento es la fuente de verdad del producto. Quien construya (Claude u otro equipo) lo lee completo y no inventa nada que no esté aquí. El plan de ejecución está en `MASTER-PLAN.md` y los datos exactos en `CONTRATO-DE-DATOS.md`.
+> Este documento es la fuente de verdad del producto. Quien construya (Claude u otro equipo) lo lee completo y no inventa nada que no esté aquí. El plan de ejecución está en `MASTER-PLAN.md` y los datos exactos en `CONTRATO-DE-DATOS.md`. **Antes de tocar nada, leer también `DECISIONES.md`**: registra qué cambió respecto de la primera versión y por qué — en particular, qué se eliminó a propósito y no hay que recrear.
 
 ## 1. Qué es
 
@@ -9,10 +9,10 @@
 Una promesa: **abrís y sabés en una frase cómo vas y qué sigue.** Un botón principal por pantalla. Todo lo demás espera.
 
 ### Lo que SÍ es
-Redes sociales: aprobar videos, pedir y subir videos nuevos, biblioteca de estilos aprobados, laboratorio de estilos, métricas de Instagram, logros por hitos de redes, notas y cambios para Claude, y un estudio de edición.
+Redes sociales: aprobar videos, pedir y subir videos nuevos, biblioteca de estilos aprobados, laboratorio de estilos, métricas de Instagram con celebraciones por hito, notas y cambios para Claude, y un estudio de edición.
 
 ### Lo que NO es (decisión de Daniel)
-**Sin ventas, comisiones, afiliados ni dinero.** Nada de Stripe ni cifras financieras. Los logros son solo de redes (seguidores, vistas, interacciones, reels, rachas). La pestaña "Números" se llama **Métricas**.
+**Sin ventas, comisiones, afiliados ni dinero.** Nada de Stripe ni cifras financieras. La pestaña "Números" se llama **Métricas**. **No hay una sección "Logros" separada** (ver `DECISIONES.md`): los hitos de redes (seguidores, vistas, interacciones, guardados) viven dentro de Métricas y se celebran como un momento puntual, no como una pantalla con niveles/XP para visitar.
 
 ## 2. Estilo (híbrido: estructura de Mando + color de Aura)
 
@@ -31,27 +31,29 @@ Esfera con degradé cónico teal/menta/durazno/damasco/rosa que respira. Está e
 5. Al cerrar, el panel vuelve a ser gota y regresa al orbe.
 El mismo morph lleva al orbe a la pantalla que pedís ("llevame a aprobar") y a la tarjeta de confirmación. Con "reducir movimiento": fundido simple, sin cola.
 
+**Una sola transición, siempre.** Abrir Jarvis, cerrarlo, navegar a otra pantalla pidiéndoselo, mostrarle algo y abrir el chat usan exactamente el mismo movimiento (la gota líquida + el florecido). Nunca una pantalla propia de fundido/deslizamiento compitiendo con el morph al mismo tiempo: si Jarvis está llevando al visitante a algún lado, es el morph el que dueño de esa transición, no el cambio de vista por su cuenta. El florecido (`bloom`/`wilt`) no es un círculo geométrico perfecto: lee como la misma nube líquida/mórfica del fondo, con el mismo lenguaje orgánico, no como un reveal plano ni algo que "flota" suelto en el aire.
+
+**Presencia mínima permanente.** El orbe de Jarvis (chico) está siempre visible y accesible en cualquier pantalla, no solo como botón dentro de la barra superior/tabbar — es una presencia flotante propia.
+
 ## 3. Mapa de la plataforma (todas las secciones)
 
 | Sección | Para qué | Acción principal |
 |---|---|---|
 | **Hoy** | La frase del día + lo que sigue | Empezar a aprobar |
-| **Aprobar** | Cola de videos por pieza y versión; agendados; rechazados | Aprobar |
 | **Crear** | Pedir videos nuevos y **subir videos** (crudos, clips, referencias) | Enviar pedido |
 | **Biblioteca** | Estilos, transiciones, textos, fondos, subtítulos y sonidos ya aprobados | Usar en un video nuevo |
 | **Laboratorio** | Rondas de estilo (Me gusta / Quizás / No), referencias, estilos en prueba | Calificar |
-| **Métricas** | Redes por cuenta y total: vistas, seguidores, interacciones, mejores reels, ritmo de publicación | Actualizar |
-| **Logros** | Trofeos y niveles por hitos de redes | Ver el próximo |
+| **Métricas** | Redes por cuenta y total: vistas, seguidores, interacciones, mejores reels, ritmo de publicación, y celebración cuando se cruza un hito | Actualizar |
 | **Notas** | Bandeja de notas y cambios pendientes + **Enviar cambios** a Claude | Enviar cambios |
-| **Estudio** | Editor de video (ver §6), se abre sobre cualquier video | Guardar / Exportar |
+| **Estudio** | Listado de todos los videos. Entrar a uno abre una vista general (revisar, aprobar, agendar — lo que antes era "Aprobar"); desde ahí, "Abrir en editor" lleva al editor completo (ver §6) | Aprobar / Editar |
 | **Ajustes** | Espacio de trabajo, cuentas, tema, voz de Jarvis, zona segura, modo demo | — |
 | **Jarvis** | Asistente en el orbe, disponible en toda pantalla | Preguntar / pedir |
 
 ### Hoy
-Orbe grande + saludo con mini onda + frase del día (300/56 px, lo importante en 500 con resaltado damasco) calculada de datos reales, p. ej. "Inglés se queda sin contenido el jueves. Con 5 aprobados hoy llegás al 20." Cápsulas: **Empezar a aprobar (n)** · Pedir un video · Abrir el Estudio. Campo "Preguntale a Jarvis" con micrófono. Tarjetas de vidrio: *Contenido asegurado* (días por cuenta, barras), *Por aprobar* (tira de videos con puntaje), *Redes 7 días* (vistas, seguidores, interacciones con curva), *Pedidos en curso* (Claude trabajando, con avance), *Pendientes de Daniel* (lista con urgencia), *Logros* (nivel, XP, 5 medallas), *Laboratorio* (ronda abierta).
+Orbe grande + saludo con mini onda + frase del día (300/56 px, lo importante en 500 con resaltado damasco) calculada de datos reales, p. ej. "Inglés se queda sin contenido el jueves. Con 5 aprobados hoy llegás al 20." Cápsulas: **Empezar a aprobar (n)** · Pedir un video · Abrir el Estudio. Campo "Preguntale a Jarvis" con micrófono. Tarjetas de vidrio: *Contenido asegurado* (días por cuenta, barras), *Por aprobar* (tira de videos con puntaje), *Redes 7 días* (vistas, seguidores, interacciones con curva), *Pedidos en curso* (Claude trabajando, con avance), *Pendientes de Daniel* (lista con urgencia), *Laboratorio* (ronda abierta).
 
-### Aprobar
-Tres pestañas: **Por aprobar · Agendados · Rechazados**. Selector de cuenta. Cada pieza agrupa sus versiones (v1…v4) como cápsulas con anillo de puntaje del predictor. Pantalla de revisión: video en marco de vidrio con resplandor ambiental tomado del poster, barra de progreso con notas por cuadro (nota anclada al segundo), zona segura de Instagram (interruptor), subtítulos por palabra editables (estilos por palabra), etiquetas de problema (Hook, Subtítulos, Intro, Música, Audio, Cara tapada, Otro), predictor de viralidad con factores explicables y evidencia propia, y a la derecha Jarvis opina ("v2 puede ser la mejor de la pieza…"). Cápsula inferior: **Rechazar · Quizás · Aprobar vN**; atajos `A/Q/R`, `←/→` versión, `Espacio`, `N` nota, `⌘Z` deshacer. **Aprobar = agendar** (escribe `requests/schedule_<cuenta>` y avisa a Claude); rechazar un video ya agendado lo marca para quitar de Metricool. Selección múltiple en lote. Estado "triage": cuenta de piezas hechas / total, tiempo estimado.
+### Estudio — listado y revisión (reemplaza a la antigua pestaña "Aprobar", ver `DECISIONES.md`)
+Ya no existe una sección "Aprobar" aparte: este es el flujo de entrada al Estudio, y es donde vive todo lo que antes hacía esa pestaña. Tres vistas dentro de Estudio: **Por aprobar · Agendados · Rechazados**. Selector de cuenta. Cada pieza agrupa sus versiones (v1…v4) como cápsulas con anillo de puntaje del predictor — este es el *listado de todos los videos creados*. Click en una versión entra a la **vista general**: video en marco de vidrio con resplandor ambiental tomado del poster, barra de progreso con notas por cuadro (nota anclada al segundo), zona segura de Instagram (interruptor), subtítulos por palabra editables (estilos por palabra), etiquetas de problema (Hook, Subtítulos, Intro, Música, Audio, Cara tapada, Otro), predictor de viralidad con factores explicables y evidencia propia, y a la derecha Jarvis opina ("v2 puede ser la mejor de la pieza…"). Cápsula inferior: **Rechazar · Quizás · Aprobar vN**; atajos `A/Q/R`, `←/→` versión, `Espacio`, `N` nota, `⌘Z` deshacer. **Aprobar = agendar** (escribe `requests/schedule_<cuenta>` y avisa a Claude); rechazar un video ya agendado lo marca para quitar de Metricool. Selección múltiple en lote. Estado "triage": cuenta de piezas hechas / total, tiempo estimado. Desde esta vista general, un botón **"Abrir en editor"** es la única puerta al editor completo (§6) — el editor nunca se abre directo desde ningún otro lado de la plataforma.
 
 ### Crear (importantísimo)
 Dos modos en una sola pantalla, con la cápsula de modo arriba:
@@ -68,14 +70,13 @@ Tres pestañas: **Ronda** (tarjetas con demo animada; Me gusta / Quizás / No co
 ### Métricas
 Solo redes. Selector Total / cuenta. Rango 7/30 días. Tarjetas grandes: vistas, seguidores (neto, ganados, perdidos), interacciones, alcance, reels publicados. Curva de evolución, tabla de **mejores reels** (nombre de pieza, vistas, interacciones, fecha), **ritmo de publicación** (agendados por día y hueco de contenido), mejor hora para publicar. Datos de Metricool (`IGRE*` y evolución); si no hay conexión, últimos datos guardados con la marca "dato guardado hace…". Sin dinero.
 
-### Logros
-Definiciones por hitos de redes: seguidores, vistas de reels (150 días), interacciones, reel más visto, reels publicados, vistas en 7 días, seguidores nuevos en 7 días, **racha de días con contenido**. Niveles Bronce, Plata, Oro, Platino, Diamante; XP; por cuenta o total; "próximos 3"; celebración al desbloquear (medalla con rebote, 4 destellos, vibración corta) y compartir. Solo se guarda cuáles vio Daniel (`home/trophies`).
+**Hitos (reemplaza a la antigua sección "Logros", ver `DECISIONES.md`: no recrear una pantalla aparte).** Definiciones por número específico cruzado: vistas, seguidores, interacciones, likes o guardados (por cuenta o total). No hay niveles/XP/medallas para visitar: cuando al abrir la app un hito nuevo quedó cruzado desde la última vez, aparece una **celebración puntual** con el mismo branding y la misma transición (morph) que el resto de la plataforma — nunca un componente visual aparte — con confeti, un mensaje de felicitación/reconocimiento por el trabajo hecho y una frase motivacional, y se cierra volviendo a Métricas. Qué hitos ya se celebraron se guarda (p. ej. `home/trophies`) para no repetir la misma celebración dos veces.
 
 ### Notas
 Bandeja con lo que está sin enviar (notas por cuadro, feedback por video, cambios de subtítulos, referencias, calificaciones de ronda, comentarios generales), con **Deshacer** por elemento y el botón **Enviar cambios**, que marca todo como enviado y avisa a Claude una sola vez. Historial de enviadas y resueltas.
 
-### Estudio y Ajustes
-Ver §6 y §7.
+### Ajustes
+Ver §7. (El editor del Estudio está descrito en §6; su listado y vista general están arriba, en "Estudio — listado y revisión".)
 
 ## 4. Jarvis
 
@@ -92,7 +93,7 @@ La interfaz habla con un **adaptador** (Claude real / memoria de demostración /
 
 ## 6. Estudio (recreado, mismo motor)
 
-Misma lógica y mismo renderizador que hoy (modelo puro, reglas de calidad, catálogo, `StudioRenderer` con GSAP; lo que se ve es lo que se exporta, 1080×1920 a 30 fps), con una piel nueva minimalista de vidrio:
+Se llega acá SOLO desde el botón "Abrir en editor" de la vista general descrita en §3 (listado de videos → vista general → editor). Nunca es la pantalla con la que arranca la sección Estudio. Misma lógica y mismo renderizador que hoy (modelo puro, reglas de calidad, catálogo, `StudioRenderer` con GSAP; lo que se ve es lo que se exporta, 1080×1920 a 30 fps), con una piel nueva minimalista de vidrio:
 - **Arriba:** volver, nombre de la pieza, versiones (v1…v4 con punto de estado), guardado, deshacer/rehacer, reglas (n), Pedirle a Claude, Exportar.
 - **Izquierda – Biblioteca del Estudio:** Fondos · Texto · Transiciones · Imágenes · Subtítulos · Sonido · Estilos. Un toque agrega al cursor.
 - **Centro:** teléfono con el video, selección en el cuadro (arrastrar texto/medios), zona segura, play/pausa, barra, código de tiempo, silenciar.
@@ -104,7 +105,7 @@ Misma lógica y mismo renderizador que hoy (modelo puro, reglas de calidad, cat�
 
 ## 7. Multi espacio (para vender)
 
-Todo lo propio de Daniel vive en un **preset de espacio** (`App.config`): nombre del espacio, cuentas (id, nombre, @, blogId, color, idioma), formatos de producción, etiquetas de problema, materia prima, textos de Jarvis, objetivos de logros. Se entrega el preset **KT** y un segundo preset **Lumen** (marca ficticia, otro idioma y otras cuentas) para probar que la interfaz no depende de KT. Ver `MASTER-PLAN.md` §6 para lo que falta para ser un SaaS real (autenticación, tenencia, cobro, workers, OAuth de Metricool).
+Todo lo propio de Daniel vive en un **preset de espacio** (`App.config`): nombre del espacio, cuentas (id, nombre, @, blogId, color, idioma), formatos de producción, etiquetas de problema, materia prima, textos de Jarvis, objetivos de hitos (para las celebraciones de Métricas, ver §3). Se entrega el preset **KT** y un segundo preset **Lumen** (marca ficticia, otro idioma y otras cuentas) para probar que la interfaz no depende de KT. Ver `MASTER-PLAN.md` §6 para lo que falta para ser un SaaS real (autenticación, tenencia, cobro, workers, OAuth de Metricool).
 
 ## 8. Estados, accesibilidad y responsive
 

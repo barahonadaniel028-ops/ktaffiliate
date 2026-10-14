@@ -1,5 +1,7 @@
 # Master plan · Aura
 
+> Este plan describe cómo se construyó la fase 0-8 (ver `DECISIONES.md` para lo que cambió después de probar esa versión — algunas cosas que este plan da por entregadas, como "Logros", se eliminaron a propósito y no hay que recrearlas).
+
 ## 1. Decisión de eficiencia (la pregunta de Daniel)
 
 > "¿Tú creas todo el código y yo se lo paso al chat donde creamos la plataforma, o tú lo editas todo?"
