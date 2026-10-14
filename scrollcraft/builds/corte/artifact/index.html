@@ -1,0 +1,384 @@
+<title>CORTE Pack de edición</title>
+<script>document.documentElement.lang = 'es'; document.documentElement.dataset.trat = 'limpio';</script>
+<meta name="description" content="16 estilos de edición listos para Claude Code. Sueltas un video crudo, eliges el estilo y Claude hace el corte, los subtítulos, los gráficos y el render. Un solo pago.">
+<meta name="theme-color" content="#0B0C0E">
+<meta property="og:title" content="CORTE · 16 estilos de edición para Claude Code">
+<meta property="og:description" content="Suelta el video. Elige el corte. Un pack de skills de edición para Claude Code, en un solo pago.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230B0C0E'/><rect x='7' y='7' width='7' height='7' fill='%23FF4A1C'/><rect x='7' y='17' width='18' height='2' fill='%23EEEAE2'/><rect x='7' y='22' width='12' height='2' fill='%23EEEAE2'/></svg>">
+<link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="scrollcraft.css">
+<link rel="stylesheet" href="css/corte.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+<script>
+  // Runs before first paint: decides the intro and restores a chosen grade
+  // so the page never flashes the wrong heading treatment.
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var seen = false;
+    try { seen = sessionStorage.getItem('corte-slate') === '1'; } catch (e) {}
+    if (!reduce && !seen) d.classList.add('slate-on');
+  })();
+</script>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<div class="slate" aria-hidden="true">
+  <div class="slate__half slate__half--top"><span class="slate__mark"><i></i>CORTE</span><span class="slate__tc" data-slate-tc>00:00:00:00</span></div>
+  <div class="slate__half slate__half--bottom"><span>Escena 1</span><span>Toma 1</span><span>Sala de montaje</span></div>
+</div>
+
+<div class="haze" aria-hidden="true"></div>
+<canvas class="gl gl--back" id="gl-back" aria-hidden="true"></canvas>
+<div class="sc-grain" aria-hidden="true"></div>
+<div class="fx-flash" aria-hidden="true"></div>
+<div class="fx-grade" aria-hidden="true"><i></i></div>
+
+<header class="bar" data-bar>
+  <a class="bar__mark" href="#inicio" aria-label="CORTE, volver al inicio"><i class="tally" aria-hidden="true"></i>CORTE</a>
+  <button class="bar__tc" type="button" aria-haspopup="dialog" aria-controls="bin" data-open-bin>
+    <span class="tc nums" data-tc>00:00:00:00</span>
+    <span class="bar__grade" data-grade-label>Abrir el bin</span>
+  </button>
+  <a class="btn btn--sm bar__cta" href="#precio" data-buy>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+</header>
+
+<dialog class="bin" id="bin" aria-labelledby="bin-title">
+  <div class="bin__head">
+    <div>
+      <h2 class="bin__title" id="bin-title">Bin</h2>
+      <p class="bin__lede">Esta página es una edición de 90 segundos. Salta a cualquier clip.</p>
+    </div>
+    <button class="bin__close" type="button" data-close-bin aria-label="Cerrar el bin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <ol class="bin__list" data-bin-list></ol>
+</dialog>
+
+<dialog class="all" id="todos" aria-labelledby="todos-title">
+  <div class="all__head">
+    <h2 class="all__title" id="todos-title">Los 16 estilos y 2 herramientas</h2>
+    <button class="bin__close" type="button" data-close-all aria-label="Cerrar la lista de estilos"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="all__grid" data-all-grid></div>
+</dialog>
+
+<main id="contenido">
+
+  <!-- 1 · APERTURA. Pinned. The headline is cut in two and the halves part. -->
+  <section id="inicio" class="hero" data-sc-act="pin" data-sc-span="1.65" data-clip="Apertura" aria-labelledby="hero-title">
+    <div data-sc-stage class="hero__stage">
+      <div class="hero__anchor" data-anchor="hero" aria-hidden="true"></div>
+      <img class="hero__poster" src="assets/img/hero-poster.webp" alt="" aria-hidden="true" decoding="async">
+      <div class="hero__copy">
+        <h1 class="hero__title" id="hero-title">
+          <span class="hero__line hero__line--a">Suelta el video.</span>
+          <span class="hero__line hero__line--b">Elige el <em>corte.</em></span>
+        </h1>
+        <div class="hero__foot">
+          <p class="hero__sub">16 estilos de edición listos para Claude Code. Tú diriges; Claude hace el corte, los subtítulos, los gráficos y el render.</p>
+          <div class="hero__actions">
+            <a class="btn" href="#precio" data-buy>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="link" href="#estilos">Ver los 16 estilos</a>
+            <p class="hero__note"><span class="nums">$67</span> una vez. Tuyo para siempre.</p>
+          </div>
+        </div>
+      </div>
+      <div class="hero__razor" aria-hidden="true"></div>
+      <p class="hero__tag"><span>Tu material. Tu marca.</span> <span>Un estilo que ya funciona.</span></p>
+    </div>
+  </section>
+
+  <!-- 2 · LO QUE CUESTA. Flow. A ledger, then a year of bars. -->
+  <section id="costo" class="costo" data-sc-act="flow" data-clip="Lo que cuesta" aria-labelledby="costo-title">
+    <div class="sc-wrap">
+      <h2 class="h2 costo__title" id="costo-title" data-trat data-sc-in>Lo que te cuesta <em>editar</em> hoy</h2>
+      <div class="costo__grid">
+        <ol class="ledger" data-sc-in data-sc-stagger="110">
+          <li class="ledger__row">
+            <div class="ledger__what">
+              <h3>Contratar un editor</h3>
+              <p>Un pago fijo, mes tras mes.</p>
+            </div>
+            <p class="ledger__cost"><span class="nums">$500 a $3,000+</span><small>al mes</small></p>
+          </li>
+          <li class="ledger__row">
+            <div class="ledger__what">
+              <h3>Apilar apps de edición</h3>
+              <p>Una suscripción por app, y casi todos usan dos o tres.</p>
+              <ul class="chips" aria-label="Precios de lista de apps de edición">
+                <li>CapCut Pro <span class="nums">~$20/mes</span></li>
+                <li>OpusClip Pro <span class="nums">$29/mes</span></li>
+                <li>Descript Creator <span class="nums">$35/mes</span></li>
+                <li>Submagic Pro <span class="nums">$39/mes</span></li>
+              </ul>
+            </div>
+            <p class="ledger__cost"><span class="nums">$20 a $40</span><small>al mes, cada una</small></p>
+          </li>
+          <li class="ledger__row ledger__row--pack">
+            <div class="ledger__what">
+              <h3><i class="tally" aria-hidden="true"></i>CORTE</h3>
+              <p>Un solo pago. Después, solo el plan de Claude que quizá ya tienes (de $20 a $200 al mes).</p>
+            </div>
+            <p class="ledger__cost"><span class="nums">$67</span><small>una vez</small></p>
+          </li>
+        </ol>
+
+        <figure class="year" aria-labelledby="year-title">
+          <figcaption class="year__title" id="year-title"><span class="nums">12</span> meses, lado a lado</figcaption>
+          <div class="year__row" style="--v:1">
+            <span class="year__label">Editor a <span class="nums">$1,000</span>/mes</span>
+            <span class="year__track"><i></i></span>
+            <span class="year__value nums">$<span data-sc-count="0 12,000" data-sc-count-at="0.32 0.56">12,000</span></span>
+          </div>
+          <div class="year__row" style="--v:0.09">
+            <span class="year__label">Tres apps, ~<span class="nums">$90</span>/mes</span>
+            <span class="year__track"><i></i></span>
+            <span class="year__value nums">$<span data-sc-count="0 1,080" data-sc-count-at="0.36 0.58">1,080</span></span>
+          </div>
+          <p class="year__aside">Y sigues editando tú.</p>
+          <div class="year__row year__row--pack" style="--v:0.0056">
+            <span class="year__label">CORTE, un solo pago</span>
+            <span class="year__track"><i></i></span>
+            <span class="year__value nums">$67</span>
+          </div>
+          <div class="year__base" data-anchor="costo" aria-hidden="true"></div>
+          <p class="footnote">El total del pack no incluye tu plan de Claude ni la transcripción de pago. Precios de lista mensuales de cada app publicados en octubre de 2026; cambian seguido. El rango del editor es un pago típico de freelance. Revisa cada proveedor.</p>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · ESTILOS. Pan. The peak: a playhead scans the styles; choosing one regrades the page. -->
+  <section id="estilos" class="estilos" data-sc-act="pan" data-sc-span="6" data-clip="Los 16 estilos" aria-labelledby="estilos-title">
+    <div data-sc-stage class="estilos__stage">
+      <h2 class="h2 estilos__title" id="estilos-title"><span class="nums">16</span> estilos. <em>Elige uno,</em> o úsalos todos.</h2>
+
+      <div class="info" data-info>
+        <p class="info__fmt"><span data-info-group>Formato corto</span><span class="nums" data-info-fmt>9:16</span></p>
+        <h3 class="info__name" data-info-name>Reel de negocio</h3>
+        <p class="info__line" data-info-line>Pantalla completa, pantalla dividida y animación, alternando en cada corte.</p>
+        <div class="info__actions">
+          <button class="btn btn--ghost" type="button" data-apply>Aplicar a toda la página</button>
+          <button class="link link--btn" type="button" data-open-all>Ver todos</button>
+        </div>
+        <p class="info__applied" data-applied aria-live="polite"></p>
+      </div>
+
+      <figure class="monitor" data-monitor data-fmt="9:16">
+        <figcaption class="monitor__bar"><span>Programa</span><span class="nums" data-mon-tc>00:00:00</span></figcaption>
+        <div class="monitor__screen"><canvas data-mon-canvas role="img" aria-label="Vista previa animada del estilo"></canvas></div>
+      </figure>
+
+      <div class="track" data-anchor="estilos">
+        <div class="track__playhead" aria-hidden="true"><i></i></div>
+        <div class="track__rail" data-sc-pan="0" data-rail>
+          <div class="track__group"><span>Formato corto</span><span class="nums">9:16 · 12</span></div>
+          <button class="clip" type="button" data-style="reel-negocio"><canvas></canvas><span>Reel de negocio</span></button>
+          <button class="clip" type="button" data-style="reel-personal"><canvas></canvas><span>Reel personal</span></button>
+          <button class="clip" type="button" data-style="panel-explicativo"><canvas></canvas><span>Panel explicativo</span></button>
+          <button class="clip" type="button" data-style="subtitulo-ajustado"><canvas></canvas><span>Subtítulo ajustado</span></button>
+          <button class="clip" type="button" data-style="ensayo-visual"><canvas></canvas><span>Ensayo visual</span></button>
+          <button class="clip" type="button" data-style="reel-dividido"><canvas></canvas><span>Reel dividido</span></button>
+          <button class="clip" type="button" data-style="broll-frases"><canvas></canvas><span>B-roll y frases</span></button>
+          <button class="clip" type="button" data-style="nube-imagenes"><canvas></canvas><span>Nube de imágenes</span></button>
+          <button class="clip" type="button" data-style="recorte-fondo"><canvas></canvas><span>Recorte sobre fondo</span></button>
+          <button class="clip" type="button" data-style="ranking"><canvas></canvas><span>Ranking</span></button>
+          <button class="clip" type="button" data-style="clips-largo"><canvas></canvas><span>Clips de video largo</span></button>
+          <button class="clip" type="button" data-style="datos-en-pantalla"><canvas></canvas><span>Datos en pantalla</span></button>
+          <div class="track__group"><span>Formato largo</span><span class="nums">16:9 · 4</span></div>
+          <button class="clip clip--wide" type="button" data-style="youtube-educativo"><canvas></canvas><span>YouTube educativo</span></button>
+          <button class="clip clip--wide" type="button" data-style="leccion-dividida"><canvas></canvas><span>Lección dividida</span></button>
+          <button class="clip clip--wide" type="button" data-style="clips-llamada"><canvas></canvas><span>Clips de llamada</span></button>
+          <button class="clip clip--wide" type="button" data-style="podcast"><canvas></canvas><span>Podcast a dos cámaras</span></button>
+          <div class="track__group"><span>Herramientas</span><span class="nums">2</span></div>
+          <button class="clip clip--wide" type="button" data-style="biblioteca-broll"><canvas></canvas><span>Biblioteca de B-roll</span></button>
+          <button class="clip clip--wide" type="button" data-style="video-a-texto"><canvas></canvas><span>Video a texto</span></button>
+        </div>
+      </div>
+      <p class="estilos__note">Animatics de estructura: muestran el layout, el ritmo y los subtítulos de cada estilo. Tus ediciones usan tu material, tus colores y tus tipografías.</p>
+    </div>
+  </section>
+
+  <!-- 4 · HAZLOS TUYOS. Flow + reveal. Arrives on a whip pan. -->
+  <section id="tuyos" class="tuyos" data-sc-act="flow" data-clip="Hazlos tuyos" aria-labelledby="tuyos-title">
+    <div class="sc-wrap tuyos__wrap" data-whip>
+      <div class="tuyos__grid">
+      <div class="tuyos__lead">
+        <h2 class="h2" id="tuyos-title" data-trat>Un punto de partida, <em>no una caja cerrada.</em></h2>
+        <p class="lede">Los 16 estilos son donde empiezas. Son skills normales y son tuyos, así que Claude puede cambiarlos contigo.</p>
+        <div class="tuyos__braid" data-anchor="tuyos" aria-hidden="true"></div>
+      </div>
+      <ul class="tuyos__list">
+        <li class="feat" data-sc-reveal="left" data-sc-reveal-at="0.16 0.34">
+          <svg class="feat__ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+          <h3>Ajusta un estilo</h3>
+          <p>¿Te gusta un estilo pero quieres otros subtítulos, colores o ritmo? Se lo dices a Claude y actualiza el skill para todas las ediciones siguientes.</p>
+        </li>
+        <li class="feat" data-sc-reveal="left" data-sc-reveal-at="0.24 0.42">
+          <svg class="feat__ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4c6 0 6 8 8 8s2-8 8-8M4 20c6 0 6-8 8-8s2 8 8 8"/></svg>
+          <h3>Combina estilos</h3>
+          <p>Los subtítulos de uno, el layout de otro y los gráficos de un tercero. Claude junta lo que te gusta en un estilo que es solo tuyo.</p>
+        </li>
+        <li class="feat" data-sc-reveal="left" data-sc-reveal-at="0.32 0.5">
+          <svg class="feat__ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="14" rx="1"/><path d="M15 12h6M18 9v6"/></svg>
+          <h3>Crea estilos nuevos</h3>
+          <p>Usa los 16 como ejemplos que funcionan y pide a Claude un estilo nuevo a partir de tus propios videos de referencia.</p>
+        </li>
+        <li class="feat" data-sc-reveal="left" data-sc-reveal-at="0.4 0.58">
+          <svg class="feat__ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/></svg>
+          <h3>Ahorra tu uso</h3>
+          <p>Dejar un estilo bien desde cero son rondas y rondas de prompts, renders y correcciones, y cada ronda gasta tus límites de Claude. Estos skills ya pasaron por eso. Tu uso se va en tus videos, no en construir el editor.</p>
+        </li>
+      </ul>
+      </div>
+      <p class="tuyos__remate" data-sc-in>No compras 16 plantillas fijas. <em>Compras 16 puntos de partida probados.</em></p>
+    </div>
+  </section>
+
+  <!-- 5 · CÓMO FUNCIONA. Pin. A line draws itself through four stations. Arrives on a flash frame. -->
+  <section id="como" class="como" data-sc-act="pin" data-sc-span="2.7" data-clip="Cómo funciona" aria-labelledby="como-title">
+    <div data-sc-stage class="como__stage">
+      <h2 class="h2 como__title" id="como-title" data-trat data-sc-cue="0 1 0 0.02">Te guía en <em>cada paso.</em></h2>
+      <div class="como__rail" aria-hidden="true"><i></i><b></b></div>
+      <ol class="steps">
+        <li class="step" style="--a:0.06">
+          <span class="step__ico" aria-hidden="true"><svg viewBox="0 0 48 48"><path pathLength="1" d="M6 14v24h36V18H24l-4-4z"/><path pathLength="1" d="M14 26h20M14 32h12"/></svg></span>
+          <div class="step__txt" data-sc-cue="0.04 1 0.1 0.02"><span class="step__n nums">01</span>
+          <h3>Instala tus skills</h3>
+          <p>Instala Claude Code y descomprime los skills en tu carpeta de skills.</p></div>
+        </li>
+        <li class="step" style="--a:0.27">
+          <span class="step__ico" aria-hidden="true"><svg viewBox="0 0 48 48"><path pathLength="1" d="M8 8h32v32H8z"/><path pathLength="1" d="M14 18l3 3 6-6M14 30l3 3 6-6M28 18h8M28 30h8"/></svg></span>
+          <div class="step__txt" data-sc-cue="0.24 1 0.1 0.02"><span class="step__n nums">02</span>
+          <h3>Deja que Claude te guíe</h3>
+          <p>La primera vez que usas un skill, Claude revisa tu computadora y te dice exactamente qué instalar, en orden.</p></div>
+        </li>
+        <li class="step" style="--a:0.48">
+          <span class="step__ico" aria-hidden="true"><svg viewBox="0 0 48 48"><path pathLength="1" d="M6 10h24v14H16l-6 5v-5H6z"/><path pathLength="1" d="M42 22H22v14h12l6 5v-5h2z"/></svg></span>
+          <div class="step__txt" data-sc-cue="0.45 1 0.1 0.02"><span class="step__n nums">03</span>
+          <h3>Hazlo tuyo</h3>
+          <p>Te entrevista una pregunta a la vez: colores, tipografías, cómo grabas, dónde guardas tus archivos. Mándale dos o tres videos de referencia y adapta el estilo a ti.</p></div>
+        </li>
+        <li class="step" style="--a:0.69">
+          <span class="step__ico" aria-hidden="true"><svg viewBox="0 0 48 48"><path pathLength="1" d="M4 14h10v20H4zM19 14h10v20H19z"/><path pathLength="1" class="hot" d="M34 14h10v20H34z"/><path pathLength="1" d="M14 24h5M29 24h5"/></svg></span>
+          <div class="step__txt" data-sc-cue="0.66 1 0.1 0.02"><span class="step__n nums">04</span>
+          <h3>Suelta. Dirige. Renderiza.</h3>
+          <p>Sueltas un video crudo y dices «edítalo como reel de negocio». Recibes una vista previa, das notas en tu idioma y renderiza el final.</p></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 6 · POR QUÉ. Flow + kinetic. Four sentences at poster scale. -->
+  <section id="porque" class="porque" data-sc-act="flow" data-clip="Por qué" aria-labelledby="porque-title">
+    <div class="sc-wrap">
+      <h2 class="h2 porque__title" id="porque-title" data-trat data-sc-in>Por qué una plantilla le gana a <em>la página en blanco.</em></h2>
+      <ol class="claims">
+        <li class="claim"><p class="claim__t" data-claim data-sc-kinetic="lines">Empiezas con un estilo que ya funciona.</p></li>
+        <li class="claim claim--r"><p class="claim__t" data-claim data-sc-kinetic="lines">Lo haces tuyo y sigues construyendo encima.</p></li>
+        <li class="claim"><p class="claim__t" data-claim data-sc-kinetic="lines">Dejas de pagar cada mes por ediciones que puedes dirigir tú.</p></li>
+        <li class="claim claim--r">
+          <p class="claim__t" data-claim data-sc-kinetic="lines">Te saltas la prueba y error cara.</p>
+          <p class="claim__sub" data-sc-in>Las pruebas ya están hechas, así que no quemas uso ni créditos averiguando cómo se ve una buena edición.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 7 · LO QUE NECESITAS. Flow + in. Opens on an iris. -->
+  <section id="necesitas" class="necesitas" data-sc-act="flow" data-clip="Lo que necesitas" aria-labelledby="necesitas-title">
+    <div class="necesitas__iris" data-sc-reveal="iris" data-sc-reveal-at="0.02 0.3">
+      <div class="sc-wrap necesitas__grid">
+        <h2 class="h2" id="necesitas-title" data-trat>Lo que <em>necesitas.</em></h2>
+        <div>
+          <ul class="needs" data-sc-in data-sc-stagger="90">
+            <li><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M4 12.5l5 5L20 6.5"/></svg><p><strong>Una computadora Mac o Windows.</strong> Está hecho en Mac. En Windows, Claude revisa tu equipo y te dice qué instalar.</p></li>
+            <li><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M4 12.5l5 5L20 6.5"/></svg><p><strong>Claude Code con un plan de pago de Claude.</strong> Tu suscripción de Claude va aparte.</p></li>
+            <li><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M4 12.5l5 5L20 6.5"/></svg><p><strong>Las herramientas gratis que instala el setup:</strong> Node, HyperFrames y ffmpeg.</p></li>
+            <li><svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M4 12.5l5 5L20 6.5"/></svg><p><strong>Un transcriptor.</strong> Un servicio de pago por uso o la opción local gratis.</p></li>
+          </ul>
+          <p class="needs__note" data-sc-in>Las tipografías, la música y el material son tuyos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · PRECIO. An export sheet slides up over the dark page. -->
+  <section id="precio" class="precio ground-light" data-sc-act="flow" data-clip="Precio" aria-labelledby="precio-title">
+    <div class="sheet" data-sheet>
+      <div class="sheet__slug" aria-hidden="true"><span>Exportar</span><span>corte_pack_completo.zip</span><span class="nums">16 estilos · 2 herramientas</span><span class="nums">v1.0</span></div>
+      <div class="sc-wrap precio__grid">
+        <div class="precio__lead" data-sc-in>
+          <p class="label">Precio de lanzamiento</p>
+          <h2 class="h2" id="precio-title" data-trat>Un solo pago. <em>Tuyo para siempre.</em></h2>
+          <p class="lede">Pago único, sin suscripción. Te ahorra el uso y los créditos de construir un estilo desde cero.</p>
+        </div>
+        <div class="export" data-sc-in>
+          <p class="export__head"><span>Pack completo</span><span class="nums">16 + 2</span></p>
+          <p class="export__price"><span class="export__cur">$</span><span class="nums">67</span><span class="export__unit">USD<br>una vez</span></p>
+          <dl class="export__spec">
+            <div><dt>Estilos de edición</dt><dd class="nums">16</dd></div>
+            <div><dt>Herramientas</dt><dd>Biblioteca de B-roll y video a texto</dd></div>
+            <div><dt>Entrevista guiada de configuración</dt><dd>Incluida</dd></div>
+            <div><dt>Flujo de vista previa y notas</dt><dd>Incluido</dd></div>
+            <div><dt>Actualizaciones de estos estilos</dt><dd>Incluidas</dd></div>
+            <div><dt>Editar, combinar y ampliar</dt><dd>Cada skill, como quieras</dd></div>
+            <div class="export__grade" data-export-grade hidden><dt>Tu grade</dt><dd data-export-grade-name></dd></div>
+          </dl>
+          <a class="btn btn--block" href="#precio" data-checkout>Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <p class="export__fine">Producto digital de descarga inmediata. Tu plan de Claude se compra aparte.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · FAQ. Same paper, quiet. -->
+  <section id="faq" class="faq ground-light" data-sc-act="flow" data-clip="Antes de empezar" aria-labelledby="faq-title">
+    <div class="sc-wrap faq__grid">
+      <h2 class="h2" id="faq-title" data-trat data-sc-in>Antes de <em>empezar.</em></h2>
+      <div class="faq__list" data-sc-in>
+        <details><summary>¿Necesito saber programar?</summary><p>No. Le hablas a Claude en tu idioma y el setup te guía paso a paso. Si sabes copiar una carpeta, sabes instalarlo.</p></details>
+        <details><summary>¿Funciona en Windows?</summary><p>Sí. Está hecho en Mac. En Windows, la primera vez que usas un skill, Claude revisa tu equipo y te dice qué instalar, en orden.</p></details>
+        <details><summary>¿Claude está incluido?</summary><p>No. Necesitas Claude Code con un plan de pago de Claude, que se compra aparte.</p></details>
+        <details><summary>¿Gasta mucho de mi uso de Claude?</summary><p>Menos que construir un estilo desde cero. Los estilos ya pasaron por las rondas de prueba, así que tu uso se va en tus videos, no en enseñarle a editar.</p></details>
+        <details><summary>¿Puedo cambiar los estilos?</summary><p>Sí. Son skills tuyos: Claude los ajusta, los combina o crea estilos nuevos a partir de tus videos de referencia.</p></details>
+        <details><summary>¿Mis ediciones se verán como las vistas previas?</summary><p>Siguen la misma estructura y el mismo ritmo, con tu material, tus colores y tus tipografías. Las vistas previas de esta página son animatics de estructura, no videos de clientes.</p></details>
+        <details><summary>¿Hay reembolso?</summary><p>Es un producto digital de descarga inmediata, así que todas las ventas son finales. Si algo no funciona en tu equipo, escríbenos y lo resolvemos contigo.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · RENDER FINAL. Pin, last. Smash cut to black; the strip closes into a reel. -->
+  <section id="cierre" class="cierre" data-sc-act="pin" data-sc-span="1.5" data-clip="Render final" aria-labelledby="cierre-title">
+    <div data-sc-stage class="cierre__stage">
+      <div class="render" data-anchor="cierre">
+        <div class="render__monitor"><canvas data-close-canvas role="img" aria-label="Vista previa del estilo elegido"></canvas></div>
+        <div class="render__bar" aria-hidden="true">
+          <span class="render__label" data-render-label>Renderizando</span>
+          <span class="render__pct nums"><span data-sc-count="0 100" data-sc-count-at="0.04 0.5">0</span>%</span>
+          <i></i>
+        </div>
+      </div>
+      <div class="cierre__copy">
+        <h2 class="h2 h2--xl" id="cierre-title" data-trat data-sc-cue="0 1 0 0">Tu próximo video. <em>Un mejor punto de partida.</em></h2>
+        <p class="lede" data-sc-cue="0.06">16 estilos probados. Tu material. Tu dirección.</p>
+        <p class="cierre__grade" data-sc-cue="0.08">Estilo en el monitor: <strong data-close-name>Subtítulo ajustado</strong> · <a href="#estilos">cambiar</a></p>
+        <a class="btn btn--lg" href="#precio" data-buy data-sc-cue="0.1" data-sc-rise="0" data-sc-magnet="0.22">Consigue el pack<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <footer class="foot">
+        <span><i class="tally" aria-hidden="true"></i>CORTE · <span class="nums">2026</span></span>
+        <span>Producto independiente. Claude y Claude Code son marcas de Anthropic.</span>
+      </footer>
+    </div>
+  </section>
+
+</main>
+
+<canvas class="gl gl--front" id="gl-front" aria-hidden="true"></canvas>
+
+<script src="scrollcraft.js"></script>
+<script type="module" src="js/main.js"></script>

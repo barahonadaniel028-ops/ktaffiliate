@@ -1,0 +1,8 @@
+{
+  "name": "corte",
+  "private": true,
+  "description": "Verification tooling for the CORTE landing page",
+  "devDependencies": {
+    "playwright-core": "^1.56.1"
+  }
+}
