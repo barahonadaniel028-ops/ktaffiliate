@@ -1,0 +1,42 @@
+/* Tokens de Aura. Dia = perla con teal, damasco y rosa. Noche = teal casi negro con las mismas manchas mas suaves.
+   El bloque entre @DARK y @END lo repite tools/build.py bajo tres selectores (sistema oscuro, data-theme del anfitrion y data-aura="night"). */
+:root {
+  color-scheme: light;
+  --font: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --teal: #0f6b6c; --apricot: #ffad85; --rose: #f7a6bd; --sand: #f3dcb2; --mint: #a9e6d3;
+
+  --base: #eef2f0;
+  --ink: #0d1b1d; --ink2: #3f4f4e; --ink3: #5b6b69;
+  --glass-a: rgba(255,255,255,.70); --glass-b: rgba(255,255,255,.40); --glass-solid: #f7faf9;
+  --edge: rgba(255,255,255,.92); --edge2: rgba(255,255,255,.5); --hair: rgba(13,27,29,.10); --hair2: rgba(13,27,29,.06);
+  --solid: #0d1b1d; --on-solid: #ffffff;
+  --accent: #0f6b6c; --accent-soft: rgba(15,107,108,.12);
+  --hl: rgba(255,173,133,.62);
+  --up: #0b7a52; --down: #c93b2e; --warn: #9a6a00;
+  --keep: #0b7a52; --maybe: #9a6a00; --drop: #c93b2e;
+  --shadow: rgba(13,60,62,.34);
+  --veil: rgba(238,242,240,.55);
+  --b1: rgba(15,107,108,.55); --b2: rgba(255,173,133,.75); --b3: rgba(247,166,189,.65); --b4: rgba(169,230,211,.8); --b5: rgba(243,220,178,.8);
+  --grain: .06;
+  --r-s: 14px; --r-m: 22px; --r-l: 30px; --r-xl: 40px;
+  --ease: cubic-bezier(.2,.9,.25,1);
+  --spring: linear(0, .24 8%, .62 17%, .93 28%, 1.07 39%, 1.06 48%, .99 62%, 1 78%, 1);
+  --rail-w: 92px; --top-h: 76px;
+  --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+}
+/*@DARK*/
+  color-scheme: dark;
+  --base: #06100f;
+  --ink: #eaf4f1; --ink2: #b7c8c4; --ink3: #8fa39f;
+  --glass-a: rgba(255,255,255,.095); --glass-b: rgba(255,255,255,.04); --glass-solid: #0f1b1a;
+  --edge: rgba(255,255,255,.2); --edge2: rgba(255,255,255,.07); --hair: rgba(255,255,255,.11); --hair2: rgba(255,255,255,.06);
+  --solid: #eef7f4; --on-solid: #06201f;
+  --accent: #6fd1c0; --accent-soft: rgba(111,209,192,.16);
+  --hl: rgba(255,173,133,.34);
+  --up: #6fe0b0; --down: #ff8f84; --warn: #f3c77a;
+  --keep: #6fe0b0; --maybe: #f3c77a; --drop: #ff8f84;
+  --shadow: rgba(0,0,0,.55);
+  --veil: rgba(6,16,15,.6);
+  --b1: rgba(15,107,108,.62); --b2: rgba(255,150,100,.30); --b3: rgba(247,120,160,.24); --b4: rgba(60,170,150,.34); --b5: rgba(243,200,140,.14);
+  --grain: .09;
+/*@END*/
