@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Propuesta 2 · Pauta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Montserrat:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/phone.css">
+<style>
+/* Pauta: el negocio contado como un diario. Papel plateado frio, tinta casi negra, un solo azul cobalto.
+   La serif lleva las cifras y los titulares; la sans lleva todo lo que se toca. */
+:root {
+  --canvas: #f1f2f4; --surface: #ffffff; --sunk: #f6f7f9; --tint: #e9ebef;
+  --hair: rgba(13,16,21,.08); --hair2: rgba(13,16,21,.14);
+  --ink: #0d1015; --ink2: #4a5262; --ink3: #8c94a3;
+  --accent: #2233ff; --accent-ink: #ffffff; --accent-soft: rgba(34,51,255,.07);
+  --up: #0e8a5a; --up-soft: rgba(14,138,90,.09); --down: #d8443b; --down-soft: rgba(216,68,59,.08); --warn: #b97a06; --warn-soft: rgba(185,122,6,.09);
+  --es: #e8742a; --en: #7c5cfa;
+  --serif: "Instrument Serif", Georgia, serif; --sans: "Instrument Sans", system-ui, sans-serif;
+  --e1: 0 1px 2px rgba(13,16,21,.05), 0 0 0 1px var(--hair);
+  --e2: 0 1px 2px rgba(13,16,21,.04), 0 12px 32px -14px rgba(20,28,60,.18), 0 0 0 1px var(--hair);
+}
+* { box-sizing: border-box; margin: 0; } ul, ol { padding: 0; list-style: none; }
+body { background: #d9dce2; color: var(--ink); font: 400 14.5px/1.5 var(--sans); -webkit-font-smoothing: antialiased; padding: 40px; display: grid; gap: 40px; justify-content: center; }
+.ic { width: 16px; height: 16px; flex: none; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+.board { position: relative; width: 1440px; background: var(--canvas); overflow: hidden; border-radius: 18px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; background: var(--c, var(--ink3)); }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 999px; font: 500 14px/1 var(--sans); color: var(--ink); background: var(--surface); box-shadow: var(--e1); white-space: nowrap; }
+.btn.pri { background: var(--ink); color: #fff; box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 8px 18px -8px rgba(13,16,21,.5); }
+.btn.acc { background: var(--accent); color: #fff; box-shadow: 0 8px 20px -8px rgba(34,51,255,.55); }
+.btn.ghost { background: transparent; box-shadow: none; color: var(--ink2); }
+.label { font: 500 12.5px/1.2 var(--sans); color: var(--ink3); }
+.eyebrow { font: 500 12.5px/1 var(--sans); color: var(--ink3); letter-spacing: .02em; }
+.serif { font-family: var(--serif); font-weight: 400; }
+.up { color: var(--up); } .dn { color: var(--down); }
+.delta { display: inline-flex; align-items: center; gap: 3px; font: 600 12px/1 var(--sans); padding: 4px 7px; border-radius: 999px; }
+.delta.up { background: var(--up-soft); } .delta.dn { background: var(--down-soft); }
+.orb { width: 22px; height: 22px; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 30%, #e7ebff, #6b78ff 32%, #2233ff 60%, #0b1280); box-shadow: 0 4px 10px -3px rgba(34,51,255,.5); }
+h2.h { font: 400 34px/1.05 var(--serif); letter-spacing: -.01em; }
+.shead { display: flex; align-items: baseline; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--hair2); }
+.shead .r { margin-left: auto; display: flex; gap: 10px; align-items: center; color: var(--ink3); font-size: 13.5px; }
+.link { color: var(--accent); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.card { background: var(--surface); border-radius: 20px; box-shadow: var(--e1); }
+
+/* ===== nav ===== */
+.nav { height: 76px; display: flex; align-items: center; gap: 20px; padding: 0 48px; border-bottom: 1px solid var(--hair); background: rgba(241,242,244,.85); }
+.mark { display: flex; align-items: center; gap: 10px; }
+.mark i { width: 30px; height: 30px; border-radius: 9px; background: var(--ink); color: #fff; display: grid; place-items: center; font: italic 400 22px/1 var(--serif); }
+.mark b { font: 400 26px/1 var(--serif); letter-spacing: -.01em; }
+.wsp { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px 0 5px; border-radius: 999px; background: var(--surface); box-shadow: var(--e1); font-weight: 500; font-size: 13.5px; }
+.wsp .lg { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: #fff; font: 700 9.5px/1 var(--sans); }
+.wsp .ic { color: var(--ink3); width: 14px; height: 14px; }
+.links { display: flex; gap: 4px; margin-left: 18px; }
+.links a { padding: 8px 12px; border-radius: 999px; color: var(--ink2); font-weight: 500; font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+.links a b { font: 600 11.5px/1 var(--sans); padding: 3px 6px; border-radius: 999px; background: var(--tint); color: var(--ink2); }
+.links a.on { background: var(--surface); color: var(--ink); box-shadow: var(--e1); }
+.links a.on b, .links a b.hot { background: var(--accent); color: #fff; }
+.nav .r { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.ib { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--ink2); background: var(--surface); box-shadow: var(--e1); }
+.ask { display: inline-flex; align-items: center; gap: 10px; height: 38px; padding: 0 16px 0 8px; border-radius: 999px; background: var(--surface); box-shadow: var(--e1); font-weight: 500; font-size: 14px; color: var(--ink2); }
+.ask kbd { font: 500 11px/1 var(--sans); color: var(--ink3); border: 1px solid var(--hair2); border-radius: 5px; padding: 2px 5px; margin-left: 4px; }
+.av { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(140deg, #e8742a, #b0386b); color: #fff; font: 600 14px/1 var(--sans); flex: none; }
+
+/* ===== HOME ===== */
+.wrap { width: 1200px; margin: 0 auto; padding: 56px 0 72px; display: grid; gap: 64px; }
+.hero { display: grid; grid-template-columns: 1fr 400px; gap: 64px; align-items: end; }
+.hero h1 { font: 400 76px/1 var(--serif); letter-spacing: -.02em; margin-top: 18px; text-wrap: balance; }
+.hero h1 span { color: var(--ink3); }
+.hero h1 em { font-style: italic; color: var(--accent); }
+.urg { display: grid; gap: 0; }
+.urg h3 { font: 600 13px/1 var(--sans); color: var(--ink3); padding-bottom: 12px; }
+.urg li { display: grid; grid-template-columns: 10px 1fr 36px; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--hair2); }
+.urg li b { font-weight: 600; font-size: 15px; display: block; line-height: 1.3; } .urg li small { color: var(--ink2); font-size: 13px; }
+.urg li .go { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); box-shadow: var(--e1); }
+.urg li:first-of-type .go { background: var(--ink); color: #fff; box-shadow: none; }
+
+.money { padding: 36px 40px 30px; display: grid; grid-template-columns: 1fr 560px; gap: 40px; box-shadow: var(--e2); }
+.money .big { font: 400 120px/.9 var(--serif); letter-spacing: -.035em; margin-top: 18px; }
+.money .big span { color: var(--ink3); }
+.money .row { display: flex; gap: 36px; margin-top: 28px; }
+.money .row div b { display: block; font: 400 30px/1.1 var(--serif); margin-top: 6px; }
+.chart { position: relative; height: 230px; color: var(--accent); }
+.chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.chart .goalline { position: absolute; left: 0; right: 0; top: 52px; border-top: 1.5px dashed rgba(13,16,21,.25); }
+.chart .goalline span { position: absolute; right: 0; top: -26px; font: 500 12px/1 var(--sans); color: var(--ink2); background: var(--surface); padding: 4px 8px; border-radius: 999px; box-shadow: var(--e1); }
+.chart .axis { position: absolute; left: 0; right: 0; bottom: -24px; display: flex; justify-content: space-between; color: var(--ink3); font-size: 12px; }
+.mfoot { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding-top: 22px; border-top: 1px solid var(--hair); color: var(--ink2); font-size: 14px; }
+.mfoot .bar { flex: 1; max-width: 420px; height: 6px; border-radius: 3px; background: var(--tint); overflow: hidden; } .mfoot .bar i { display: block; height: 100%; width: 83%; background: var(--accent); border-radius: 3px; }
+.mfoot b { color: var(--ink); font-weight: 600; }
+.mfoot .r { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+.sale { display: flex; align-items: center; gap: 8px; font-size: 13.5px; } .sale strong { color: var(--up); font-weight: 600; }
+
+.accts { display: grid; grid-template-columns: 1fr 1fr; }
+.acct { padding: 26px 36px 4px 0; display: grid; gap: 18px; align-content: start; }
+.acct + .acct { padding-left: 36px; padding-right: 0; border-left: 1px solid var(--hair2); }
+.acct-h { display: flex; align-items: center; gap: 12px; }
+.mono-b { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 700 12.5px/1 var(--sans); color: #fff; background: var(--c); }
+.acct-h b { font-weight: 600; font-size: 16px; display: block; } .acct-h small { color: var(--ink3); font-size: 13px; }
+.acct-h .link { margin-left: auto; font-size: 13.5px; }
+.trio3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.trio3 b { display: block; font: 400 52px/1 var(--serif); letter-spacing: -.02em; margin: 8px 0 8px; }
+.acct .sp { height: 64px; color: var(--c); } .acct .sp svg { width: 100%; height: 100%; display: block; }
+.ed { font: italic 400 21px/1.35 var(--serif); color: var(--ink); padding-left: 16px; border-left: 2px solid var(--c); }
+.ed small { display: block; font: 500 12.5px/1.4 var(--sans); font-style: normal; color: var(--ink3); margin-top: 6px; }
+.bestr { display: flex; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid var(--hair); font-size: 13.5px; color: var(--ink2); }
+.bestr .fr { width: 30px; height: 53px; border-radius: 6px; overflow: hidden; flex: none; } .fr svg { width: 100%; height: 100%; display: block; }
+.bestr b { color: var(--ink); font-weight: 600; }
+
+.sheet { display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px; padding-top: 24px; }
+.th { display: grid; gap: 10px; }
+.th .f { position: relative; aspect-ratio: 9/16; border-radius: 14px; overflow: hidden; box-shadow: 0 14px 30px -16px rgba(13,16,21,.55); }
+.th .f > div { position: absolute; inset: 0; }
+.pill { position: absolute; top: 9px; left: 9px; font: 600 11.5px/1 var(--sans); padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.92); color: var(--sc); display: inline-flex; gap: 5px; align-items: center; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--sc); }
+.vc { position: absolute; bottom: 9px; right: 9px; font: 600 11px/1 var(--sans); padding: 5px 7px; border-radius: 999px; background: rgba(13,16,21,.62); color: #fff; }
+.th b { font-weight: 600; font-size: 13.5px; line-height: 1.3; } .th small { display: flex; align-items: center; gap: 6px; color: var(--ink3); font-size: 12.5px; }
+
+.duo { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.blk { padding: 26px 28px; display: grid; gap: 18px; align-content: start; }
+.blk h3 { font: 400 26px/1.1 var(--serif); display: flex; align-items: baseline; gap: 10px; } .blk h3 small { margin-left: auto; font: 500 13px/1 var(--sans); color: var(--ink3); }
+.runway { display: grid; gap: 18px; }
+.rw-h { display: flex; align-items: baseline; gap: 10px; } .rw-h b { font-weight: 600; } .rw-h .v { margin-left: auto; font: 400 26px/1 var(--serif); } .rw-h .v.dn { color: var(--down); }
+.days { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 10px; }
+.days i { height: 26px; border-radius: 6px; background: var(--c); }
+.days i.ok { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+.days i.no { background: transparent; box-shadow: inset 0 0 0 1px var(--hair2); }
+.days i.cut { background: repeating-linear-gradient(-45deg, var(--down-soft) 0 4px, transparent 4px 8px); box-shadow: inset 0 0 0 1px rgba(216,68,59,.35); }
+.rw-l { display: flex; gap: 18px; font-size: 12.5px; color: var(--ink3); }
+.rw-l span { display: inline-flex; align-items: center; gap: 6px; } .rw-l i { width: 14px; height: 10px; border-radius: 3px; background: var(--ink2); } .rw-l i.ok { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink2); } .rw-l i.no { background: transparent; box-shadow: inset 0 0 0 1px rgba(216,68,59,.5); }
+.lvl { display: flex; align-items: center; gap: 18px; }
+.ringw { position: relative; width: 92px; height: 92px; flex: none; } .ringw svg { width: 100%; height: 100%; display: block; }
+.ring-trk { stroke: var(--tint); } .ring-val { stroke: var(--accent); }
+.ringw .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; } .ringw .in b { font: 400 38px/1 var(--serif); } .ringw .in small { font: 600 9.5px/1.3 var(--sans); letter-spacing: .08em; color: var(--ink3); }
+.lvl b { font-weight: 600; font-size: 16px; } .lvl p { color: var(--ink2); font-size: 13.5px; }
+.shelf { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.md { display: grid; justify-items: center; gap: 6px; text-align: center; font-size: 11.5px; color: var(--ink2); line-height: 1.25; }
+.md i { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: radial-gradient(circle at 35% 30%, #fff, var(--m) 40%, color-mix(in srgb, var(--m) 55%, #000)); box-shadow: 0 6px 12px -6px var(--m); }
+.md i .ic { width: 18px; height: 18px; color: rgba(13,16,21,.75); }
+.md.lock i { background: var(--tint); box-shadow: inset 0 0 0 1px var(--hair2); } .md.lock i .ic { color: var(--ink3); } .md.lock { color: var(--ink3); }
+.mp li { display: grid; grid-template-columns: 1fr auto; gap: 8px 10px; padding: 10px 0; border-top: 1px solid var(--hair); font-size: 14px; color: var(--ink2); }
+.mp li:first-child { border-top: 0; padding-top: 0; }
+.mp li b { font: 400 22px/1 var(--serif); color: var(--ink); } .mp li b.dn { color: var(--down); }
+.lab { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.lab div { aspect-ratio: 9/16; border-radius: 10px; overflow: hidden; position: relative; }
+.lab em { position: absolute; left: 6px; bottom: 6px; font: 600 10px/1 var(--sans); font-style: normal; padding: 4px 6px; border-radius: 999px; background: rgba(255,255,255,.92); color: var(--ink); }
+.lab em.k { background: var(--accent); color: #fff; }
+.pbar { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink3); } .pbar .b { flex: 1; height: 5px; border-radius: 3px; background: var(--tint); } .pbar .b i { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.quote { font: italic 400 22px/1.35 var(--serif); }
+.st { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 var(--sans); color: var(--warn); background: var(--warn-soft); padding: 5px 9px; border-radius: 999px; }
+.fbi { height: 42px; border-radius: 12px; border: 1px dashed var(--hair2); display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--ink3); font-size: 14px; }
+
+/* ===== REVISAR (mesa de luz) ===== */
+#review { height: 900px; display: grid; grid-template-rows: 76px 1fr; }
+.rv { display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
+.table { padding: 30px 40px; display: grid; grid-template-rows: auto 1fr auto; gap: 24px; }
+.rv-h { display: flex; align-items: flex-end; gap: 20px; }
+.rv-h h1 { font: 400 40px/1.05 var(--serif); letter-spacing: -.01em; margin-top: 10px; }
+.rv-h p { color: var(--ink2); font-size: 14px; margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+.seg { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--tint); margin-left: auto; }
+.seg span { padding: 7px 14px; border-radius: 999px; font-size: 13.5px; color: var(--ink2); font-weight: 500; } .seg span.on { background: var(--surface); color: var(--ink); box-shadow: var(--e1); }
+.vers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; align-items: start; }
+.ver { display: grid; gap: 12px; }
+.ver-h { display: flex; align-items: center; gap: 8px; }
+.ver-h b { font: 600 15px/1 var(--sans); } .ver-h small { color: var(--ink3); font-size: 13px; }
+.ver-h .sc { margin-left: auto; font: 400 26px/1 var(--serif); color: var(--sc); }
+.ver .f { position: relative; aspect-ratio: 9/16; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 40px -20px rgba(13,16,21,.55); }
+.ver .f > div { position: absolute; inset: 0; }
+.ver.sel .f { box-shadow: 0 0 0 3px var(--canvas), 0 0 0 5px var(--accent), 0 20px 40px -20px rgba(34,51,255,.6); }
+.ver.dim .f { opacity: .55; filter: saturate(.6); }
+.rec { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px/1 var(--sans); padding: 6px 9px 6px 6px; border-radius: 999px; background: rgba(255,255,255,.94); color: var(--ink); }
+.rec .orb { width: 14px; height: 14px; box-shadow: none; }
+.chk { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; } .chk .ic { width: 15px; height: 15px; }
+.vb { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.vb span { height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); box-shadow: var(--e1); color: var(--ink2); }
+.vb span.on { background: var(--accent); color: #fff; box-shadow: none; } .vb span.x.on { background: var(--down); }
+.strip { display: flex; align-items: center; gap: 12px; padding-top: 18px; border-top: 1px solid var(--hair2); }
+.strip .label { margin-right: 4px; }
+.strip .s { width: 34px; height: 60px; border-radius: 7px; overflow: hidden; position: relative; }
+.strip .s.on { box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--ink); }
+.strip .s.done::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; background: rgba(14,138,90,.6); color: #fff; font-weight: 700; }
+.strip .r { margin-left: auto; display: flex; gap: 8px; align-items: center; color: var(--ink3); font-size: 13px; }
+.rail { background: var(--surface); border-left: 1px solid var(--hair); padding: 28px 28px; display: grid; align-content: start; gap: 24px; }
+.jc { border-radius: 18px; padding: 18px; background: linear-gradient(160deg, rgba(34,51,255,.06), rgba(34,51,255,0) 70%), var(--sunk); display: grid; gap: 12px; box-shadow: inset 0 0 0 1px rgba(34,51,255,.12); }
+.jc-h { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.jc p { font: 400 19px/1.4 var(--serif); }
+.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cmp th { text-align: center; font: 600 12px/1 var(--sans); color: var(--ink3); padding: 0 4px 10px; } .cmp th:first-child { text-align: left; }
+.cmp td { padding: 9px 4px; border-top: 1px solid var(--hair); text-align: center; color: var(--ink2); } .cmp td:first-child { text-align: left; color: var(--ink); }
+.cmp td .y { color: var(--up); font-weight: 700; } .cmp td .n { color: var(--ink3); }
+.notes { display: grid; gap: 10px; }
+.note { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 13.5px; padding: 12px; border-radius: 14px; background: var(--sunk); }
+.note .tc { font: 600 11.5px/1 var(--sans); color: var(--warn); background: var(--warn-soft); padding: 5px 7px; border-radius: 999px; align-self: start; font-variant-numeric: tabular-nums; }
+.note.ok .tc { color: var(--up); background: var(--up-soft); } .note.ok p { color: var(--ink3); text-decoration: line-through; }
+.note .rp { grid-column: 2; color: var(--ink2); font-size: 12.5px; }
+.rail .acts { display: grid; gap: 8px; margin-top: 4px; }
+.rail .acts .btn { justify-content: center; height: 48px; font-size: 15px; }
+
+/* ===== SISTEMA (onboarding + planes) ===== */
+#system { padding: 0 0 56px; }
+.onb { width: 1200px; margin: 48px auto 0; display: grid; grid-template-columns: 520px 1fr; gap: 28px; }
+.wiz { padding: 32px; display: grid; gap: 22px; box-shadow: var(--e2); align-content: start; }
+.steps { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink3); }
+.steps span { display: inline-flex; align-items: center; gap: 6px; } .steps i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 11px/1 var(--sans); font-style: normal; background: var(--tint); color: var(--ink2); }
+.steps span.done i { background: var(--up); color: #fff; } .steps span.on { color: var(--ink); font-weight: 600; } .steps span.on i { background: var(--ink); color: #fff; }
+.steps b { flex: 1; height: 1px; background: var(--hair2); min-width: 12px; }
+.wiz h2 { font: 400 38px/1.05 var(--serif); } .wiz > p { color: var(--ink2); margin-top: -10px; }
+.fld { display: grid; gap: 7px; } .fld > span { font: 600 13px/1 var(--sans); color: var(--ink2); }
+.inp { height: 46px; border-radius: 12px; background: var(--sunk); box-shadow: inset 0 0 0 1px var(--hair2); display: flex; align-items: center; gap: 10px; padding: 0 14px; font-size: 15px; }
+.inp small { margin-left: auto; color: var(--ink3); font-size: 12.5px; }
+.inp.foc { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 4px var(--accent-soft); background: #fff; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sws { display: flex; gap: 10px; } .sws i { width: 34px; height: 34px; border-radius: 50%; background: var(--c); } .sws i.on { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--c); }
+.drop { height: 74px; border-radius: 14px; border: 1.5px dashed var(--hair2); display: flex; align-items: center; gap: 14px; padding: 0 16px; color: var(--ink2); font-size: 14px; }
+.drop .lg { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: #1f6b4f; color: #fff; font: italic 400 24px/1 var(--serif); }
+.slider { position: relative; height: 6px; border-radius: 3px; background: var(--tint); margin: 12px 0 4px; } .slider i { position: absolute; inset: 0 auto 0 0; width: 34%; border-radius: 3px; background: var(--ink); } .slider b { position: absolute; left: 34%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: #fff; box-shadow: var(--e2); }
+.wiz .foot { display: flex; justify-content: space-between; padding-top: 6px; }
+.prev { padding: 22px; display: grid; gap: 16px; align-content: start; background: transparent; box-shadow: none; }
+.prev-h { display: flex; align-items: center; gap: 10px; } .prev-h .label { font-weight: 600; color: var(--ink2); }
+.live { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 var(--sans); color: var(--up); } .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--up); box-shadow: 0 0 0 3px var(--up-soft); }
+.browser { border-radius: 18px; overflow: hidden; background: #f3f5f2; box-shadow: 0 30px 60px -30px rgba(13,16,21,.45), 0 0 0 1px var(--hair2); }
+.bbar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #e7eae6; }
+.bbar i { width: 11px; height: 11px; border-radius: 50%; background: #c9cdc7; } .bbar span { margin: 0 auto; font-size: 12.5px; color: var(--ink2); background: #f6f7f5; padding: 5px 40px; border-radius: 8px; }
+.mini { padding: 20px 26px 26px; display: grid; gap: 18px; --g: #1f6b4f; }
+.mini .mn { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink2); }
+.mini .mn .lg { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--g); color: #fff; font: italic 400 15px/1 var(--serif); }
+.mini .mn b { color: var(--ink); font-weight: 600; } .mini .mn em { font-style: normal; padding: 5px 10px; border-radius: 999px; } .mini .mn em.on { background: #fff; box-shadow: var(--e1); color: var(--ink); }
+.mini h3 { font: 400 46px/1 var(--serif); letter-spacing: -.02em; } .mini h3 em { font-style: italic; color: var(--g); }
+.mini .mc { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+.mini .mcard { background: #fff; border-radius: 14px; box-shadow: var(--e1); padding: 14px; display: grid; gap: 8px; }
+.mini .mcard b.big { font: 400 40px/1 var(--serif); } .mini .sp { height: 40px; color: var(--g); } .mini .sp svg { width: 100%; height: 100%; display: block; }
+.mini .tl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .mini .tl div { aspect-ratio: 9/16; border-radius: 8px; overflow: hidden; }
+.mini .gbtn { justify-self: start; display: inline-flex; height: 32px; align-items: center; padding: 0 14px; border-radius: 999px; background: var(--g); color: #fff; font-size: 13px; font-weight: 500; }
+.plans { width: 1200px; margin: 48px auto 0; display: grid; gap: 22px; }
+.plans-h { display: flex; align-items: baseline; gap: 16px; } .plans-h h2 { font: 400 40px/1 var(--serif); } .plans-h p { color: var(--ink2); } .plans-h small { margin-left: auto; color: var(--ink3); font-size: 13px; }
+.pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.plan { padding: 28px; display: grid; gap: 18px; align-content: start; }
+.plan.feat { background: var(--ink); color: #fff; box-shadow: 0 30px 60px -30px rgba(13,16,21,.7); }
+.plan h3 { font: 600 16px/1 var(--sans); display: flex; align-items: center; gap: 10px; } .plan h3 em { font: 600 11px/1 var(--sans); font-style: normal; padding: 5px 8px; border-radius: 999px; background: var(--accent); color: #fff; }
+.plan .pr { font: 400 56px/1 var(--serif); letter-spacing: -.02em; } .plan .pr small { font: 500 14px/1 var(--sans); color: var(--ink3); letter-spacing: 0; }
+.plan.feat .pr small, .plan.feat p { color: rgba(255,255,255,.6); }
+.plan p { color: var(--ink2); font-size: 14px; margin-top: -8px; }
+.plan ul { display: grid; gap: 9px; font-size: 14px; } .plan li { display: flex; gap: 10px; align-items: flex-start; } .plan li .ic { color: var(--up); margin-top: 3px; } .plan.feat li .ic { color: #8fa0ff; }
+.plan .btn { justify-content: center; height: 46px; } .plan.feat .btn { background: #fff; color: var(--ink); }
+
+/* ===== MOVIL ===== */
+.mob { height: 1060px; display: flex; align-items: center; justify-content: center; gap: 44px; background: radial-gradient(60% 60% at 50% 35%, #ffffff, var(--canvas) 70%); }
+.ph-col { display: grid; gap: 18px; justify-items: center; }
+.ph-col > p { color: var(--ink3); font-size: 14px; } .ph-col > p b { color: var(--ink); font-weight: 600; }
+.phone { background: linear-gradient(145deg, #d9dbe0, #a9adb5 40%, #cfd2d8); box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 40px 80px -24px rgba(13,16,21,.35), 0 18px 36px -18px rgba(13,16,21,.3); }
+.scr { background: var(--canvas); color: var(--ink); }
+.m-in { position: absolute; inset: 54px 0 0; padding: 12px 20px 0; display: grid; align-content: start; gap: 18px; }
+.m-top { display: flex; align-items: center; gap: 10px; } .m-top .wsp { height: 32px; } .m-top .av { width: 34px; height: 34px; font-size: 13px; margin-left: auto; }
+.m-in h1 { font: 400 40px/1.02 var(--serif); letter-spacing: -.02em; } .m-in h1 span { color: var(--ink3); } .m-in h1 em { font-style: italic; color: var(--accent); }
+.m-card { background: var(--surface); border-radius: 20px; box-shadow: var(--e1); padding: 16px; display: grid; gap: 10px; }
+.m-urg li { display: grid; grid-template-columns: 8px 1fr 30px; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--hair); }
+.m-urg li:first-child { border-top: 0; padding-top: 0; }
+.m-urg b { font-weight: 600; font-size: 14.5px; display: block; line-height: 1.25; } .m-urg small { color: var(--ink3); font-size: 12.5px; }
+.m-urg .go { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--sunk); } .m-urg li:first-child .go { background: var(--ink); color: #fff; } .m-urg .go .ic { width: 14px; height: 14px; }
+.m-money .big { font: 400 54px/1 var(--serif); letter-spacing: -.03em; } .m-money .big span { color: var(--ink3); }
+.m-money .sp { height: 54px; color: var(--accent); margin: 0 -16px -16px; } .m-money .sp svg { width: 100%; height: 100%; display: block; }
+.tabbar { position: absolute; left: 16px; right: 16px; bottom: 26px; height: 62px; border-radius: 999px; background: rgba(255,255,255,.88); backdrop-filter: blur(16px); box-shadow: 0 16px 30px -14px rgba(13,16,21,.35), 0 0 0 1px var(--hair); display: flex; align-items: center; justify-content: space-around; padding: 0 8px; }
+.tabbar span { display: grid; justify-items: center; gap: 3px; font-size: 10.5px; color: var(--ink3); font-weight: 600; position: relative; }
+.tabbar span .ic { width: 21px; height: 21px; } .tabbar span.on { color: var(--ink); }
+.tabbar span b { position: absolute; top: -6px; right: -6px; font: 700 10px/1 var(--sans); background: var(--accent); color: #fff; padding: 3px 5px; border-radius: 999px; }
+.tabbar .orbt { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); } .tabbar .orbt .orb { width: 24px; height: 24px; }
+.m-rv { position: absolute; inset: 54px 0 0; display: grid; align-content: start; gap: 14px; padding: 10px 20px 0; }
+.m-rv .hd { display: flex; align-items: center; gap: 10px; } .m-rv .hd .ib { width: 34px; height: 34px; } .m-rv .hd div { flex: 1; } .m-rv .hd b { font-weight: 600; font-size: 15px; display: block; } .m-rv .hd small { color: var(--ink3); font-size: 12.5px; }
+.m-rv h2 { font: 400 28px/1.08 var(--serif); }
+.m-vf { position: relative; height: 440px; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 40px -20px rgba(13,16,21,.55); }
+.m-vf > div { position: absolute; inset: 0; } .m-vf .fr svg { width: 100%; height: 100%; }
+.m-vf > .vtag { position: absolute; inset: 12px auto auto 12px; display: flex; gap: 6px; align-items: flex-start; }
+.m-vf .vtag span { font: 600 12px/1 var(--sans); padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.94); }
+.m-vf .vtag span.s { color: var(--up); }
+.m-vf .side { position: absolute; right: -36px; top: 40px; bottom: 40px; width: 28px; border-radius: 14px 0 0 14px; }
+.vdots { display: flex; justify-content: center; gap: 6px; } .vdots i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair2); } .vdots i.on { width: 22px; border-radius: 4px; background: var(--ink); }
+.m-act { display: grid; grid-template-columns: 56px 1fr 56px; gap: 10px; }
+.m-act span { height: 56px; border-radius: 999px; display: grid; place-items: center; background: var(--surface); box-shadow: var(--e1); color: var(--ink2); }
+.m-act span.k { background: var(--accent); color: #fff; box-shadow: 0 12px 24px -10px rgba(34,51,255,.6); display: flex; gap: 8px; justify-content: center; align-items: center; font: 600 16px/1 var(--sans); }
+.m-act .ic { width: 22px; height: 22px; }
+.chat { position: absolute; inset: 54px 0 0; display: grid; align-content: start; gap: 14px; padding: 10px 18px 0; }
+.chat .hd { display: flex; align-items: center; gap: 10px; } .chat .hd .orb { width: 34px; height: 34px; } .chat .hd b { font-weight: 600; } .chat .hd small { display: block; color: var(--up); font-size: 12px; } .chat .hd .ib { margin-left: auto; width: 34px; height: 34px; }
+.bub { max-width: 86%; padding: 12px 15px; border-radius: 20px; font-size: 15px; line-height: 1.4; }
+.bub.me { justify-self: end; background: var(--ink); color: #fff; border-bottom-right-radius: 6px; }
+.bub.ai { background: var(--surface); box-shadow: var(--e1); border-bottom-left-radius: 6px; font: 400 19px/1.35 var(--serif); }
+.bub.ai .mini2 { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: var(--sans); }
+.bub.ai .mini2 div { background: var(--sunk); border-radius: 12px; padding: 8px 10px; font-size: 12px; color: var(--ink3); } .bub.ai .mini2 b { display: block; font: 400 22px/1.1 var(--serif); color: var(--ink); }
+.conf { background: var(--surface); box-shadow: var(--e1); border-radius: 20px; padding: 14px; display: grid; gap: 10px; font-size: 14px; } .conf b { font-weight: 600; } .conf .row { display: flex; gap: 8px; } .conf .btn { flex: 1; justify-content: center; height: 40px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; } .chips span { padding: 8px 12px; border-radius: 999px; background: var(--surface); box-shadow: var(--e1); font-size: 13px; color: var(--ink2); }
+.composer { position: absolute; left: 16px; right: 16px; bottom: 30px; height: 56px; border-radius: 999px; background: var(--surface); box-shadow: 0 16px 30px -14px rgba(13,16,21,.3), 0 0 0 1px var(--hair); display: flex; align-items: center; gap: 10px; padding: 0 8px 0 20px; color: var(--ink3); font-size: 15px; }
+.composer .mic { margin-left: auto; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; }
+.m-acc { display: grid; gap: 12px; }
+.m-acc .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; } .m-acc .row3 b { display: block; font: 400 30px/1 var(--serif); margin: 4px 0; }
+.m-acc .sp { height: 48px; color: var(--c); } .m-acc .sp svg { width: 100%; height: 100%; display: block; }
+.mseg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: var(--tint); } .mseg span { text-align: center; padding: 8px 0; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--ink2); display: flex; gap: 6px; justify-content: center; align-items: center; } .mseg span.on { background: var(--surface); color: var(--ink); box-shadow: var(--e1); }
+.sheetw { position: absolute; inset: 0; background: rgba(13,16,21,.32); }
+.bsheet { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 30px 30px 0 0; background: var(--surface); padding: 10px 20px 40px; display: grid; gap: 6px; box-shadow: 0 -20px 40px -20px rgba(13,16,21,.4); }
+.bsheet .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--hair2); justify-self: center; margin-bottom: 10px; }
+.bsheet h3 { font: 400 28px/1.1 var(--serif); margin-bottom: 6px; }
+.wsr { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 16px; }
+.wsr.on { background: var(--sunk); }
+.wsr .lg { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: #fff; font: 700 12px/1 var(--sans); background: var(--c); }
+.wsr b { font-weight: 600; font-size: 15px; display: block; } .wsr small { color: var(--ink3); font-size: 12.5px; }
+.wsr .ic { color: var(--accent); }
+.subb { display: grid; gap: 2px; padding: 0 12px 6px 64px; } .subb span { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink2); padding: 5px 0; } .subb span b { margin-left: auto; font: 600 11.5px/1 var(--sans); background: var(--accent); color: #fff; padding: 3px 6px; border-radius: 999px; }
+.bsheet .act2 { display: flex; align-items: center; gap: 12px; padding: 12px; color: var(--ink2); font-size: 14.5px; border-top: 1px solid var(--hair); }
+</style>
+</head>
+<body>
+
+<!-- ============================== HOME ============================== -->
+<section class="board" id="home">
+  <header class="nav">
+    <div class="mark"><i>P</i><b>Pauta</b></div>
+    <span class="wsp"><span class="lg">KT</span>KT Media<i data-i="chevdown"></i></span>
+    <nav class="links"><a class="on">Hoy</a><a>Revisar <b class="hot">70</b></a><a>Calendario</a><a>Números</a><a>Laboratorio</a><a>Logros</a><a>Notas <b>1</b></a></nav>
+    <div class="r"><span class="ib"><i data-i="search"></i></span><span class="ask"><span class="orb"></span>Preguntale a Jarvis<kbd>⌘K</kbd></span><div class="av">D</div></div>
+  </header>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Martes 13 de octubre · 23:38</span>
+        <h1>Buenas noches, Daniel. <span>Entraron <em>$96</em> hoy y te esperan <em>70 videos</em>.</span></h1>
+      </div>
+      <div class="urg">
+        <h3>Lo que necesita tu mano</h3>
+        <ul>
+          <li><span class="dot" style="--c:var(--down)"></span><div><b>Aprobá videos de KT English</b><small>Se queda sin contenido el jueves 15</small></div><span class="go"><i data-i="arrow"></i></span></li>
+          <li><span class="dot" style="--c:var(--warn)"></span><div><b>Grabá 3 intros en inglés</b><small>Quedan 0 para producir</small></div><span class="go"><i data-i="arrow"></i></span></li>
+          <li><span class="dot" style="--c:var(--warn)"></span><div><b>Votá la ronda de estilo 3</b><small>Te faltan 7 de 12</small></div><span class="go"><i data-i="arrow"></i></span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card money">
+      <div>
+        <span class="eyebrow">Comisión acumulada · afiliados</span>
+        <div class="big num">$3,482<span>.60</span></div>
+        <div class="row">
+          <div><span class="label">Pagado</span><b class="num">$2,150.00</b></div>
+          <div><span class="label">En camino</span><b class="num">$904.20</b></div>
+          <div><span class="label">Para cobrar</span><b class="num">$428.40</b></div>
+        </div>
+      </div>
+      <div class="chart">
+        <div data-spark="40,52,48,70,66,90,84,110,104,128,120,150,168,160,182,176,210,226,218,250,262,248,280,300,292,330,356,348,380,412" data-w="560" data-h="230" data-pad="10" data-min="0" data-dot="4" data-sw="2" data-fill=".14" style="height:230px"></div>
+        <div class="goalline"><span>Primera meta · $500 al mes</span></div>
+        <div class="axis"><span>14 sep</span><span>Comisión de 30 días · <b style="color:var(--ink)">$412.80</b></span><span>Hoy</span></div>
+      </div>
+      <div class="mfoot"><span>Primera meta</span><div class="bar"><i></i></div><span><b>83%</b> · te faltan $87.20</span>
+        <div class="r"><span class="sale"><span class="dot" style="--c:var(--up)"></span>María G. · Natural Cures <strong>+$48</strong></span><span class="sale"><span class="dot" style="--c:var(--up)"></span>Jorge R. · Debt Cures <strong>+$48</strong></span><span class="link">Todas las ventas <i data-i="arrow" class="ic"></i></span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shead"><h2 class="h">Las cuentas</h2><span class="label">Instagram · últimos 7 días, hasta el 12 oct</span><div class="r"><span class="link">Ver números <i data-i="arrow" class="ic"></i></span></div></div>
+      <div class="accts">
+        <div class="acct" style="--c:var(--es)">
+          <div class="acct-h"><span class="mono-b">ES</span><div><b>KT Español</b><small>@ktespanol</small></div></div>
+          <div class="trio3">
+            <div><span class="label">Vistas</span><b class="num">7,028</b><span class="delta up">▲ 33%</span></div>
+            <div><span class="label">Interacciones</span><b class="num">267</b><span class="delta up">▲ 685%</span></div>
+            <div><span class="label">Seguidores</span><b class="num">+35</b><span class="label">2,796 en total</span></div>
+          </div>
+          <div class="sp" data-spark="12,14,13,18,16,22,25,24,30,28,35,40,38,46" data-w="560" data-h="64" data-sw="2"></div>
+          <p class="ed">“Meditar no te relaja” se llevó un tercio de las vistas de la semana.<small>Nota de Jarvis · el gancho con promesa directa sigue ganando</small></p>
+          <div class="bestr"><div class="fr" data-frame data-tone="cool" data-pose="1" data-cap=""></div><span>Mejor reel: <b>Meditar no te relaja. Te cambia de canal.</b> · 2.1K vistas</span></div>
+        </div>
+        <div class="acct" style="--c:var(--en)">
+          <div class="acct-h"><span class="mono-b">EN</span><div><b>KT English</b><small>@kevintrudeaubeststudent</small></div></div>
+          <div class="trio3">
+            <div><span class="label">Vistas</span><b class="num">786</b><span class="delta dn">▼ 81%</span></div>
+            <div><span class="label">Interacciones</span><b class="num">3</b><span class="delta dn">▼ 92%</span></div>
+            <div><span class="label">Seguidores</span><b class="num">−1</b><span class="label">1,535 en total</span></div>
+          </div>
+          <div class="sp" data-spark="30,34,31,28,26,20,16,12,9,7,5,4,4,3" data-w="560" data-h="64" data-sw="2"></div>
+          <p class="ed">No cayó el contenido: la cuenta no publica desde el 9 de octubre.<small>Nota de Jarvis · 5 aprobados hoy la ponen al día</small></p>
+          <div class="bestr"><div class="fr" data-frame data-tone="studio" data-cap=""></div><span>Mejor reel: <b>Your words are programming your brain</b> · 312 vistas</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shead"><h2 class="h">Para revisar</h2><span class="label">70 versiones de 18 piezas · ordenadas por puntaje</span><div class="r"><span class="btn pri">Revisar los 70 <i data-i="arrow" class="ic"></i></span></div></div>
+      <div class="sheet">
+        <div class="th"><div class="f"><div data-frame data-tone="warm" data-cap="es tu BOCA" data-hl="2"></div><span class="pill" style="--sc:var(--up)">82</span><span class="vc">4 versiones</span></div><b>No es tu sueldo lo que te tiene pobre</b><small><span class="dot" style="--c:var(--es)"></span>KT Español</small></div>
+        <div class="th"><div class="f"><div data-frame data-tone="cool" data-pose="1" data-cap="your WORDS" data-hl="1"></div><span class="pill" style="--sc:var(--up)">78</span><span class="vc">4 versiones</span></div><b>Your words are programming your brain</b><small><span class="dot" style="--c:var(--en)"></span>KT English</small></div>
+        <div class="th"><div class="f"><div data-frame data-tone="rose" data-cap="tenía un PLAN" data-hl="2"></div><span class="pill" style="--sc:var(--warn)">64</span><span class="vc">3 versiones</span></div><b>Tenía un plan por si intentaban desaparecerlo</b><small><span class="dot" style="--c:var(--es)"></span>KT Español</small></div>
+        <div class="th"><div class="f"><div data-frame data-tone="teal" data-pose="1" data-cap="every BEEP" data-hl="1"></div><span class="pill" style="--sc:var(--warn)">57</span><span class="vc">4 versiones</span></div><b>Every beep in your car is conditioning you</b><small><span class="dot" style="--c:var(--en)"></span>KT English</small></div>
+        <div class="th"><div class="f"><div data-frame data-tone="olive" data-cap="un ramo de $10" data-hl="3"></div><span class="pill" style="--sc:var(--warn)">52</span><span class="vc">4 versiones</span></div><b>Un ramo de $10 puede limpiar el trauma</b><small><span class="dot" style="--c:var(--es)"></span>KT Español</small></div>
+        <div class="th"><div class="f"><div data-frame data-tone="studio" data-pose="1" data-cap="2 WORDS" data-hl="1"></div><span class="pill" style="--sc:var(--down)">38</span><span class="vc">2 versiones</span></div><b>The 2 words ruining your life</b><small><span class="dot" style="--c:var(--en)"></span>KT English</small></div>
+      </div>
+    </section>
+
+    <div class="duo">
+      <section class="card blk">
+        <h3>Contenido asegurado<small>meta 14 días por marca</small></h3>
+        <div class="runway">
+          <div style="--c:var(--es)"><div class="rw-h"><span class="dot"></span><b>KT Español</b><span class="v num">8 días</span></div><div class="days"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="ok"></i><i class="ok"></i><i class="no"></i><i class="no"></i><i class="no"></i><i class="no"></i><i class="no"></i></div></div>
+          <div style="--c:var(--en)"><div class="rw-h"><span class="dot"></span><b>KT English</b><span class="v num dn">2 días</span></div><div class="days"><i></i><i></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i><i class="cut"></i></div></div>
+          <div class="rw-l"><span><i></i>Agendado</span><span><i class="ok"></i>Aprobado, se agenda solo</span><span><i class="no"></i>Hueco</span><span style="margin-left:auto">Mié 14 → Mar 27</span></div>
+        </div>
+      </section>
+      <section class="card blk">
+        <h3>Logros<small>nivel 7 · Estratega</small></h3>
+        <div class="lvl"><div class="ringw" data-ring=".78" data-r="40" data-sw="6"><div class="in"><b>7</b><small>NIVEL</small></div></div><div><b>660 XP para nivel 8</b><p>Te falta poco para 5,000 seguidores (87%) y para $500 al mes (83%).</p></div></div>
+        <div class="shelf">
+          <span class="md" style="--m:#e9b949"><i><i data-i="eye"></i></i>100K vistas</span>
+          <span class="md" style="--m:#b9c2cc"><i><i data-i="users"></i></i>2,500 seg.</span>
+          <span class="md" style="--m:#cf8a4f"><i><i data-i="dollar"></i></i>Venta $50+</span>
+          <span class="md lock"><i><i data-i="users"></i></i>5,000 seg.</span>
+          <span class="md lock"><i><i data-i="target"></i></i>$500/mes</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="three">
+      <section class="card blk">
+        <h3>Materia prima</h3>
+        <ul class="mp"><li>Teachers<b class="num">14</b></li><li>Reactions<b class="num">6</b></li><li>Intros Español<b class="num">4</b></li><li>Intros English<b class="num dn">0</b></li></ul>
+      </section>
+      <section class="card blk">
+        <h3>Laboratorio<small>ronda 3</small></h3>
+        <div class="lab"><div data-frame data-tone="rose" data-cap=""><em class="k">Keep</em></div><div data-frame data-tone="olive" data-pose="1" data-cap=""><em class="k">Keep</em></div><div data-frame data-tone="warm" data-cap=""><em>Drop</em></div><div data-frame data-tone="teal" data-pose="1" data-cap=""><em>Votar</em></div></div>
+        <div class="pbar"><span>5 de 12</span><div class="b"><i style="width:42%"></i></div><span class="link">Seguir</span></div>
+      </section>
+      <section class="card blk">
+        <h3>Notas<small>1 abierta</small></h3>
+        <p class="quote">“Que me avise cuando inglés baje de 5 días de contenido.”</p>
+        <span class="st">● En curso · Claude lo está armando</span>
+        <div class="fbi"><i data-i="plus"></i>Escribí una idea o un cambio</div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== REVISAR ============================== -->
+<section class="board" id="review">
+  <header class="nav">
+    <div class="mark"><i>P</i><b>Pauta</b></div>
+    <span class="wsp"><span class="lg">KT</span>KT Media<i data-i="chevdown"></i></span>
+    <nav class="links"><a>Hoy</a><a class="on">Revisar <b>70</b></a><a>Calendario</a><a>Números</a><a>Laboratorio</a><a>Logros</a><a>Notas <b>1</b></a></nav>
+    <div class="r"><span class="ask"><span class="orb"></span>Preguntale a Jarvis<kbd>⌘K</kbd></span><div class="av">D</div></div>
+  </header>
+  <div class="rv">
+    <div class="table">
+      <div class="rv-h">
+        <div><span class="eyebrow">Pieza 4 de 18 · KT Español</span><h1>No es tu sueldo lo que te tiene pobre</h1><p><span class="dot" style="--c:var(--es)"></span>4 versiones · sale el jueves 15 a las 19:00 · Reel</p></div>
+        <div class="seg"><span class="on">Comparar</span><span>Una por una</span><span>Zona segura</span></div>
+      </div>
+      <div class="vers">
+        <div class="ver sel"><div class="ver-h"><b>v1</b><small>Promesa</small><span class="sc" style="--sc:var(--up)">82</span></div><div class="f"><div data-frame data-tone="warm" data-cap="no es tu SUELDO" data-hl="3"></div><span class="rec"><span class="orb"></span>Recomendada</span><span class="chk"><i data-i="check"></i></span></div><div class="vb"><span class="x"><i data-i="x" class="ic"></i></span><span><i data-i="clock" class="ic"></i></span><span class="on"><i data-i="check" class="ic"></i></span></div></div>
+        <div class="ver sel"><div class="ver-h"><b>v2</b><small>Cifra</small><span class="sc" style="--sc:var(--up)">74</span></div><div class="f"><div data-frame data-tone="warm" data-pose="1" data-cap="cada vez que decís NO ME ALCANZA" data-hl="4,5,6" data-max="13"></div><span class="chk"><i data-i="check"></i></span></div><div class="vb"><span class="x"><i data-i="x" class="ic"></i></span><span><i data-i="clock" class="ic"></i></span><span class="on"><i data-i="check" class="ic"></i></span></div></div>
+        <div class="ver"><div class="ver-h"><b>v3</b><small>Pregunta</small><span class="sc" style="--sc:var(--warn)">58</span></div><div class="f"><div data-frame data-tone="olive" data-cap="¿por qué seguís SIN PLATA?" data-hl="3,4"></div></div><div class="vb"><span class="x"><i data-i="x" class="ic"></i></span><span><i data-i="clock" class="ic"></i></span><span><i data-i="check" class="ic"></i></span></div></div>
+        <div class="ver dim"><div class="ver-h"><b>v4</b><small>Historia</small><span class="sc" style="--sc:var(--down)">41</span></div><div class="f"><div data-frame data-tone="studio" data-pose="1" data-cap="cuando tenía 20 años" data-hl="9"></div></div><div class="vb"><span class="x on"><i data-i="x" class="ic"></i></span><span><i data-i="clock" class="ic"></i></span><span><i data-i="check" class="ic"></i></span></div></div>
+      </div>
+      <div class="strip"><span class="label">Siguientes</span>
+        <div class="s done" data-frame data-tone="cool" data-cap=""></div><div class="s done" data-frame data-tone="rose" data-cap=""></div><div class="s done" data-frame data-tone="olive" data-cap=""></div><div class="s on" data-frame data-tone="warm" data-cap=""></div><div class="s" data-frame data-tone="teal" data-cap=""></div><div class="s" data-frame data-tone="studio" data-cap=""></div><div class="s" data-frame data-tone="cool" data-pose="1" data-cap=""></div><div class="s" data-frame data-tone="rose" data-pose="1" data-cap=""></div>
+        <span class="r">Atajos: <b>1–4</b> elegir versión · <b>A</b> aprobar · <b>R</b> rechazar · <b>→</b> siguiente pieza</span>
+      </div>
+    </div>
+    <aside class="rail">
+      <div class="jc"><div class="jc-h"><span class="orb"></span>Jarvis compara</div><p>v1 y v2 son las más fuertes: dicen la promesa en el primer segundo. v4 tarda 3 segundos en llegar al punto.</p></div>
+      <div>
+        <table class="cmp"><thead><tr><th>Por qué</th><th>v1</th><th>v2</th><th>v3</th><th>v4</th></tr></thead>
+          <tbody>
+            <tr><td>Promesa directa</td><td><span class="y">●</span></td><td><span class="y">●</span></td><td><span class="n">○</span></td><td><span class="n">○</span></td></tr>
+            <tr><td>Cifra o tiempo concreto</td><td><span class="n">○</span></td><td><span class="y">●</span></td><td><span class="y">●</span></td><td><span class="n">○</span></td></tr>
+            <tr><td>Menos de 12 palabras</td><td><span class="y">●</span></td><td><span class="n">○</span></td><td><span class="y">●</span></td><td><span class="n">○</span></td></tr>
+            <tr><td>Cara en el primer cuadro</td><td><span class="y">●</span></td><td><span class="y">●</span></td><td><span class="y">●</span></td><td><span class="y">●</span></td></tr>
+          </tbody></table>
+      </div>
+      <div class="notes">
+        <span class="label">Notas por cuadro</span>
+        <div class="note"><span class="tc">v2 · 00:03.2</span><p>Cortar la respiración antes de “alcanza”.</p></div>
+        <div class="note ok"><span class="tc">v1 · 00:11.8</span><p>El subtítulo tapa la cara.</p><span class="rp">Claude: lo subí 40 px.</span></div>
+      </div>
+      <div class="acts"><span class="btn acc"><i data-i="check" class="ic"></i>Aprobar v1 y v2</span><span class="btn">Rechazar v4 y seguir</span></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================== SISTEMA ============================== -->
+<section class="board" id="system">
+  <header class="nav">
+    <div class="mark"><i>P</i><b>Pauta</b></div>
+    <span class="wsp"><span class="lg" style="background:#1f6b4f">PR</span>Dra. Paula Ríos<i data-i="chevdown"></i></span>
+    <div class="r"><span class="label">Paso 2 de 5 · se guarda solo</span><div class="av" style="background:linear-gradient(140deg,#2f8f6a,#14402f)">P</div></div>
+  </header>
+  <div class="onb">
+    <section class="card wiz">
+      <div class="steps"><span class="done"><i>✓</i>Cuenta</span><b></b><span class="on"><i>2</i>Marca</span><b></b><span><i>3</i>Conexiones</span><b></b><span><i>4</i>Módulos</span><b></b><span><i>5</i>Listo</span></div>
+      <h2>Contanos de tu marca.</h2>
+      <p>Con esto Pauta se viste con tus colores y tu asistente habla como vos. Lo podés cambiar cuando quieras.</p>
+      <div class="two">
+        <label class="fld"><span>Nombre de la marca</span><div class="inp foc">Paula Ríos · Nutrición</div></label>
+        <label class="fld"><span>Idioma</span><div class="inp">Español<small>es-MX</small><i data-i="chevdown" class="ic"></i></div></label>
+      </div>
+      <label class="fld"><span>Logo</span><div class="drop"><span class="lg">P</span><div><b style="font-weight:600;color:var(--ink)">logo-paula.svg</b><br><small style="color:var(--ink3)">Arrastrá otro para cambiarlo</small></div></div></label>
+      <label class="fld"><span>Color de acento</span><div class="sws"><i class="on" style="--c:#1f6b4f"></i><i style="--c:#2233ff"></i><i style="--c:#e8742a"></i><i style="--c:#7c5cfa"></i><i style="--c:#d8443b"></i><i style="--c:#0d1015"></i></div></label>
+      <div class="two">
+        <label class="fld"><span>Nombre del asistente</span><div class="inp">Nora<small>voz cálida</small></div></label>
+        <label class="fld"><span>Cuenta principal</span><div class="inp"><i data-i="link" class="ic" style="color:var(--up)"></i>@drapaularios<small style="color:var(--up)">conectada</small></div></label>
+      </div>
+      <label class="fld"><span>Meta de contenido asegurado · <b style="color:var(--ink)">10 días</b></span><div class="slider"><i></i><b></b></div><small class="label">Te avisamos cuando te queden menos de 4.</small></label>
+      <div class="foot"><span class="btn ghost"><i data-i="chevleft" class="ic"></i>Atrás</span><span class="btn pri">Continuar <i data-i="arrow" class="ic"></i></span></div>
+    </section>
+    <section class="prev">
+      <div class="prev-h"><span class="label">Así lo va a ver Paula</span><span class="live">Vista previa en vivo</span></div>
+      <div class="browser">
+        <div class="bbar"><i></i><i></i><i></i><span>pauta.drapaularios.com</span></div>
+        <div class="mini">
+          <div class="mn"><span class="lg">P</span><b>Paula Ríos</b><em class="on">Hoy</em><em>Revisar</em><em>Números</em><em>Logros</em><span style="margin-left:auto;display:inline-flex;align-items:center;gap:6px"><span class="orb" style="width:16px;height:16px;background:radial-gradient(circle at 35% 30%,#e3f5ec,#3aa57a 35%,#1f6b4f 65%,#0b2a1e)"></span>Preguntale a Nora</span></div>
+          <h3>Buenos días, Paula. <em>12 videos</em> te esperan.</h3>
+          <div class="mc">
+            <div class="mcard"><span class="label">Vistas, 7 días</span><b class="big num">18,240</b><div class="sp" data-spark="10,12,15,13,18,22,20,26,30,28,34,38" data-w="300" data-h="40"></div></div>
+            <div class="mcard"><span class="label">Contenido asegurado</span><b class="big num">6 días</b><span class="label">meta 10</span></div>
+          </div>
+          <div class="tl"><div data-frame data-tone="olive" data-cap="3 alimentos" data-hl="0"></div><div data-frame data-tone="teal" data-pose="1" data-cap="el AYUNO" data-hl="1"></div><div data-frame data-tone="warm" data-cap="tu INTESTINO" data-hl="1"></div><div data-frame data-tone="rose" data-pose="1" data-cap="sin azúcar" data-hl="1"></div></div>
+          <span class="gbtn">Revisar los 12</span>
+        </div>
+      </div>
+    </section>
+  </div>
+  <section class="plans">
+    <div class="plans-h"><h2>Un plan para cada tamaño.</h2><p>Todas las funciones de aprobación en todos los planes.</p><small>Precios de ejemplo</small></div>
+    <div class="pgrid">
+      <div class="card plan"><h3>Creador</h3><div class="pr num">$29<small> / mes</small></div><p>Para una persona y una marca.</p><ul><li><i data-i="check" class="ic"></i>1 marca, 2 cuentas</li><li><i data-i="check" class="ic"></i>Aprobación, calendario y números</li><li><i data-i="check" class="ic"></i>Asistente con voz</li><li><i data-i="check" class="ic"></i>Logros</li></ul><span class="btn">Empezar gratis 14 días</span></div>
+      <div class="card plan feat"><h3>Estudio <em>Más elegido</em></h3><div class="pr num">$99<small> / mes</small></div><p>Para quien produce todos los días.</p><ul><li><i data-i="check" class="ic"></i>Hasta 5 marcas y 4 personas</li><li><i data-i="check" class="ic"></i>Laboratorio de estilos</li><li><i data-i="check" class="ic"></i>Ventas de afiliados en vivo</li><li><i data-i="check" class="ic"></i>Pedir videos a la IA</li></ul><span class="btn">Elegir Estudio</span></div>
+      <div class="card plan"><h3>Agencia</h3><div class="pr num">$299<small> / mes</small></div><p>Para manejar clientes.</p><ul><li><i data-i="check" class="ic"></i>Marcas ilimitadas</li><li><i data-i="check" class="ic"></i>Portal de cliente para aprobar</li><li><i data-i="check" class="ic"></i>Marca blanca y dominio propio</li><li><i data-i="check" class="ic"></i>Roles y permisos por marca</li></ul><span class="btn">Hablar con ventas</span></div>
+    </div>
+  </section>
+</section>
+
+<!-- ============================== MOVIL ============================== -->
+<section class="board mob" id="mobile">
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:38</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <div class="m-top"><span class="wsp"><span class="lg">KT</span>KT Media<i data-i="chevdown"></i></span><div class="av">D</div></div>
+        <h1>Buenas noches, Daniel. <span>Entraron <em>$96</em> hoy.</span></h1>
+        <div class="m-card"><ul class="m-urg">
+          <li><span class="dot" style="--c:var(--down)"></span><div><b>Aprobá videos de English</b><small>60 esperan · se corta el jueves</small></div><span class="go"><i data-i="arrow"></i></span></li>
+          <li><span class="dot" style="--c:var(--warn)"></span><div><b>Grabá 3 intros en inglés</b><small>Quedan 0</small></div><span class="go"><i data-i="arrow"></i></span></li>
+          <li><span class="dot" style="--c:var(--warn)"></span><div><b>Votá la ronda 3</b><small>Faltan 7 de 12</small></div><span class="go"><i data-i="arrow"></i></span></li>
+        </ul></div>
+        <div class="m-card m-money"><span class="label">Comisión acumulada</span><div class="big num">$3,482<span>.60</span></div><span class="label">83% de la primera meta · faltan $87.20</span><div class="sp" data-spark="40,52,48,70,66,90,84,110,104,128,120,150,168,160,182,176,210,226,218,250,262,248,280,300,292,330,356,348,380,412" data-w="350" data-h="54" data-min="0"></div></div>
+      </div>
+      <div class="tabbar"><span class="on"><i data-i="home2"></i>Hoy</span><span><i data-i="film"></i>Revisar<b>70</b></span><span class="orbt"><span class="orb"></span></span><span><i data-i="chart"></i>Números</span><span><i data-i="trophy"></i>Logros</span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Hoy</b> · una frase te dice cómo va todo</p>
+  </div>
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:41</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-rv">
+        <div class="hd"><span class="ib"><i data-i="chevleft"></i></span><div><b>Pieza 4 de 18</b><small>KT Español · sale el jueves</small></div><span class="ib"><i data-i="more"></i></span></div>
+        <h2>No es tu sueldo lo que te tiene pobre</h2>
+        <div class="m-vf"><div class="fr" data-frame data-tone="warm" data-cap="no es tu SUELDO" data-hl="3"></div><div class="vtag"><span>v1 · Promesa</span><span class="s">82 · Recomendada</span></div></div>
+        <div class="vdots"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="m-act"><span><i data-i="x"></i></span><span class="k"><i data-i="check"></i>Aprobar v1</span><span><i data-i="message"></i></span></div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Revisar</b> · deslizá entre las 4 versiones</p>
+  </div>
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:44</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="chat">
+        <div class="hd"><span class="orb"></span><div><b>Jarvis</b><small>● escuchando</small></div><span class="ib"><i data-i="x"></i></span></div>
+        <div class="bub me">¿Cómo van las ventas esta semana?</div>
+        <div class="bub ai">Bien. Entraron 5 ventas, $236 en comisión. Con una más pasás la primera meta.<div class="mini2"><div>Esta semana<b class="num">$236</b></div><div>Meta del mes<b class="num">83%</b></div></div></div>
+        <div class="conf"><span>¿Querés que pida <b>5 videos nuevos</b> para English?</span><div class="row"><span class="btn">Ahora no</span><span class="btn acc">Pedirlos</span></div></div>
+        <div class="chips"><span>¿Qué tengo pendiente?</span><span>¿Cuánto contenido queda?</span></div>
+      </div>
+      <div class="composer">Escribí o hablale<span class="mic"><i data-i="mic"></i></span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Jarvis</b> · conversación con confirmación</p>
+  </div>
+</section>
+
+<!-- ============================== MOVIL 2 ============================== -->
+<section class="board mob" id="mobile2">
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:46</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <h1 style="font-size:36px">Números</h1>
+        <div class="mseg"><span class="on"><span class="dot" style="--c:var(--es)"></span>Español</span><span><span class="dot" style="--c:var(--en)"></span>English</span></div>
+        <div class="m-card m-acc" style="--c:var(--es)"><span class="label">Instagram · 7 días</span><div class="row3"><div><span class="label">Vistas</span><b class="num">7,028</b><span class="delta up">▲ 33%</span></div><div><span class="label">Interacc.</span><b class="num">267</b><span class="delta up">▲ 685%</span></div><div><span class="label">Seguid.</span><b class="num">+35</b><span class="label">2,796</span></div></div><div class="sp" data-spark="12,14,13,18,16,22,25,24,30,28,35,40,38,46" data-w="320" data-h="48"></div></div>
+        <div class="m-card"><span class="label">Qué versión funciona</span>
+          <div style="display:grid;gap:8px;font-size:13.5px">
+            <div style="display:grid;grid-template-columns:28px 1fr 46px;gap:10px;align-items:center"><b>v1</b><div style="height:8px;border-radius:4px;background:var(--tint)"><div style="width:92%;height:100%;border-radius:4px;background:var(--accent)"></div></div><span class="num" style="text-align:right">1,240</span></div>
+            <div style="display:grid;grid-template-columns:28px 1fr 46px;gap:10px;align-items:center"><b>v2</b><div style="height:8px;border-radius:4px;background:var(--tint)"><div style="width:70%;height:100%;border-radius:4px;background:var(--ink2)"></div></div><span class="num" style="text-align:right">940</span></div>
+            <div style="display:grid;grid-template-columns:28px 1fr 46px;gap:10px;align-items:center"><b>v3</b><div style="height:8px;border-radius:4px;background:var(--tint)"><div style="width:48%;height:100%;border-radius:4px;background:var(--ink2)"></div></div><span class="num" style="text-align:right">650</span></div>
+            <div style="display:grid;grid-template-columns:28px 1fr 46px;gap:10px;align-items:center"><b>v4</b><div style="height:8px;border-radius:4px;background:var(--tint)"><div style="width:30%;height:100%;border-radius:4px;background:var(--ink2)"></div></div><span class="num" style="text-align:right">410</span></div>
+          </div>
+          <span class="label">Promedio de vistas por video · 30 días</span>
+        </div>
+      </div>
+      <div class="tabbar"><span><i data-i="home2"></i>Hoy</span><span><i data-i="film"></i>Revisar<b>70</b></span><span class="orbt"><span class="orb"></span></span><span class="on"><i data-i="chart"></i>Números</span><span><i data-i="trophy"></i>Logros</span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Números</b> · qué versión y qué gancho gana</p>
+  </div>
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:47</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in">
+        <h1 style="font-size:36px">Logros</h1>
+        <div class="m-card" style="grid-template-columns:auto 1fr;align-items:center;gap:16px"><div class="ringw" data-ring=".78" data-r="40" data-sw="6"><div class="in"><b>7</b><small>NIVEL</small></div></div><div><b style="font-weight:600;font-size:17px">Estratega</b><p style="color:var(--ink2);font-size:13.5px">660 XP para nivel 8. El dinero vale 8 veces más.</p></div></div>
+        <div class="m-card"><span class="label">Esta semana</span><div class="shelf" style="grid-template-columns:repeat(3,1fr)"><span class="md" style="--m:#e9b949"><i><i data-i="eye"></i></i>100K vistas<br><b style="font-weight:600;color:#b8861b">Oro</b></span><span class="md" style="--m:#b9c2cc"><i><i data-i="users"></i></i>2,500 seg.<br><b style="font-weight:600;color:#7d8794">Plata</b></span><span class="md" style="--m:#cf8a4f"><i><i data-i="dollar"></i></i>Venta $50+<br><b style="font-weight:600;color:#a8642c">Bronce</b></span></div></div>
+        <div class="m-card"><span class="label">Camino a $30,000 al mes</span><div style="display:flex;justify-content:space-between;align-items:baseline"><b class="serif num" style="font-size:40px">$412</b><span class="label">este mes</span></div><div class="pbar"><div class="b"><i style="width:14%"></i></div></div><div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3)"><span><b style="color:var(--ink)">$500</b> primera meta</span><span><b style="color:var(--ink)">$30K</b> meta final</span></div></div>
+      </div>
+      <div class="tabbar"><span><i data-i="home2"></i>Hoy</span><span><i data-i="film"></i>Revisar<b>70</b></span><span class="orbt"><span class="orb"></span></span><span><i data-i="chart"></i>Números</span><span class="on"><i data-i="trophy"></i>Logros</span></div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Logros</b> · medallas reales, metas de dinero</p>
+  </div>
+  <div class="ph-col">
+    <div class="phone"><div class="scr">
+      <div class="island"></div><div class="sbar"><span>23:49</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+      <div class="m-in"><div class="m-top"><span class="wsp"><span class="lg">KT</span>KT Media<i data-i="chevdown"></i></span><div class="av">D</div></div><h1>Buenas noches, Daniel.</h1></div>
+      <div class="sheetw"></div>
+      <div class="bsheet">
+        <span class="grab"></span>
+        <h3>Tus espacios</h3>
+        <div class="wsr on" style="--c:var(--ink)"><span class="lg">KT</span><div><b>KT Media</b><small>Estudio · 2 marcas</small></div><i data-i="check"></i></div>
+        <div class="subb"><span><span class="dot" style="--c:var(--es)"></span>KT Español<b>10</b></span><span><span class="dot" style="--c:var(--en)"></span>KT English<b>60</b></span></div>
+        <div class="wsr" style="--c:#1f6b4f"><span class="lg">PR</span><div><b>Dra. Paula Ríos</b><small>Creador · 1 marca</small></div><span></span></div>
+        <div class="wsr" style="--c:#6b4a2c"><span class="lg">CO</span><div><b>Café Origen</b><small>Estudio · 3 marcas</small></div><span></span></div>
+        <div class="wsr" style="--c:#3d3f7a"><span class="lg">LS</span><div><b>Lumen Studio</b><small>Agencia · 12 marcas</small></div><span></span></div>
+        <div class="act2"><i data-i="plus" class="ic"></i>Crear un espacio nuevo</div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div>
+    <p><b>Espacios</b> · todas tus marcas y clientes</p>
+  </div>
+</section>
+
+<script src="shared/kit.js"></script>
+</body>
+</html>
