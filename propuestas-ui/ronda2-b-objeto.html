@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Objeto · Ronda 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/phone.css">
+<style>
+/* Objeto: el portal como un aparato bien hecho. Gris calido de carcasa, caras blancas, tinta negra
+   y un solo punto naranja para lo que se toca. Medidores con aguja, teclas con recorrido, etiquetas en mono. */
+:root {
+  --body: #e9e9e4; --bezel: #dcdcd6; --face: #fbfbf9; --face2: #f3f3ef;
+  --line: rgba(20,20,18,.09); --line2: rgba(20,20,18,.16);
+  --ink: #111110; --ink2: #5d5e5a; --ink3: #9a9b95;
+  --dot: #ff4f00; --dot-soft: rgba(255,79,0,.1);
+  --up: #138a52; --down: #d43b2a; --warn: #c98a00;
+  --es: #ff8a3d; --en: #3c6cf0;
+  --font: "Albert Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --panel: 0 1px 0 rgba(255,255,255,.9) inset, 0 0 0 1px var(--line), 0 1px 2px rgba(20,20,18,.06), 0 18px 36px -24px rgba(20,20,18,.28);
+}
+* { box-sizing: border-box; margin: 0; } ul { list-style: none; padding: 0; }
+body { background: #c9c9c3; color: var(--ink); font: 400 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; padding: 40px; display: grid; gap: 40px; justify-content: center; }
+.ic { width: 18px; height: 18px; flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.lbl { font: 500 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.board { position: relative; width: 1440px; overflow: hidden; border-radius: 22px; background: var(--body); }
+.screen { position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--body); }
+.screen::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .48 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.led { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--dot)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c, var(--dot)) 18%, transparent), 0 0 8px color-mix(in srgb, var(--c, var(--dot)) 60%, transparent); flex: none; display: inline-block; }
+.p { background: var(--face); border-radius: 22px; box-shadow: var(--panel); position: relative; }
+.p .ph { display: flex; align-items: center; gap: 10px; }
+.p .ph .r { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.screw { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #c8c8c2 60%, #a9a9a2); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); position: relative; }
+.screw::after { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 1px; background: rgba(0,0,0,.25); transform: rotate(40deg); }
+
+/* barra superior */
+.bar { position: absolute; left: 0; right: 0; top: 0; height: 88px; display: flex; align-items: center; padding: 0 40px; gap: 28px; }
+.logo { display: flex; align-items: center; gap: 8px; font: 600 22px/1 var(--font); letter-spacing: -.04em; }
+.logo i { width: 10px; height: 10px; border-radius: 50%; background: var(--dot); }
+.logo small { font: 500 11px/1 var(--mono); letter-spacing: .08em; color: var(--ink3); margin-left: 8px; text-transform: uppercase; }
+.seg { display: flex; padding: 4px; border-radius: 16px; background: var(--bezel); box-shadow: inset 0 1px 2px rgba(0,0,0,.08), 0 1px 0 rgba(255,255,255,.8); margin: 0 auto; }
+.seg span { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 12px; font: 500 14px/1 var(--font); color: var(--ink2); }
+.seg span.on { background: var(--face); color: var(--ink); box-shadow: 0 1px 0 #fff inset, 0 1px 2px rgba(0,0,0,.12), 0 4px 10px -4px rgba(0,0,0,.18); }
+.seg span b { font: 500 11px/1 var(--mono); color: #fff; background: var(--dot); padding: 3px 5px; border-radius: 6px; }
+.knob { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 40% 30%, #fff, #ecece8 55%, #d6d6d0); box-shadow: 0 1px 0 #fff inset, 0 0 0 1px var(--line2), 0 6px 14px -6px rgba(0,0,0,.35); position: relative; }
+.knob::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: repeating-conic-gradient(rgba(0,0,0,.05) 0 3deg, transparent 3deg 9deg); }
+.knob i.led { position: relative; }
+.bar .r { display: flex; align-items: center; gap: 14px; }
+.bar .r .t { text-align: right; font: 500 11px/1.4 var(--mono); letter-spacing: .06em; color: var(--ink3); text-transform: uppercase; }
+.bar .r .t b { display: block; font: 500 15px/1.2 var(--mono); color: var(--ink); letter-spacing: 0; }
+.ws { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 6px; border-radius: 20px; background: var(--face); box-shadow: var(--panel); font: 500 13.5px/1 var(--font); }
+.ws .lg { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: #fff; font: 600 10px/1 var(--font); }
+
+/* ===== HOY ===== */
+.grid { position: absolute; left: 40px; right: 40px; top: 96px; bottom: 40px; display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: 1fr 250px; gap: 16px; }
+.now { grid-column: span 7; padding: 30px 32px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; }
+.now h1 { font: 500 52px/1.02 var(--font); letter-spacing: -.045em; text-wrap: balance; margin-top: 6px; }
+.now h1 span { color: var(--ink3); }
+.strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-self: center; }
+.v { position: relative; aspect-ratio: 9/16; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 10px 20px -12px rgba(0,0,0,.5); }
+.v svg.still { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.v .sc { position: absolute; left: 6px; top: 6px; display: flex; align-items: center; gap: 5px; font: 500 10.5px/1 var(--mono); color: #fff; padding: 4px 6px; border-radius: 6px; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); }
+.v .sc i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.v .cap { position: absolute; left: 6px; right: 6px; top: 60%; text-align: center; font: 700 11px/1.15 var(--font); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.v .cap em { font-style: normal; color: #ffdf6b; }
+.v.more { display: grid; place-items: center; background: var(--face2); box-shadow: inset 0 0 0 1px var(--line2); font: 500 13px/1.3 var(--mono); color: var(--ink2); text-align: center; }
+.keys { display: flex; align-items: center; gap: 12px; }
+.key { display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 24px; border-radius: 16px; font: 600 16px/1 var(--font); color: #fff; background: linear-gradient(180deg, #ff6a24, #f24800); box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -2px 0 rgba(0,0,0,.18) inset, 0 4px 0 #b83600, 0 12px 20px -8px rgba(242,72,0,.6); }
+.key.w { color: var(--ink); background: linear-gradient(180deg, #fff, #efefea); box-shadow: 0 1px 0 #fff inset, 0 -2px 0 rgba(0,0,0,.06) inset, 0 4px 0 #cfcfc8, 0 10px 18px -10px rgba(0,0,0,.35), 0 0 0 1px var(--line); }
+.cap2 { font: 500 11px/1 var(--mono); padding: 4px 6px; border-radius: 5px; background: rgba(0,0,0,.14); }
+.key.w .cap2 { background: var(--face2); box-shadow: inset 0 0 0 1px var(--line2); color: var(--ink2); }
+.keys small { margin-left: auto; font: 500 11.5px/1.5 var(--mono); color: var(--ink3); text-align: right; }
+
+.money { grid-column: span 5; padding: 30px 32px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 10px; }
+.money .big { font: 300 92px/.95 var(--font); letter-spacing: -.06em; margin-top: 8px; }
+.money .big sup { font-size: 34px; vertical-align: 46px; color: var(--ink3); margin-right: 4px; font-weight: 400; }
+.money .big span { color: var(--ink3); }
+.gauge { position: relative; height: 150px; display: grid; place-items: end center; margin-bottom: 52px; align-self: center; }
+.gauge svg { width: 300px; height: 160px; overflow: visible; }
+.gauge .read { position: absolute; bottom: -52px; left: 0; right: 0; text-align: center; }
+.gauge .read b { font: 500 22px/1 var(--font); letter-spacing: -.03em; } .gauge .read span { display: block; font: 500 10.5px/1.6 var(--mono); letter-spacing: .08em; color: var(--ink3); text-transform: uppercase; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); padding-top: 14px; }
+.trio div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+.trio b { display: block; font: 500 19px/1.3 var(--font); letter-spacing: -.02em; margin-top: 4px; }
+.mini { grid-column: span 4; padding: 24px 26px; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
+.meters { display: grid; gap: 16px; align-content: center; }
+.meter .mh { display: flex; align-items: baseline; gap: 8px; font: 500 14px/1 var(--font); }
+.meter .mh b { margin-left: auto; font: 500 20px/1 var(--font); letter-spacing: -.03em; }
+.meter .mh b.dn { color: var(--down); }
+.ticks { margin-top: 10px; display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; }
+.ticks i { height: 16px; border-radius: 3px; background: var(--face2); box-shadow: inset 0 0 0 1px var(--line); }
+.ticks i.on { background: var(--c); box-shadow: none; }
+.ticks i.ok { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+.ticks i.cut { background: repeating-linear-gradient(-45deg, rgba(212,59,42,.14) 0 3px, transparent 3px 6px); box-shadow: inset 0 0 0 1px rgba(212,59,42,.3); }
+.mini .bigs { font: 300 56px/1 var(--font); letter-spacing: -.055em; align-self: end; }
+.mini .bigs small { font: 500 13px/1 var(--mono); color: var(--up); letter-spacing: 0; margin-left: 8px; }
+.mini .sp { height: 54px; color: var(--ink); } .mini .sp svg { width: 100%; height: 100%; display: block; }
+.xp { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; } .xp i { height: 22px; border-radius: 3px; background: var(--face2); box-shadow: inset 0 0 0 1px var(--line); } .xp i.on { background: var(--ink); box-shadow: none; } .xp i.nx { background: var(--dot); box-shadow: none; }
+.lvrow { display: flex; align-items: baseline; gap: 12px; } .lvrow b { font: 300 56px/1 var(--font); letter-spacing: -.055em; } .lvrow span { color: var(--ink2); font-size: 15px; }
+.medals { display: flex; gap: 8px; } .medals i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #fff, var(--m) 45%, color-mix(in srgb, var(--m) 60%, #000)); box-shadow: 0 4px 8px -4px var(--m); } .medals i .ic { width: 14px; height: 14px; color: rgba(0,0,0,.6); }
+
+/* ===== APROBAR (mesa) ===== */
+.mesa { position: absolute; left: 40px; right: 40px; top: 96px; bottom: 40px; display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+.table { padding: 26px 28px; display: grid; grid-template-rows: auto 1fr auto; gap: 20px; }
+.table h2 { font: 500 34px/1.05 var(--font); letter-spacing: -.04em; margin-top: 8px; }
+.vers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+.ver { display: grid; gap: 10px; }
+.ver .vh { display: flex; align-items: center; gap: 8px; font: 500 14px/1 var(--font); } .ver .vh small { color: var(--ink3); font-weight: 400; }
+.ver .vh .s { margin-left: auto; font: 300 28px/1 var(--font); letter-spacing: -.04em; color: var(--c); }
+.ver .v { border-radius: 16px; }
+.ver .v .cap { font-size: 15px; }
+.ver.sel .v { box-shadow: 0 0 0 3px var(--face), 0 0 0 5px var(--dot), 0 18px 30px -14px rgba(242,72,0,.45); }
+.ver.off .v { filter: grayscale(.8) brightness(.9); opacity: .55; }
+.vmeter { height: 6px; border-radius: 3px; background: var(--face2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; } .vmeter i { display: block; height: 100%; background: var(--c); }
+.vk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.vk span { height: 36px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(180deg, #fff, #f0f0ec); box-shadow: 0 1px 0 #fff inset, 0 2px 0 #d2d2cb, 0 0 0 1px var(--line); color: var(--ink2); }
+.vk span.on { background: linear-gradient(180deg, #ff6a24, #f24800); color: #fff; box-shadow: 0 2px 0 #b83600, 0 1px 0 rgba(255,255,255,.4) inset; }
+.vk span.x.on { background: linear-gradient(180deg, #e65445, #c93626); box-shadow: 0 2px 0 #8f2116; }
+.foot { display: flex; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.foot .pg { display: flex; gap: 4px; } .foot .pg i { width: 26px; height: 6px; border-radius: 3px; background: var(--face2); box-shadow: inset 0 0 0 1px var(--line); } .foot .pg i.d { background: var(--ink); box-shadow: none; } .foot .pg i.on { background: var(--dot); box-shadow: none; }
+.foot small { font: 500 11.5px/1 var(--mono); color: var(--ink3); }
+.foot .keys { margin-left: auto; }
+.foot .key { height: 48px; font-size: 15px; padding: 0 20px; }
+.rail { display: grid; gap: 16px; align-content: start; }
+.jcmp { padding: 22px; display: grid; gap: 12px; }
+.jcmp p { font: 400 19px/1.4 var(--font); letter-spacing: -.015em; }
+.jcmp p b { font-weight: 600; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cmp th { font: 500 11px/1 var(--mono); color: var(--ink3); text-align: center; padding: 0 2px 8px; } .cmp th:first-child { text-align: left; }
+.cmp td { text-align: center; padding: 8px 2px; border-top: 1px solid var(--line); } .cmp td:first-child { text-align: left; color: var(--ink2); }
+.cmp i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ink); } .cmp i.n { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line2); }
+.notes { padding: 20px 22px; display: grid; gap: 10px; }
+.note { display: grid; grid-template-columns: auto 1fr; gap: 10px; font-size: 13.5px; color: var(--ink2); }
+.note em { font: 500 11px/1 var(--mono); font-style: normal; padding: 4px 6px; border-radius: 5px; background: var(--dot-soft); color: var(--dot); align-self: start; }
+
+/* ===== VENTAS (destino del morph) ===== */
+.ventas { position: absolute; left: 40px; right: 40px; top: 96px; bottom: 40px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+.vmain { padding: 30px 34px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; }
+.vmain .big { font: 300 132px/.9 var(--font); letter-spacing: -.065em; }
+.vmain .big sup { font-size: 46px; vertical-align: 70px; color: var(--ink3); margin-right: 6px; font-weight: 400; }
+.vmain .big span { color: var(--ink3); }
+.chart { position: relative; }
+.chart { height: 100%; min-height: 200px; } .bars { height: 100%; } .bars svg { width: 100%; height: 100%; display: block; } .bars rect { fill: #cfcfc9; } .bars rect.hi { fill: var(--dot); } .bars rect.zero { fill: #e2e2dc; }
+.goalline { position: absolute; left: 0; right: 0; top: 30%; border-top: 1px dashed var(--ink3); } .goalline span { position: absolute; right: 0; top: -22px; font: 500 11px/1 var(--mono); color: var(--ink2); background: var(--face); padding: 3px 6px; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }
+.feed { padding: 24px 24px; display: grid; gap: 4px; align-content: start; }
+.feed li { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.feed li:first-of-type { border-top: 0; }
+.feed .in { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--face2); box-shadow: inset 0 0 0 1px var(--line); font: 600 12px/1 var(--font); color: var(--ink2); }
+.feed b { font-weight: 600; font-size: 14.5px; display: block; } .feed small { color: var(--ink3); font-size: 12.5px; }
+.feed strong { font: 500 16px/1 var(--mono); color: var(--up); }
+
+/* ===== STORYBOARD ===== */
+.sb { padding: 64px 64px 72px; display: grid; gap: 40px; }
+.sb-h { display: flex; align-items: flex-end; gap: 40px; }
+.sb-h h2 { font: 500 46px/1.02 var(--font); letter-spacing: -.045em; } .sb-h h2 span { color: var(--ink3); }
+.sb-h p { color: var(--ink2); font-size: 15px; max-width: 48ch; margin-left: auto; }
+.frames { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 32px; }
+.fr { display: grid; gap: 14px; }
+.win { position: relative; width: 640px; height: 400px; border-radius: 16px; overflow: hidden; box-shadow: var(--panel); }
+.win > .screen { transform: scale(.4444); transform-origin: 0 0; position: absolute; top: 0; left: 0; }
+.fr .c { display: flex; align-items: baseline; gap: 14px; } .fr .c b { font: 500 12.5px/1 var(--mono); color: var(--dot); } .fr .c span { color: var(--ink2); font-size: 14.5px; }
+.spec { display: grid; grid-template-columns: auto 1fr auto; gap: 28px; align-items: center; padding: 22px 26px; }
+.spec svg { width: 220px; height: 70px; }
+.spec p { color: var(--ink2); font-size: 14px; } .spec p b { color: var(--ink); font-weight: 600; }
+.spec .k { display: grid; gap: 6px; text-align: right; font: 500 11.5px/1.3 var(--mono); color: var(--ink3); white-space: nowrap; }
+.tap { position: absolute; z-index: 9; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,79,0,.25); box-shadow: 0 0 0 8px rgba(255,79,0,.1); }
+/* estados intermedios */
+.s-lift .money { transform: translateY(-4px) scale(1.01); box-shadow: 0 0 0 2px var(--dot), 0 30px 50px -24px rgba(242,72,0,.35); }
+.s-fold .now, .s-fold .mini { opacity: .0; transform: translateY(24px) scale(.97); }
+.s-fold .money { grid-column: 1 / -1; grid-row: 1 / -1; }
+.s-fold .money .gauge { opacity: .2; }
+.s-fold .money .big { font-size: 120px; }
+.s-chart .feed { opacity: .0; transform: translateX(40px); }
+.s-chart .bars rect { transform: scaleY(.55); transform-origin: bottom; transform-box: fill-box; }
+</style>
+</head>
+<body>
+
+<section class="board" id="hoy"></section>
+<section class="board" id="aprobar"></section>
+<section class="board" id="morph"></section>
+<section class="board" id="movil"></section>
+
+<script>
+const I = (n, c = "ic") => `<i data-i="${n}" class="${c}"></i>`;
+const V = (tone, cap, sc, col, side) => `<div class="v" data-still="${tone}" ${side ? 'data-side="r"' : ""}><span class="sc"><i style="--c:${col}"></i>${sc}</span>${cap ? `<div class="cap">${cap}</div>` : ""}</div>`;
+const barTop = (on) => `<header class="bar"><div class="logo"><i></i>objeto<small>KT Media</small></div>
+  <nav class="seg">${[["hoy","Hoy"],["aprobar","Aprobar",70],["numeros","Números"],["ventas","Ventas"],["logros","Logros"],["lab","Laboratorio"]].map(([k,t,b]) => `<span class="${k === on ? "on" : ""}">${t}${b ? `<b>${b}</b>` : ""}</span>`).join("")}</nav>
+  <div class="r"><div class="t">Mar 13 oct<b>23:38</b></div><span class="knob" title="Jarvis"><i class="led"></i></span></div></header>`;
+const gaugeSvg = (p) => { const a = Math.PI * (1 - p), x = 150 + 118 * Math.cos(a), y = 150 - 118 * Math.sin(a);
+  const ticks = Array.from({ length: 21 }, (_, i) => { const t = Math.PI * (1 - i / 20), r1 = 132, r2 = i % 5 ? 126 : 120; return `<line x1="${150 + r1 * Math.cos(t)}" y1="${150 - r1 * Math.sin(t)}" x2="${150 + r2 * Math.cos(t)}" y2="${150 - r2 * Math.sin(t)}" stroke="${i / 20 <= p ? "#111110" : "#c4c4be"}" stroke-width="${i % 5 ? 1.5 : 2.5}" stroke-linecap="round"/>`; }).join("");
+  return `<svg viewBox="0 0 300 160">${ticks}<path d="M32 150 A118 118 0 0 1 268 150" fill="none" stroke="#e4e4de" stroke-width="10" stroke-linecap="round"/><path d="M32 150 A118 118 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="#ff4f00" stroke-width="10" stroke-linecap="round"/><line x1="150" y1="150" x2="${(150 + 96 * Math.cos(a)).toFixed(1)}" y2="${(150 - 96 * Math.sin(a)).toFixed(1)}" stroke="#111110" stroke-width="3" stroke-linecap="round"/><circle cx="150" cy="150" r="9" fill="#111110"/><circle cx="150" cy="150" r="3" fill="#fbfbf9"/></svg>`; };
+const ticks = (on, ok, cut, c) => Array.from({ length: 14 }, (_, i) => `<i class="${i < on ? "on" : i < on + ok ? "ok" : cut ? "cut" : ""}"></i>`).join("");
+
+const hoyScreen = (mod = "") => `<div class="screen ${mod}">${barTop("hoy")}
+  <div class="grid">
+    <section class="p now">
+      <div class="ph"><span class="led" style="--c:var(--down)"></span><span class="lbl">Ahora · urgente</span><div class="r"><span class="screw"></span></div></div>
+      <h1>Aprobá videos de KT English. <span>Se queda sin contenido el jueves.</span></h1>
+      <div class="strip">${V("amber","it's your <em>mouth</em>",82,"var(--up)")}${V("ocean","your <em>words</em>",78,"var(--up)",1)}${V("dusk","the 2 <em>words</em>",64,"var(--warn)")}${V("teal","still <em>broke</em>",57,"var(--warn)",1)}${V("smoke","a <em>beep</em>",49,"var(--warn)")}<div class="v more">+55<br>más</div></div>
+      <div class="keys"><span class="key">Empezar <span class="cap2">↵</span></span><span class="key w">Ver todas <span class="cap2">V</span></span><small>60 versiones · 14 con puntaje alto<br>≈ 9 minutos a tu ritmo</small></div>
+    </section>
+    <section class="p money">
+      <div class="ph"><span class="lbl">Comisión · 30 días</span><div class="r"><span class="led" style="--c:var(--up)"></span><span class="lbl" style="color:var(--up)">en vivo</span></div></div>
+      <div class="big num"><sup>$</sup>412<span>.80</span></div>
+      <div class="gauge">${gaugeSvg(.83)}<div class="read"><b class="num">83%</b><span>de la meta de $500</span></div></div>
+      <div class="trio"><div><span class="lbl">Pagado</span><b class="num">$2,150</b></div><div><span class="lbl">En camino</span><b class="num">$904</b></div><div><span class="lbl">Para cobrar</span><b class="num">$428</b></div></div>
+    </section>
+    <section class="p mini">
+      <div class="ph"><span class="lbl">Contenido asegurado</span><div class="r"><span class="lbl">meta 14 d</span></div></div>
+      <div class="meters">
+        <div class="meter" style="--c:var(--es)"><div class="mh"><span class="led" style="--c:var(--es)"></span>Español<b class="num">8 días</b></div><div class="ticks">${ticks(7,2,false)}</div></div>
+        <div class="meter" style="--c:var(--en)"><div class="mh"><span class="led" style="--c:var(--en)"></span>English<b class="num dn">2 días</b></div><div class="ticks">${ticks(2,0,true)}</div></div>
+      </div>
+    </section>
+    <section class="p mini">
+      <div class="ph"><span class="lbl">Vistas · 7 días</span><div class="r"><span class="lbl">2 cuentas</span></div></div>
+      <div style="display:grid;align-content:end;gap:10px"><div class="bigs num">7,814<small>▲ 9%</small></div><div class="sp" data-spark="22,25,21,30,28,34,31,38,36,35,41,39,44,46" data-w="380" data-h="54" data-fill=".06" data-dot="3"></div></div>
+    </section>
+    <section class="p mini">
+      <div class="ph"><span class="lbl">Logros</span><div class="r"><div class="medals"><i style="--m:#e9b949">${I("eye")}</i><i style="--m:#bcc3cb">${I("users")}</i><i style="--m:#cf8a4f">${I("dollar")}</i></div></div></div>
+      <div style="display:grid;align-content:end;gap:12px"><div class="lvrow"><b>7</b><span>Estratega · 660 XP para el 8</span></div><div class="xp">${Array.from({ length: 20 }, (_, i) => `<i class="${i < 15 ? "on" : i === 15 ? "nx" : ""}"></i>`).join("")}</div></div>
+    </section>
+  </div></div>`;
+
+const aprobarScreen = (mod = "") => `<div class="screen ${mod}">${barTop("aprobar")}
+  <div class="mesa">
+    <section class="p table">
+      <div><div class="ph"><span class="led" style="--c:var(--es)"></span><span class="lbl">KT Español · pieza 4 de 18 · sale el jueves 19:00</span></div><h2>No es tu sueldo lo que te tiene pobre</h2></div>
+      <div class="vers">
+        <div class="ver sel" style="--c:var(--up)"><div class="vh">v1 <small>Promesa</small><span class="s num">82</span></div>${V("amber","no es tu <em>sueldo</em>",82,"var(--up)")}<div class="vmeter"><i style="width:82%"></i></div><div class="vk"><span class="x">${I("x")}</span><span>${I("clock")}</span><span class="on">${I("check")}</span></div></div>
+        <div class="ver sel" style="--c:var(--up)"><div class="vh">v2 <small>Cifra</small><span class="s num">74</span></div>${V("amber","no me <em>alcanza</em>",74,"var(--up)",1)}<div class="vmeter"><i style="width:74%"></i></div><div class="vk"><span class="x">${I("x")}</span><span>${I("clock")}</span><span class="on">${I("check")}</span></div></div>
+        <div class="ver" style="--c:var(--warn)"><div class="vh">v3 <small>Pregunta</small><span class="s num">58</span></div>${V("sage","¿por qué <em>sin plata</em>?",58,"var(--warn)")}<div class="vmeter"><i style="width:58%"></i></div><div class="vk"><span class="x">${I("x")}</span><span>${I("clock")}</span><span>${I("check")}</span></div></div>
+        <div class="ver off" style="--c:var(--down)"><div class="vh">v4 <small>Historia</small><span class="s num">41</span></div>${V("smoke","cuando tenía <em>20</em>",41,"var(--down)",1)}<div class="vmeter"><i style="width:41%"></i></div><div class="vk"><span class="x on">${I("x")}</span><span>${I("clock")}</span><span>${I("check")}</span></div></div>
+      </div>
+      <div class="foot"><div class="pg"><i class="d"></i><i class="d"></i><i class="d"></i><i class="on"></i>${"<i></i>".repeat(6)}</div><small>4 de 18 piezas</small>
+        <div class="keys"><span class="key w">Rechazar v4 <span class="cap2">R</span></span><span class="key">Aprobar v1 y v2 <span class="cap2">A</span></span></div></div>
+    </section>
+    <aside class="rail">
+      <section class="p jcmp"><div class="ph"><span class="knob" style="width:34px;height:34px"><i class="led"></i></span><span class="lbl">Jarvis compara</span></div><p><b>v1 y v2</b> dicen la promesa en el primer segundo. v4 tarda 3 segundos en llegar al punto.</p></section>
+      <section class="p jcmp"><table class="cmp"><thead><tr><th>Factor</th><th>v1</th><th>v2</th><th>v3</th><th>v4</th></tr></thead><tbody>
+        <tr><td>Promesa directa</td><td><i></i></td><td><i></i></td><td><i class="n"></i></td><td><i class="n"></i></td></tr>
+        <tr><td>Cifra concreta</td><td><i class="n"></i></td><td><i></i></td><td><i></i></td><td><i class="n"></i></td></tr>
+        <tr><td>Menos de 12 palabras</td><td><i></i></td><td><i class="n"></i></td><td><i></i></td><td><i class="n"></i></td></tr>
+        <tr><td>Cara en el 1er cuadro</td><td><i></i></td><td><i></i></td><td><i></i></td><td><i></i></td></tr></tbody></table></section>
+      <section class="p notes"><span class="lbl">Notas por cuadro</span><div class="note"><em>v2 · 00:03.2</em>Cortar la respiración antes de “alcanza”.</div><div class="note"><em style="background:rgba(19,138,82,.1);color:var(--up)">v1 · 00:11.8</em><span style="text-decoration:line-through;color:var(--ink3)">El subtítulo tapa la cara.</span></div></section>
+    </aside>
+  </div></div>`;
+
+const ventasScreen = (mod = "") => `<div class="screen ${mod}">${barTop("ventas")}
+  <div class="ventas">
+    <section class="p vmain">
+      <div class="ph"><span class="lbl">Comisión · 30 días</span><div class="r"><span class="led" style="--c:var(--up)"></span><span class="lbl" style="color:var(--up)">en vivo · hace 4 min</span></div></div>
+      <div style="display:flex;align-items:flex-end;gap:28px"><div class="big num"><sup>$</sup>412<span>.80</span></div><div style="padding-bottom:18px"><span class="lbl">Primera meta</span><div style="font:500 22px/1.2 var(--font);letter-spacing:-.02em">83% · faltan $87.20</div><span class="lbl" style="color:var(--ink2)">a tu ritmo, el viernes</span></div></div>
+      <div class="chart"><div class="bars" data-bars="12,0,24,36,0,18,0,48,12,0,30,24,0,60,36,0,12,48,24,0,36,72,24,0,48,36,96,24,48,96" data-hi="26,29" data-w="900" data-h="200" data-gap="6"></div><div class="goalline"><span>ritmo para $500 al mes</span></div></div>
+      <div class="trio"><div><span class="lbl">Acumulado</span><b class="num">$3,482.60</b></div><div><span class="lbl">Pagado</span><b class="num">$2,150.00</b></div><div><span class="lbl">En camino</span><b class="num">$904.20</b></div></div>
+    </section>
+    <section class="p feed"><div class="ph"><span class="lbl">Últimas ventas</span><div class="r"><span class="lbl">nombres recortados</span></div></div><ul>
+      <li><span class="in">MG</span><div><b>María G.</b><small>Natural Cures · hace 2 h</small></div><strong>+$48</strong></li>
+      <li><span class="in">JR</span><div><b>Jorge R.</b><small>Debt Cures · hace 5 h</small></div><strong>+$48</strong></li>
+      <li><span class="in">AL</span><div><b>Ana L.</b><small>Your Wish Is Your Command · ayer</small></div><strong>+$72</strong></li>
+      <li><span class="in">PS</span><div><b>Pedro S.</b><small>Mega Memory · ayer</small></div><strong>+$36</strong></li>
+      <li><span class="in">LC</span><div><b>Lucía C.</b><small>Natural Cures · 10 oct</small></div><strong>+$48</strong></li>
+    </ul></section>
+  </div></div>`;
+
+document.getElementById("hoy").innerHTML = hoyScreen();
+document.getElementById("aprobar").innerHTML = aprobarScreen();
+document.getElementById("morph").innerHTML = `<div class="sb">
+  <div class="sb-h"><h2>El número se vuelve la página. <span>Nada se recarga.</span></h2><p>Tocás la comisión y el mismo número viaja, crece y queda como título de Ventas. Los paneles de al lado se pliegan hacia abajo, las barras del medidor se estiran hasta ser el gráfico y las ventas entran desde la derecha.</p></div>
+  <div class="frames">
+    <div class="fr"><div class="win">${hoyScreen("s-lift")}<span class="tap" style="left:470px;top:110px"></span></div><div class="c"><b>0 ms</b><span>El panel se levanta 4 px y se enciende el borde naranja.</span></div></div>
+    <div class="fr"><div class="win">${hoyScreen("s-fold")}</div><div class="c"><b>200 ms</b><span>Los otros paneles se pliegan. La comisión ocupa todo el aparato.</span></div></div>
+    <div class="fr"><div class="win">${ventasScreen("s-chart")}</div><div class="c"><b>380 ms</b><span>El medidor se convierte en gráfico. Las barras crecen desde la base.</span></div></div>
+    <div class="fr"><div class="win">${ventasScreen()}</div><div class="c"><b>520 ms</b><span>Llegan las ventas, una por una, con 40 ms entre cada una.</span></div></div>
+  </div>
+  <div class="p spec"><svg viewBox="0 0 220 70"><path d="M4 66 C 60 66, 70 4, 216 4" fill="none" stroke="#ff4f00" stroke-width="2"/><path d="M4 66 L216 66" stroke="#c9c9c3"/><circle cx="216" cy="4" r="3" fill="#ff4f00"/></svg>
+    <p><b>Movimiento mecánico, sin rebote.</b> Como una bandeja bien engrasada: arranca firme y frena suave. Cada tecla baja 2 px al tocarla y suena un clic (se puede apagar).</p>
+    <div class="k"><span>tecla 90 ms</span><span>pliegue 200 ms</span><span>morph 520 ms</span></div></div>
+</div>`;
+
+const ph = (inner, t = "23:38") => `<div class="phone" style="background:linear-gradient(145deg,#f4f4f1,#c9c9c3 45%,#e6e6e1)"><div class="scr" style="background:var(--body);color:var(--ink)"><div class="island"></div><div class="sbar"><span>${t}</span><span class="r"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>${inner}<div class="home-ind"></div></div></div>`;
+document.getElementById("movil").innerHTML = `<div class="mob">
+  <div class="pc">${ph(`<div class="mi">
+      <div class="mtop"><div class="logo" style="font-size:20px"><i></i>objeto</div><span class="knob" style="width:40px;height:40px"><i class="led"></i></span></div>
+      <section class="p mnow"><div class="ph"><span class="led" style="--c:var(--down)"></span><span class="lbl">Ahora · urgente</span></div><h1>Aprobá videos de English.</h1><div class="strip" style="grid-template-columns:repeat(4,1fr)">${V("amber","",82,"var(--up)")}${V("ocean","",78,"var(--up)",1)}${V("dusk","",64,"var(--warn)")}<div class="v more">+57</div></div><span class="key" style="justify-content:center">Empezar · 60 versiones</span></section>
+      <section class="p mmoney"><div class="ph"><span class="lbl">Comisión · 30 días</span><div class="r"><span class="led" style="--c:var(--up)"></span></div></div><div class="mrow"><div class="big num"><sup>$</sup>412<span>.80</span></div><div class="mg">${gaugeSvg(.83)}</div></div></section>
+      <div class="mtwo"><section class="p"><span class="lbl">English</span><b class="num" style="color:var(--down)">2 días</b></section><section class="p"><span class="lbl">Vistas 7 d</span><b class="num">7,814</b></section></div>
+    </div>
+    <nav class="mtab"><span class="on">${I("home2")}<small>Hoy</small></span><span>${I("inbox")}<small>Aprobar</small><b>70</b></span><span class="knob" style="width:50px;height:50px"><i class="led"></i></span><span>${I("dollar")}<small>Ventas</small></span><span>${I("trophy")}<small>Logros</small></span></nav>`)}<p><b>Hoy</b> · paneles que se leen de un vistazo</p></div>
+  <div class="pc">${ph(`<div class="mi">
+      <div class="mtop"><span class="lbl">Pieza 4 de 18 · KT Español</span><span class="lbl" style="color:var(--dot)">v1 de 4</span></div>
+      <div class="stack"><div class="v back2" data-still="smoke"></div><div class="v back1" data-still="sage" data-side="r"></div><div class="v front" data-still="amber"><span class="sc"><i style="--c:var(--up)"></i>82 · recomendada</span><div class="cap" style="font-size:24px">no es tu <em>sueldo</em></div></div><span class="stamp">Aprobar</span></div>
+      <div class="mkeys"><span class="key w" style="justify-content:center;padding:0">${I("x")}</span><span class="key" style="justify-content:center">${I("check")}Aprobar</span><span class="key w" style="justify-content:center;padding:0">${I("clock")}</span></div>
+      <p class="hint">Deslizá a la derecha para aprobar, a la izquierda para rechazar</p>
+    </div>`, "23:41")}<p><b>Aprobar</b> · una pila de tarjetas con tecla</p></div>
+  <div class="pc">${ph(`<div class="mi">
+      <div class="mtop"><span class="knob" style="width:40px;height:40px"><i class="led"></i></span><div><b style="font:600 16px/1 var(--font)">Jarvis</b><br><span class="lbl" style="color:var(--up)">escuchando</span></div></div>
+      <div class="mjv"><div class="wave">${[8,14,24,12,30,20,10,26,16,8,22,28,12,6,18,24,10].map((h) => `<i style="height:${h}px"></i>`).join("")}</div>
+        <p>Entraron 5 ventas esta semana, <b>$236</b>. Con una más pasás la meta del mes.</p>
+        <div class="mgauge">${gaugeSvg(.83)}<div class="read"><b class="num">83%</b><span>meta del mes</span></div></div>
+        <section class="p mconf"><span>¿Pido <b>5 videos nuevos</b> para English?</span><div class="r"><span class="key w" style="height:46px;justify-content:center">Ahora no</span><span class="key" style="height:46px;justify-content:center">Pedirlos</span></div></section>
+      </div>
+      <div class="mctl"><span class="key w">${I("keyboard")}</span><span class="key big">${I("mic")}</span><span class="key w">${I("x")}</span></div>
+    </div>`, "23:44")}<p><b>Jarvis</b> · la perilla es el asistente</p></div>
+</div>`;
+</script>
+<style>
+.mtab { position: absolute; left: 16px; right: 16px; bottom: 26px; height: 68px; border-radius: 22px; background: var(--bezel); box-shadow: inset 0 1px 2px rgba(0,0,0,.08), 0 1px 0 #fff; display: flex; align-items: center; justify-content: space-around; padding: 0 6px; }
+.mtab > span { position: relative; display: grid; justify-items: center; gap: 2px; color: var(--ink3); width: 58px; padding: 6px 0; border-radius: 14px; }
+.mtab > span small { font: 500 10px/1 var(--font); } .mtab > span.on { background: var(--face); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 1px 0 #fff inset; }
+.mtab > span b { position: absolute; top: 0; right: 6px; font: 500 9.5px/1 var(--mono); background: var(--dot); color: #fff; padding: 2px 4px; border-radius: 5px; }
+.mtab > span.knob { width: 50px; padding: 0; }
+.mob { height: 1060px; display: flex; align-items: center; justify-content: center; gap: 48px; background: radial-gradient(700px 500px at 50% 30%, #f6f6f3, var(--body) 70%); }
+.pc { display: grid; gap: 18px; justify-items: center; } .pc > p { color: var(--ink3); font-size: 14px; } .pc > p b { color: var(--ink); font-weight: 600; }
+.mi { position: absolute; inset: 58px 0 0; padding: 12px 16px 0; display: grid; align-content: start; gap: 12px; }
+.mtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
+.mnow { padding: 18px; display: grid; gap: 14px; } .mnow h1 { font: 500 30px/1.05 var(--font); letter-spacing: -.045em; }
+.mnow .key { height: 52px; }
+.mmoney { padding: 16px 18px; display: grid; gap: 4px; } .mrow { display: flex; align-items: flex-end; justify-content: space-between; } .mmoney .big { font: 300 54px/.9 var(--font); letter-spacing: -.06em; } .mmoney .big sup { font-size: 22px; vertical-align: 26px; color: var(--ink3); } .mmoney .big span { color: var(--ink3); }
+.mg svg { width: 130px; height: 70px; }
+.mtwo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mtwo .p { padding: 14px 16px; display: grid; gap: 6px; } .mtwo b { font: 400 28px/1 var(--font); letter-spacing: -.05em; }
+.stack { position: relative; height: 560px; margin-top: 6px; }
+.stack .v { position: absolute; left: 22px; right: 22px; top: 18px; height: 520px; border-radius: 26px; }
+.stack .back2 { transform: translateY(-16px) scale(.88); opacity: .5; } .stack .back1 { transform: translateY(-8px) scale(.94); opacity: .8; }
+.stack .front { transform: rotate(4deg) translateX(18px); box-shadow: 0 30px 50px -24px rgba(0,0,0,.6); }
+.stack .stamp { position: absolute; z-index: 3; top: 120px; left: 50px; transform: rotate(-10deg); font: 700 22px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--up); padding: 8px 14px; border: 3px solid var(--up); border-radius: 10px; background: rgba(255,255,255,.75); }
+.mkeys { display: grid; grid-template-columns: 64px 1fr 64px; gap: 10px; padding: 0 6px; } .mkeys .key { height: 60px; }
+.hint { text-align: center; font: 500 11px/1.4 var(--mono); color: var(--ink3); }
+.mjv { display: grid; gap: 16px; margin-top: 10px; }
+.wave { display: flex; align-items: center; gap: 4px; height: 34px; } .wave i { width: 4px; border-radius: 2px; background: var(--ink); }
+.mjv > p { font: 400 24px/1.3 var(--font); letter-spacing: -.025em; } .mjv > p b { font-weight: 600; color: var(--dot); }
+.mgauge { position: relative; display: grid; place-items: center; margin-bottom: 48px; } .mgauge svg { width: 260px; height: 140px; } .mgauge .read { position: absolute; bottom: -50px; left: 0; right: 0; text-align: center; } .mgauge .read b { font: 500 22px/1 var(--font); } .mgauge .read span { display: block; font: 500 10.5px/1.6 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.mconf { padding: 16px; display: grid; gap: 12px; font-size: 15px; } .mconf .r { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mctl { position: absolute; left: 0; right: 0; bottom: 46px; display: flex; justify-content: center; align-items: center; gap: 18px; }
+.mctl .key { width: 56px; height: 56px; padding: 0; justify-content: center; border-radius: 50%; } .mctl .key.big { width: 76px; height: 76px; } .mctl .key.big .ic { width: 28px; height: 28px; }
+</style>
+<script src="shared/kit.js"></script>
+</body>
+</html>
