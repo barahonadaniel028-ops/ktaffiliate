@@ -99,7 +99,7 @@
         const c = SLb.TEXTOS.tarjeta.make(5.2, { face: { chin: 760 } }); c.d = 2.4; add("media", c);
         add("sfx", { t: 0.55, sfx: "whoosh" });
         const words = (v.caps || []).slice(0, 14).map((w) => w[0]); const lines = []; for (let i = 0; i < words.length; i += 3) lines.push([+(i * 0.5).toFixed(2), +(i * 0.5 + 1.4).toFixed(2), words.slice(i, i + 3).join(" ")]);
-        s = SMo.setSubs(s, { lines, style: { font: "Inter", size: 64, y: 880, hero: [], key: [] } });
+        s = SMo.setSubs(s, { lines, style: { font: "Inter", size: 64, y: 1450, hero: [], key: [] } });
         return { project: v.piece, spec: s, rev: 1, updatedAt: new Date(now - 3600e3).toISOString(), log: [{ at: new Date(now - 3600e3).toISOString(), text: "Armé el editor con el texto del gancho", by: "claude" }], by: "claude" };
       };
       [firstId, first2].filter(Boolean).forEach((id) => { out.studio_versions[id] = mk(id, out.videos[id], (out.videos[id].brand.endsWith("en") || (cat[out.videos[id].brand] || {}).lang === "en") ? "en" : "es"); });

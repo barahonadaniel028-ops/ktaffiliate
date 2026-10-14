@@ -18,8 +18,7 @@
           <div class="frame lg" data-shared-target><div class="screen" id="rvscreen"><div class="still" id="rvstill"></div><video id="rvvideo" playsinline preload="auto" loop></video><div class="ov" id="rvov"></div><div class="vmsg" id="rvmsg" hidden></div><div class="safewrap" id="rvsafe" hidden>${safeSvg()}</div><button class="playhit" type="button" data-act="rvplay" aria-label="Reproducir o pausar"></button></div>
             <div class="ctrl"><button class="iconbtn sm" type="button" data-act="rvplay" id="rvplaybtn" aria-label="Reproducir">${icon("play")}</button><div class="scrub" id="rvscrub" role="slider" aria-label="Posición del video" tabindex="0"><i class="fill" id="rvfill"></i><span id="rvmarks"></span><b class="knob" id="rvknob"></b></div><span class="tc num" id="rvtc">0:00</span></div></div>
           <div class="rv-tools"><button class="chip" type="button" data-act="rvsafe" id="rvsafebtn" aria-pressed="false">${icon("frame")}Zona segura</button><button class="chip" type="button" data-act="rvmute" id="rvmutebtn" aria-pressed="false">${icon("volume")}Sonido</button><a class="chip" id="rvstudio" href="#estudio">${icon("film")}Abrir en el Estudio</a></div></section>
-        <aside class="rv-right" id="rvright" aria-label="Análisis"></aside></div>
-      <div class="capsule lg" id="rvdecide" role="group" aria-label="Decisión"></div></div>`;
+        <aside class="rv-right" id="rvright" aria-label="Análisis"></aside></div></div>`;
   }
 
   // ---------- pintar paneles ----------
@@ -134,7 +133,7 @@
   function finish() {
     const c = RV.counts, el = $("#rv"); if (!el) return; if (vEl) vEl.pause();
     el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#aprobar/agendados">Ver agendados</a></div></div>`;
-    App.morph.sparkles(el.querySelector(".orb"), 6); RV.finished = true; cancelAnimationFrame(raf);
+    App.float(""); App.morph.sparkles(el.querySelector(".orb"), 6); RV.finished = true; cancelAnimationFrame(raf);
   }
   function switchTo(id) {
     RV.id = id; history.replaceState(null, "", "#aprobar/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
@@ -168,6 +167,7 @@
       const id = r.args[1] || "", v = sel.video(id);
       if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#aprobar">Volver a la lista</a></div>`; return; }
       if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
+      App.float('<div class="capsule lg" id="rvdecide" role="group" aria-label="Decisión"></div>');
       cancelAnimationFrame(raf); RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
       vEl.muted = false; vEl.addEventListener("play", () => setPlaying(true)); vEl.addEventListener("pause", () => setPlaying(false));
       vEl.addEventListener("loadeddata", () => { clearTimeout(loadTimer); vmsg(""); vEl.style.opacity = 1; paintMarks(); });

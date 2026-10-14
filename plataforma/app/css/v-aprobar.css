@@ -35,7 +35,7 @@
 .glow { position: absolute; left: 50%; top: 42%; width: 760px; height: 760px; margin: -380px 0 0 -380px; border-radius: 50%; z-index: -1; background: radial-gradient(closest-side, rgba(255,150,90,.5), rgba(255,173,133,.15) 55%, transparent); pointer-events: none; }
 :root[data-aura="night"] .glow { background: radial-gradient(closest-side, rgba(15,160,150,.38), rgba(255,150,90,.1) 55%, transparent); }
 .frame { width: clamp(236px, calc((100dvh - 350px) * .5625 + 20px), 382px); border-radius: 40px; padding: 10px; }
-body.in-review .sendbar { bottom: 108px; } body.in-review .sendlist { bottom: 168px; }
+body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 168px; }
 .screen { position: relative; width: 100%; aspect-ratio: 9/16; border-radius: 32px; overflow: hidden; background: #0d1b1d; isolation: isolate; }
 .screen .still, .screen video { position: absolute; inset: 0; width: 100%; height: 100%; } .screen .still svg { width: 100%; height: 100%; display: block; } .screen video { object-fit: cover; transition: opacity .3s; }
 .screen .ov { position: absolute; inset: 0; pointer-events: none; display: grid; align-content: end; padding: 0 8% 24%; text-align: center; }
@@ -78,7 +78,7 @@ body.in-review .sendbar { bottom: 108px; } body.in-review .sendlist { bottom: 16
   .rv-grid { grid-template-columns: 1fr; gap: 22px; } .rv-left { display: grid; position: static; width: 100%; justify-self: stretch; order: 2; }
   .vbs { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px; scrollbar-width: none; } .vb { flex: none; padding-right: 14px; }
   .vhook { display: none; }
-  .frame { width: clamp(220px, calc((100dvh - 430px) * .5625 + 20px), 330px); } body.in-review .sendbar { bottom: calc(160px + var(--safe-b)); } body.in-review .sendlist { bottom: calc(220px + var(--safe-b)); } .glow { width: 480px; height: 480px; margin: -240px 0 0 -240px; } .rv-right { max-width: none; order: 4; } .rv-center { order: 1; }
+  .frame { width: clamp(220px, calc((100dvh - 430px) * .5625 + 20px), 330px); } body.in-review .sendbar { bottom: calc(162px + var(--safe-b)); } body.in-review .sendlist { bottom: calc(214px + var(--safe-b)); } .glow { width: 480px; height: 480px; margin: -240px 0 0 -240px; } .rv-right { max-width: none; order: 4; } .rv-center { order: 1; }
   .capsule { bottom: calc(88px + var(--safe-b)); left: 12px; right: 12px; transform: none; justify-content: space-between; padding: 6px; } .capsule .btn { flex: 1; padding: 0 8px; min-height: 54px; font-size: 14px; } .capsule kbd { display: none; } .capsule .btn.pri { flex: 1.4; }
   .rv-top { margin-bottom: 14px; } .rv-prog span { font-size: 12px; }
 }

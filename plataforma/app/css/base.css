@@ -12,17 +12,34 @@
 .num { font-variant-numeric: tabular-nums; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* ---- fondo vivo: manchas de color que respiran muy lento (solo transform, sin filtros costosos) ---- */
-.aura { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
-.aura i { position: absolute; border-radius: 50%; will-change: transform; transition: opacity .6s; }
-.aura i:nth-child(1) { width: 62vmax; height: 62vmax; left: -18vmax; top: -22vmax; background: radial-gradient(closest-side, var(--b1), transparent); animation: drift1 42s ease-in-out infinite alternate; }
-.aura i:nth-child(2) { width: 52vmax; height: 52vmax; right: -16vmax; top: -10vmax; background: radial-gradient(closest-side, var(--b2), transparent); animation: drift2 48s ease-in-out infinite alternate; }
-.aura i:nth-child(3) { width: 46vmax; height: 46vmax; right: 6vmax; bottom: -22vmax; background: radial-gradient(closest-side, var(--b3), transparent); animation: drift3 40s ease-in-out infinite alternate; }
-.aura i:nth-child(4) { width: 50vmax; height: 50vmax; left: -10vmax; bottom: -26vmax; background: radial-gradient(closest-side, var(--b4), transparent); animation: drift2 52s ease-in-out infinite alternate-reverse; }
-.aura i:nth-child(5) { width: 36vmax; height: 36vmax; left: 38vw; top: 30vh; background: radial-gradient(closest-side, var(--b5), transparent); animation: drift1 46s ease-in-out infinite alternate-reverse; }
-@keyframes drift1 { to { transform: translate3d(10vmax, 6vmax, 0) scale(1.12); } }
-@keyframes drift2 { to { transform: translate3d(-8vmax, 9vmax, 0) scale(.92); } }
-@keyframes drift3 { to { transform: translate3d(-6vmax, -8vmax, 0) scale(1.15); } }
+/* ---- la nube: cinco manchas que se deforman muy lento (solo transform: se compone en la GPU, sin repintar).
+   Cada mancha vive en un envoltorio <b> que se mueve con el puntero (parallax) y se junta hacia Jarvis cuando escucha. ---- */
+.aura { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; --px: 0; --py: 0; --gx: 0vmax; --gy: 0vmax; }
+.aura b { position: absolute; inset: 0; transition: transform 2.6s cubic-bezier(.2,.8,.2,1), opacity 1.4s var(--ease); will-change: transform; }
+.aura b:nth-child(1) { transform: translate3d(calc(var(--px) * -38px), calc(var(--py) * -30px), 0); }
+.aura b:nth-child(2) { transform: translate3d(calc(var(--px) * 46px), calc(var(--py) * -24px), 0); }
+.aura b:nth-child(3) { transform: translate3d(calc(var(--px) * -26px), calc(var(--py) * 40px), 0); }
+.aura b:nth-child(4) { transform: translate3d(calc(var(--px) * 30px), calc(var(--py) * 34px), 0); }
+.aura b:nth-child(5) { transform: translate3d(calc(var(--px) * -54px), calc(var(--py) * 50px), 0); }
+.aura i { position: absolute; border-radius: 50%; will-change: transform; }
+.aura b:nth-child(1) i { width: 62vmax; height: 62vmax; left: -18vmax; top: -22vmax; background: radial-gradient(closest-side, var(--b1), transparent); animation: morph1 46s ease-in-out infinite; }
+.aura b:nth-child(2) i { width: 52vmax; height: 52vmax; right: -16vmax; top: -10vmax; background: radial-gradient(closest-side, var(--b2), transparent); animation: morph2 54s ease-in-out infinite; }
+.aura b:nth-child(3) i { width: 46vmax; height: 46vmax; right: 6vmax; bottom: -22vmax; background: radial-gradient(closest-side, var(--b3), transparent); animation: morph3 42s ease-in-out infinite; }
+.aura b:nth-child(4) i { width: 50vmax; height: 50vmax; left: -10vmax; bottom: -26vmax; background: radial-gradient(closest-side, var(--b4), transparent); animation: morph2 58s ease-in-out infinite reverse; }
+.aura b:nth-child(5) i { width: 36vmax; height: 36vmax; left: 38vw; top: 30vh; background: radial-gradient(closest-side, var(--b5), transparent); animation: morph1 50s ease-in-out infinite reverse; }
+@keyframes morph1 { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); } 33% { transform: translate3d(9vmax, 4vmax, 0) rotate(35deg) scale(1.18, .86); } 66% { transform: translate3d(3vmax, 9vmax, 0) rotate(-20deg) scale(.9, 1.14); } }
+@keyframes morph2 { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); } 30% { transform: translate3d(-7vmax, 8vmax, 0) rotate(-40deg) scale(.88, 1.16); } 70% { transform: translate3d(-10vmax, -3vmax, 0) rotate(25deg) scale(1.15, .9); } }
+@keyframes morph3 { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); } 40% { transform: translate3d(-6vmax, -9vmax, 0) rotate(50deg) scale(1.2, .84); } 75% { transform: translate3d(5vmax, -4vmax, 0) rotate(-15deg) scale(.92, 1.1); } }
+/* tono por seccion: solo cambia cuanto pesa cada mancha */
+.aura[data-tone="warm"] b:nth-child(1) { opacity: .7; } .aura[data-tone="warm"] b:nth-child(2) { opacity: 1; }
+.aura[data-tone="cool"] b:nth-child(2) { opacity: .45; } .aura[data-tone="cool"] b:nth-child(3) { opacity: .5; }
+.aura[data-tone="gold"] b:nth-child(1) { opacity: .55; } .aura[data-tone="gold"] b:nth-child(5) { opacity: 1; }
+.aura[data-tone="vivid"] b:nth-child(4) { opacity: .7; }
+/* animo de Jarvis: la nube se junta hacia el orbe y respira mas fuerte */
+.aura[data-mood] b { transform: translate3d(var(--gx), var(--gy), 0) scale(1.08) !important; }
+.aura[data-mood="listen"] b { transform: translate3d(var(--gx), var(--gy), 0) scale(1.18) !important; }
+.aura[data-mood="think"] b:nth-child(odd) { transform: translate3d(calc(var(--gx) * .6), calc(var(--gy) * .6), 0) scale(1.12) rotate(8deg) !important; }
+.aura.paused i { animation-play-state: paused; }
 .grain { position: fixed; inset: 0; z-index: 400; pointer-events: none; opacity: var(--grain); mix-blend-mode: soft-light;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 
@@ -97,21 +114,24 @@ button.card:hover, a.card:hover { transform: translateY(-2px); }
 .bar { height: 10px; border-radius: 5px; background: var(--hair2); overflow: hidden; box-shadow: inset 0 0 0 1px var(--hair2); }
 .bar > i { display: block; height: 100%; width: var(--p, 0%); border-radius: 5px; background: linear-gradient(90deg, var(--teal), #6fd1c0, var(--apricot)); transition: width 1s var(--ease); }
 
-/* ---- orbe ---- */
+/* ---- orbe: esfera viva (el color gira, respira; escucha con ondas) ---- */
+@property --spin { syntax: "<angle>"; inherits: false; initial-value: 200deg; }
 .orb { position: relative; border-radius: 50%; flex: none; display: block; background:
   radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 22%),
   radial-gradient(circle at 70% 75%, rgba(255,173,133,.95), rgba(255,173,133,0) 45%),
   radial-gradient(circle at 25% 70%, rgba(169,230,211,.95), rgba(169,230,211,0) 50%),
-  conic-gradient(from var(--spin, 200deg) at 50% 50%, #0f6b6c, #6fd1c0, #ffd0a8, #ff9a76, #f7a6bd, #0f6b6c);
+  conic-gradient(from var(--spin) at 50% 50%, #0f6b6c, #6fd1c0, #ffd0a8, #ff9a76, #f7a6bd, #0f6b6c);
   box-shadow: inset 0 -12px 30px rgba(13,60,62,.35), inset 0 8px 20px rgba(255,255,255,.5), 0 30px 60px -20px rgba(15,107,108,.5), 0 0 0 1px rgba(255,255,255,.55);
-  animation: breathe 5s ease-in-out infinite; }
-@property --spin { syntax: "<angle>"; inherits: false; initial-value: 200deg; }
-.orb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; animation: spin 24s linear infinite; background: conic-gradient(from 0deg, transparent, rgba(255,255,255,.18), transparent 40%); mix-blend-mode: soft-light; }
-.orb.fast { animation-duration: 1.2s; }
-button.orb { cursor: pointer; padding: 0; border: 0; }
-button.orb:hover { filter: saturate(1.15); }
+  animation: breathe 5.2s ease-in-out infinite, orbspin 18s linear infinite; }
+.orb::after { content: ""; position: absolute; inset: 6%; border-radius: inherit; background: radial-gradient(circle at 38% 30%, rgba(255,255,255,.55), transparent 42%); mix-blend-mode: soft-light; animation: caustic 7s ease-in-out infinite alternate; pointer-events: none; }
+.orb.fast { animation-duration: 1.3s, 4s; }
+.orb.listen { animation: breathe 1.1s ease-in-out infinite, orbspin 5s linear infinite, ripple 1.6s ease-out infinite; }
+button.orb { cursor: pointer; padding: 0; border: 0; transition: filter .3s; }
+button.orb:hover { filter: saturate(1.2) brightness(1.04); }
 @keyframes breathe { 50% { transform: scale(1.045); } }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes orbspin { to { --spin: 560deg; } }
+@keyframes caustic { to { transform: translate(14%, 12%) scale(.8); opacity: .6; } }
+@keyframes ripple { 0% { box-shadow: inset 0 -12px 30px rgba(13,60,62,.35), inset 0 8px 20px rgba(255,255,255,.5), 0 0 0 0 rgba(111,209,192,.45), 0 0 0 0 rgba(255,173,133,.3); } 100% { box-shadow: inset 0 -12px 30px rgba(13,60,62,.35), inset 0 8px 20px rgba(255,255,255,.5), 0 0 0 26px rgba(111,209,192,0), 0 0 0 52px rgba(255,173,133,0); } }
 
 /* ---- estados: vacio, esqueleto, toast ---- */
 .empty { display: grid; justify-items: center; text-align: center; gap: 14px; padding: 48px 24px; color: var(--ink2); }
@@ -128,10 +148,26 @@ button.orb:hover { filter: saturate(1.15); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(20px) scale(.9); } }
 @keyframes toastOut { to { opacity: 0; transform: translateY(10px) scale(.96); } }
 
-/* ---- aparicion escalonada ---- */
-.rise > * { animation: rise .7s var(--ease) both; }
-.rise > *:nth-child(2) { animation-delay: .05s; } .rise > *:nth-child(3) { animation-delay: .1s; } .rise > *:nth-child(4) { animation-delay: .15s; } .rise > *:nth-child(5) { animation-delay: .2s; } .rise > *:nth-child(6) { animation-delay: .25s; } .rise > *:nth-child(n+7) { animation-delay: .3s; }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+/* ---- entrada de pantalla (solo al entrar: data-enter). Los hijos suben escalonados; anillos, barras y curvas se dibujan. ---- */
+.view[data-enter] > * { animation: enterUp .8s cubic-bezier(.16,1,.3,1) both; }
+.view[data-enter] > *:nth-child(2) { animation-delay: .05s; } .view[data-enter] > *:nth-child(3) { animation-delay: .1s; } .view[data-enter] > *:nth-child(4) { animation-delay: .15s; } .view[data-enter] > *:nth-child(n+5) { animation-delay: .2s; }
+.view[data-enter] .rise > * { animation: enterUp .9s cubic-bezier(.16,1,.3,1) both; }
+.view[data-enter] .rise > *:nth-child(2) { animation-delay: .06s; } .view[data-enter] .rise > *:nth-child(3) { animation-delay: .12s; } .view[data-enter] .rise > *:nth-child(4) { animation-delay: .18s; } .view[data-enter] .rise > *:nth-child(5) { animation-delay: .24s; } .view[data-enter] .rise > *:nth-child(6) { animation-delay: .3s; } .view[data-enter] .rise > *:nth-child(n+7) { animation-delay: .36s; }
+@keyframes enterUp { from { opacity: 0; transform: translateY(18px) scale(.985); } }
+.view[data-enter] .ring-val { animation: ringIn 1.3s .25s cubic-bezier(.16,1,.3,1) both; }
+@keyframes ringIn { from { stroke-dasharray: 0 1000; } }
+.view[data-enter] .bar > i { animation: barIn 1.2s .3s cubic-bezier(.16,1,.3,1) both; }
+@keyframes barIn { from { width: 0; } }
+.view[data-enter] svg .ln { stroke-dasharray: 1; animation: draw 1.6s .3s cubic-bezier(.16,1,.3,1) both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+/* brillo del vidrio que sigue al puntero */
+.lg:is(.card, .piece, .tr, .xc, .lib-card, .ref, .seed, .xs, .stat)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .5s var(--ease);
+  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, -20%), rgba(255,255,255,.26), transparent 42%); }
+.lg:is(.card, .piece, .tr, .xc, .lib-card, .ref, .seed, .xs, .stat):hover::after { opacity: 1; }
+:root[data-aura="night"] .lg:is(.card, .piece, .tr, .xc, .lib-card, .ref, .seed, .xs, .stat)::after { background: radial-gradient(520px circle at var(--mx, 50%) var(--my, -20%), rgba(111,209,192,.12), transparent 42%); }
+/* un hilo de luz recorre las capsulas principales al pasar */
+.btn.pri { overflow: hidden; } .btn.pri::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%); transform: translateX(-120%); transition: transform .9s var(--ease); pointer-events: none; } .btn.pri:hover::after { transform: translateX(120%); }
+.btn { position: relative; }
 
 /* ---- video de muestra (cuadro sin cara real) ---- */
 .vid { display: block; position: relative; overflow: hidden; border-radius: 16px; background: #0d1b1d; box-shadow: 0 14px 24px -14px rgba(13,40,42,.7), inset 0 0 0 1px rgba(255,255,255,.25); flex: none; }
@@ -143,6 +179,6 @@ button.orb:hover { filter: saturate(1.15); }
 .vid .st .ic { width: 12px; height: 12px; stroke-width: 2.6; }
 
 @media (prefers-reduced-motion: reduce) {
-  .aura i, .orb, .orb::after, .skel, .rise > * { animation: none !important; }
+  .aura i, .aura b, .orb, .orb::after, .skel, .view[data-enter] *, .view[data-enter] > * { animation: none !important; }
   .aura-app * { transition-duration: .01ms !important; }
 }

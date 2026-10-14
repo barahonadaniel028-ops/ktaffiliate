@@ -77,7 +77,7 @@ Reglas:
       <section class="jv lg solid-glass" id="jv" role="dialog" aria-modal="true" aria-label="Jarvis"><div class="inner">
         <div class="jh"><span class="orb"></span><div class="nm">Jarvis<small id="jvstat">en línea</small></div><span style="flex:1"></span>
           <button class="iconbtn" id="jvvoice" type="button" aria-pressed="true" aria-label="Respuestas en voz" title="Respuestas en voz">${icon("volume")}</button><button class="iconbtn" type="button" data-jvclose aria-label="Cerrar">${icon("x")}</button></div>
-        <div class="log" id="jvlog" role="log" aria-live="polite"></div>
+        <div class="jvlisten" id="jvlisten" aria-hidden="true"><span class="orb listen"></span><p id="jvlive">Te escucho…</p></div><div class="log" id="jvlog" role="log" aria-live="polite"></div>
         <div class="cmds" id="jvcmds"></div><div class="chips" id="jvchips"></div>
         <form class="ask2" id="jvform"><input id="jvbox" type="text" autocomplete="off" placeholder="${esc(App.say("Escribí, hablame o buscá un comando…", "Escribe, háblame o busca un comando…"))}" aria-label="Mensaje para Jarvis"><button class="mic" id="jvmic" type="button" aria-label="Hablar" aria-pressed="false">${icon("mic")}</button><button class="go" type="submit" aria-label="Enviar">${icon("arrow")}</button></form>
         <p class="note" id="jvnote"></p></div></section></div>`;
@@ -101,7 +101,7 @@ Reglas:
   function runCmd(i) { const c = curCmds[i]; if (c) { $("#jvbox").value = ""; c.run(); } }
   function submit() {
     const q = $("#jvbox").value.trim(); if (!q) return;
-    const top = curCmds[cmdIdx], strong = top && score(top, norm(q)) === 2 && norm(q).split(/\s+/).length <= 3;
+    const top = curCmds[cmdIdx], strong = top && score(top, norm(q)) >= 1 && norm(q).split(/\s+/).length <= 2;
     if (strong) { runCmd(cmdIdx); return; }
     send(q);
   }
@@ -126,7 +126,7 @@ Reglas:
     if (todo.length) App.act.setMany(todo, "approved");
     add("a", todo.length ? `Aprobé ${todo.length} versiones de ${pend.label}. Si te equivocaste, el aviso de abajo tiene Deshacer.` : "Esas versiones ya no estaban por aprobar.");
   }
-  function setBusy(on) { busy = on; $("#jvstat").textContent = on ? "pensando…" : "en línea"; $("#jvbox").disabled = on || !!blockedMsg; $("#jvmic").disabled = on; if (!on) $("#jvbox").focus(); const o = panel().querySelector(".jh .orb"); if (o) o.classList.toggle("fast", on); }
+  function setBusy(on) { busy = on; if (open) App.aura.mood(on ? "think" : "focus"); $("#jvstat").textContent = on ? "pensando…" : "en línea"; $("#jvbox").disabled = on || !!blockedMsg; $("#jvmic").disabled = on; if (!on) $("#jvbox").focus(); const o = panel().querySelector(".jh .orb"); if (o) o.classList.toggle("fast", on); }
 
   // ---------- conversacion ----------
   async function init() {
@@ -176,34 +176,40 @@ Reglas:
     if (rec) { try { rec.stop(); } catch (e) { /* ya detenido */ } return; }
     try {
       const r = new SR(); r.lang = App.config.lang === "es" ? "es-ES" : "en-US"; r.interimResults = true; r.continuous = false;
-      r.onresult = (ev) => { const t = [...ev.results].map((x) => x[0].transcript).join(" "); $("#jvbox").value = t; renderCmds(); if (ev.results[ev.results.length - 1].isFinal) submit(); };
+      r.onresult = (ev) => { const t = [...ev.results].map((x) => x[0].transcript).join(" "); $("#jvbox").value = t; $("#jvlive").textContent = t || "Te escucho…"; renderCmds(); if (ev.results[ev.results.length - 1].isFinal) { panel().classList.remove("listening"); submit(); } };
       r.onerror = (ev) => { if (/not-allowed|service-not-allowed|audio-capture/.test(ev.error)) { add("a", "Esta página no tiene permiso de micrófono. Usa el dictado del teclado."); mic.hidden = true; } };
-      r.onend = () => { rec = null; mic.setAttribute("aria-pressed", "false"); panel().querySelector(".jh .orb").classList.remove("fast"); };
-      rec = r; mic.setAttribute("aria-pressed", "true"); panel().querySelector(".jh .orb").classList.add("fast"); r.start();
+      r.onend = () => { rec = null; mic.setAttribute("aria-pressed", "false"); panel().querySelector(".jh .orb").classList.remove("fast"); panel().classList.remove("listening"); App.aura.mood(open ? "focus" : null); };
+      rec = r; mic.setAttribute("aria-pressed", "true"); panel().querySelector(".jh .orb").classList.add("fast"); panel().classList.add("listening"); $("#jvlive").textContent = "Te escucho…"; App.aura.mood("listen"); r.start();
     } catch (e) { rec = null; add("a", "No pude abrir el micrófono. Usa el dictado del teclado."); mic.hidden = true; }
   }
 
   // ---------- abrir / cerrar / navegar ----------
   function nav(hash) { if (open) { navigateFrom(hash); } else App.go(hash.replace(/^#/, "")); }
   async function navigateFrom(hash) {
-    const w = wrap(), p = panel(); open = false;
-    if (App.reduceMotion()) { w.classList.remove("in", "open"); App.go(hash.replace(/^#/, "")); return; }
-    const a = App.morph.rectOf(p), main = $("#main").getBoundingClientRect(), b = { x: main.left + 6, y: Math.max(96, main.top), w: Math.min(980, main.width - 12), h: 220 };
-    w.classList.remove("in"); p.style.opacity = 0;
-    await App.morph.run(a, b, { ms: 560, radiusFrom: "40px", radiusTo: "30px", glassTo: 0.0 });
-    w.classList.remove("open"); p.style.opacity = ""; if (from && from.isConnected) from.style.visibility = ""; App.morph.clean(); App.go(hash.replace(/^#/, ""));
+    const w = wrap(), p = panel(); open = false; App.aura.mood(null);
+    let went = false; const go = () => { if (!went) { went = true; App.go(hash.replace(/^#/, "")); } };
+    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); go(); return; }
+    const r = App.morph.rectOf(p), main = $("#main").getBoundingClientRect(), from = { x: r.x + r.w / 2, y: r.y + r.h / 2 }, to = { x: main.left + Math.min(main.width, 900) / 2, y: Math.max(140, main.top + 120) };
+    // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues)
+    w.classList.remove("shown"); await App.morph.wilt(p, from, 240); w.classList.remove("in"); p.style.opacity = 0;
+    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, onLand: go }); go();
+    w.classList.remove("open"); p.style.opacity = ""; p.getAnimations().forEach((x) => x.cancel()); if (fromOrb()) fromOrb().style.visibility = "";
+    const L = document.getElementById("morph"); if (L && L.firstChild) L.firstChild.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(2.2)" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)", fill: "forwards" }).finished.then(App.morph.clean, App.morph.clean); else App.morph.clean();
   }
+  const fromOrb = () => (from && from.isConnected ? from : null);
   async function openJv(fromEl) {
     if (open) return; open = true; from = fromEl && fromEl.isConnected ? fromEl : $$(".orb[data-orb]").find((o) => o.offsetParent) || null;
     if (from) from.classList.add("fast");
     renderCmds(); $("#jvlog").innerHTML = turns.length ? $("#jvlog").innerHTML : ""; if (!turns.length) { add("a", `${App.say("Acá estoy. Preguntame lo que quieras o pedime algo.", "Aquí estoy. Pregúntame lo que quieras o pídeme algo.")}`); }
     renderChips();
+    const pr = panel().getBoundingClientRect(); App.aura.mood("focus", { x: innerWidth / 2, y: Math.min(innerHeight * 0.35, 260) });
     await App.morph.open(from, wrap(), panel());
-    $("#jvbox").focus(); init();
+    $("#jvbox").focus(); init(); void pr;
   }
   function renderChips() { $("#jvchips").innerHTML = App.config.jarvis.chips.map((c) => `<button type="button" data-chip>${esc(c)}</button>`).join(""); }
   async function close() {
     if (!open) return; open = false; try { speechSynthesis.cancel(); } catch (e) { /* sin voz */ } if (ctl) ctl.abort(); if (rec) try { rec.stop(); } catch (e) { /* ya detenido */ }
+    App.aura.mood(null); panel().classList.remove("listening");
     await App.morph.close(from, wrap(), panel()); if (from) from.classList.remove("fast");
   }
   App.jarvis = { mount, open: openJv, close, toggle: () => (open ? close() : openJv(null)), isOpen: () => open, brief, tools };

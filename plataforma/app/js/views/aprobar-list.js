@@ -41,9 +41,9 @@
         <div class="tabs"><div class="seg lg" role="tablist">${TABS.map(([k, n]) => `<button role="tab" type="button" class="${k === tab ? "on" : ""}" aria-pressed="${k === tab}" data-act="aptab" data-tab="${k}">${n}${cnt[k] ? `<b>${cnt[k]}</b>` : ""}</button>`).join("")}</div></div>`;
       const body = groups.length ? `<div class="pieces rise">${groups.map((g) => pieceCard(g, tab)).join("")}</div>`
         : `<div class="empty card lg"><span class="orb"></span><h3>${tab === "por-aprobar" ? "No hay nada por aprobar" : tab === "agendados" ? "Todavía no hay agendados" : "Nada rechazado"}</h3><p>${tab === "por-aprobar" ? App.say("Pedí un video nuevo y aparece acá apenas Claude lo termine.", "Pide un video nuevo y aparece aquí apenas Claude lo termine.") : "Cuando apruebes videos, los verás aquí."}</p><a class="btn pri" href="#crear" data-go="crear">Pedir un video</a></div>`;
-      return head + body + (picked.size ? bulkBar() : "");
+      return head + body;
     },
-    bind() { /* acciones delegadas */ },
+    bind() { App.float(picked.size ? bulkBar() : ""); },
   };
   function bulkBar() {
     return `<div class="bulk lg" id="bulk"><span><b class="num">${picked.size}</b> ${plural(picked.size, "elegido", "elegidos")}</span><button class="btn sm good" type="button" data-act="bulk" data-st="approved">${icon("check")}Aprobar</button><button class="btn sm bad" type="button" data-act="bulk" data-st="rejected">${icon("x")}Rechazar</button><button class="btn sm ghost" type="button" data-act="bulk" data-st="clear">Soltar</button></div>`;

@@ -37,9 +37,11 @@
 @media (max-width: 1280px) { .hoy { grid-template-columns: 1fr; } .talk { padding-left: 8px; } .talk h1 { max-width: 20ch; } }
 @media (max-width: 820px) { .talk { padding: 4px 4px 0; gap: 16px; } .talk .orb { --orb: 96px; } .cards { grid-template-columns: 1fr; } .cards .span2 { grid-column: auto; } .askbar { height: 54px; } .talk .acts .btn { flex: 1 1 100%; } .rws { grid-template-columns: 1fr; } }
 
-/* barra de cambios sin enviar */
-.sendbar { position: fixed; z-index: 65; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 20px; border-radius: 30px; font: 500 14px/1 var(--font); animation: toastIn .5s var(--spring) both; }
+/* barra de cambios sin enviar: una capsula pequena y discreta */
+.sendbar { position: fixed; z-index: 65; right: 28px; bottom: 24px; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 8px; border-radius: 26px; font: 500 13.5px/1 var(--font); color: var(--ink2); animation: toastIn .6s var(--spring) both; }
 .sendbar[hidden] { display: none; }
-.sendlist { position: fixed; z-index: 64; left: 50%; bottom: 84px; transform: translateX(-50%); width: min(560px, calc(100vw - 28px)); max-height: 50vh; overflow: auto; border-radius: 28px; padding: 14px; }
-.sendlist ul { display: grid; gap: 4px; margin-bottom: 8px; } .sendlist li { display: flex; align-items: center; gap: 12px; padding: 8px 6px; border-bottom: 1px solid var(--hair2); } .sendlist li div { flex: 1; min-width: 0; } .sendlist li b { display: block; font-size: 12px; color: var(--ink3); text-transform: uppercase; letter-spacing: .06em; } .sendlist li span { font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 820px) { .sendbar { bottom: calc(92px + var(--safe-b)); width: calc(100vw - 24px); justify-content: space-between; padding-left: 16px; } .sendbar #sendtxt { flex: 1; } .sendlist { bottom: calc(150px + var(--safe-b)); } }
+.sendbar .sendn { min-width: 30px; height: 30px; padding: 0 8px; border-radius: 15px; display: grid; place-items: center; background: var(--apricot); color: #3b1606; font: 600 13px/1 var(--font); }
+.sendbar .iconbtn.sm { width: 34px; height: 34px; border-radius: 17px; } .sendbar .iconbtn.sm .ic { width: 16px; height: 16px; transition: transform .3s var(--ease); } .sendbar [aria-expanded="true"] .ic { transform: rotate(180deg); }
+.sendlist { position: fixed; z-index: 64; right: 28px; bottom: 80px; width: min(460px, calc(100vw - 28px)); max-height: 50vh; overflow: auto; border-radius: 26px; padding: 14px; animation: popIn .45s var(--spring) both; }
+.sendlist ul { display: grid; gap: 4px; margin-bottom: 8px; } .sendlist li { display: flex; align-items: center; gap: 12px; padding: 8px 6px; border-bottom: 1px solid var(--hair2); } .sendlist li div { flex: 1; min-width: 0; } .sendlist li b { display: block; font-size: 11.5px; color: var(--ink3); text-transform: uppercase; letter-spacing: .06em; } .sendlist li span { font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 820px) { .sendbar { right: 12px; bottom: calc(90px + var(--safe-b)); } .sendbar #sendtxt { display: none; } .sendlist { right: 12px; bottom: calc(144px + var(--safe-b)); } }

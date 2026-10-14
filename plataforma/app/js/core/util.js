@@ -68,7 +68,12 @@
     flag: '<path d="M4 22V4M4 4h13l-2 4 2 4H4"/>', pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>', fire: '<path d="M12 22c4 0 7-2.7 7-6.8 0-3.4-2.2-5.4-3.4-7.4-.6 1.4-1.4 2.2-2.4 2.8.3-3.3-1-6.4-3.8-8.6.2 3.6-1.6 5.4-3 7.3C5 11 5 13 5 15.2 5 19.3 8 22 12 22z"/>',
     user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8"/>',
     phone: '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4"/>', frame: '<path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/>',
-    ruler: '<path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/>', box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+    ruler: '<path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/>',
+    minus: '<path d="M5 12h14"/>', bg: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="m3 16 5-5 4 4 3-3 6 6"/>', photo: '<rect x="3" y="6" width="14" height="14" rx="2.5"/><path d="M7 3h11a3 3 0 0 1 3 3v11"/><path d="m3 17 4-4 3 3 2-2 5 5"/>',
+    trans: '<rect x="3" y="5" width="8" height="14" rx="2"/><path d="M14 5h5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5" stroke-dasharray="2.2 2.6"/><path d="m9 12 4 0M11.5 10l2 2-2 2"/>',
+    captions: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 11h4M13 11h4M7 15h10"/>', lines: '<path d="M4 6h16M4 10h16M4 14h11M4 18h7"/>', dot: '<circle cx="12" cy="12" r="4" fill="currentColor"/>',
+    drop: '<path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/>', palette: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.9-.6-1.3-.6-2.1 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.7-4-8.7-9-8.7z"/><circle cx="7.5" cy="11" r="1.3"/><circle cx="10.5" cy="7" r="1.3"/><circle cx="15" cy="7.5" r="1.3"/>',
+    mix: '<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>', scan: '<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M4 12h16"/>', box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
   };
   const icon = (n, cls) => `<svg class="ic${cls ? " " + cls : ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n] || ""}</svg>`;
 
@@ -90,7 +95,7 @@
     o = o || {}; v = (v || []).map(n0); if (v.length < 2) return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"></svg>`;
     const pad = 4, mn = o.min != null ? o.min : Math.min(...v), mx = Math.max(...v), r = mx - mn || 1, id = "g" + Math.random().toString(36).slice(2, 7);
     const pts = v.map((y, i) => [i * (W / (v.length - 1)), pad + (H - pad * 2) * (1 - (y - mn) / r)]), line = curve(pts), last = pts[pts.length - 1];
-    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true" style="color:${o.color || "var(--accent)"}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".28"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="${line} L${W} ${H} L0 ${H} Z" fill="url(#${id})"/><path d="${line}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round"/>${o.dot ? `<circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="currentColor"/>` : ""}</svg>`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true" style="color:${o.color || "var(--accent)"}"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".28"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="${line} L${W} ${H} L0 ${H} Z" fill="url(#${id})"/><path class="ln" pathLength="1" d="${line}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round"/>${o.dot ? `<circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="currentColor"/>` : ""}</svg>`;
   }
   function barsSvg(v, W, H, o) {
     o = o || {}; v = (v || []).map(n0); const mx = Math.max(...v, 1), gap = o.gap || 4, bw = W / (v.length || 1);
@@ -156,7 +161,7 @@
     $$("[data-count]", root).forEach((el) => {
       const to = +el.dataset.count, pre = el.dataset.pre || "", suf = el.dataset.suf || "", compact = el.dataset.compact === "1";
       const show = (v) => (el.textContent = pre + (compact ? fmt(v) : fmtFull(v)) + suf);
-      if (reduceMotion() || !Number.isFinite(to) || el.dataset.done) { show(to); return; }
+      if (reduceMotion() || !Number.isFinite(to) || el.dataset.done || !el.closest(".view[data-enter]")) { show(to); return; }
       el.dataset.done = "1"; const t0 = performance.now(), d = 800;
       const step = (now) => { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3); show(to * e); if (k < 1) requestAnimationFrame(step); else show(to); };
       requestAnimationFrame(step);
