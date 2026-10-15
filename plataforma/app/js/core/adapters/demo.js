@@ -41,7 +41,13 @@
       async sample() { if (!window.claude || !window.claude.use) return null; sampleD = sampleD || (await App.withTimeout(window.claude.use("sample"), 6000)); return sampleD; },
       async canTell() { return "demo"; },
       async tell(text) { log.push(["tell", text]); return true; },
-      async download(filename, d) { log.push(["download", filename]); const blob = d instanceof Blob ? d : new Blob([d], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); return true; },
+      async download(filename, d) {
+        log.push(["download", filename]);
+        // Publicado como artefacto (aunque este en modo demostracion) el iframe bloquea el <a download>: si el
+        // visor ofrece la capacidad `downloads`, se guarda por ahi. Sin ella (pagina autonoma) sigue el ancla.
+        const dl = window.claude && window.claude.use ? await App._adapterUtil.withTimeout(window.claude.use("downloads"), 4000) : null;
+        if (dl && dl.save) return App._adapterUtil.saveViaCapability(dl, filename, d);
+        const blob = d instanceof Blob ? d : new Blob([d], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); return true; },
       canWrite: () => true,
       _data: data,
     };

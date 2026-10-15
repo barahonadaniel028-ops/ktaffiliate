@@ -194,6 +194,11 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => App.S.studioRequests.some((r) => /iris/.test(r.text) && r.status === "pedido")), "pedirle a Claude crea studio_requests con pasos por hacer");
   await p.click('[data-tool="exportar"]'); await wait(p, 450); await p.click("#st-dl-srt"); await wait(p, 500);
   ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "download" && /\.srt$/.test(x[1]))), "exporta subtitulos SRT");
+  // publicado como artefacto (aun en modo demostracion) el visor ofrece la capacidad `downloads` y rechaza .srt: se ofrece como .txt
+  await p.evaluate(() => { window.__dlSaved = []; window.claude = { use: async (n) => (n === "downloads" ? { save: async (r) => { if (/\.srt$/i.test(r.filename)) throw { code: "rejected_extension", message: "no" }; window.__dlSaved.push(r.filename); return { status: "saved" }; } } : null) }; });
+  await p.click("#st-dl-srt"); await wait(p, 600);
+  ok(await p.evaluate(() => window.__dlSaved.some((f) => /\.srt\.txt$/.test(f))), "las descargas usan la capacidad del visor y ofrecen .txt si .srt no esta permitido");
+  await p.evaluate(() => { delete window.claude; delete window.__dlSaved; });
   for (let i = 0; i < 4 && (await p.evaluate(() => !!App.studioOpen)); i++) { await p.keyboard.press("Escape"); await wait(p, 450); }
   ok(await p.evaluate(() => App.route().name === "estudio" && !App.studioOpen), "Esc cierra el editor");
 

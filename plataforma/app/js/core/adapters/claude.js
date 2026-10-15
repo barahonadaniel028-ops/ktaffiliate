@@ -50,7 +50,7 @@
       },
       async download(filename, data) {
         dl = dl || (await cap("downloads", 6000)); if (!dl || !dl.save) return false;
-        try { await dl.save({ filename, data }); return true; } catch (e) { if (e && e.code === "declined") return "declined"; return false; }
+        return App._adapterUtil.saveViaCapability(dl, filename, data);
       },
       canWrite: () => writer,
     };
