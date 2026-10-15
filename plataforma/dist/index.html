@@ -296,8 +296,17 @@ button.orb:hover { filter: saturate(1.2) brightness(1.04); }
 .topbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 16px 28px 10px 0; }
 .topbar .ws { display: inline-flex; align-items: center; gap: 10px; height: 48px; padding: 0 8px 0 8px; border-radius: 24px; }
 .topbar .ws .mono { width: 34px; height: 34px; border-radius: 17px; display: grid; place-items: center; background: var(--solid); color: var(--on-solid); font: 700 11px/1 var(--font); }
-.topbar .ws select { appearance: none; background: transparent; border: 0; font: 600 15px/1 var(--font); color: var(--ink); padding: 0 22px 0 0; cursor: pointer; max-width: 190px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a9799' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 2px center; }
-.topbar .ws select option { color: #0d1b1d; background: #fff; }
+/* selector de cuenta: boton + menu propio (mismo lenguaje que .aipill/.aimenu del selector de modelo), no un <select> nativo -- DECISIONES.md #6 */
+.brandbtn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 8px; border-radius: 18px; background: transparent; font: 600 15px/1 var(--font); color: var(--ink); transition: background .2s var(--ease), transform .25s var(--spring); }
+.brandbtn:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); } .brandbtn:active { transform: scale(.97); }
+.brandbtn .bname { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brandbtn .ic { width: 13px; height: 13px; color: var(--ink3); transition: transform .3s var(--ease); } .brandbtn[aria-expanded="true"] .ic { transform: rotate(180deg); }
+.bdot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--c); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink) 8%, transparent); }
+.brandmenu { position: fixed; z-index: 520; width: 240px; padding: 6px; border-radius: 22px; box-shadow: inset 0 1px 0 var(--edge), 0 44px 80px -30px var(--shadow), 0 0 0 1px var(--edge2); animation: aimIn .34s var(--spring) both; }
+.brandmenu .bm-i { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 12px; border-radius: 14px; text-align: left; color: var(--ink); font: 500 14.5px/1.2 var(--font); transition: background .15s; }
+.brandmenu .bm-i:hover, .brandmenu .bm-i:focus-visible { background: var(--accent-soft); outline: none; }
+.brandmenu .bm-i span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brandmenu .bm-i .ic { width: 16px; height: 16px; color: var(--accent); opacity: 0; transform: scale(.5); transition: opacity .2s, transform .35s var(--spring); } .brandmenu .bm-i[aria-checked="true"] .ic { opacity: 1; transform: none; }
 .topbar .ask { flex: 1; max-width: 520px; margin: 0 auto; height: 48px; padding: 0 8px 0 10px; border-radius: 24px; display: flex; align-items: center; gap: 10px; color: var(--ink3); font-size: 15px; text-align: left; transition: transform .2s var(--ease); }
 .topbar .ask:hover { transform: translateY(-1px); }
 .topbar .ask .orb { width: 30px; height: 30px; box-shadow: inset 0 -5px 10px rgba(13,60,62,.3), inset 0 3px 8px rgba(255,255,255,.5), 0 6px 14px -6px rgba(15,107,108,.5); }
@@ -410,7 +419,7 @@ body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: o
   .rail { display: none; } .tabbar { display: flex; } .jv-fab { display: none; } /* el orbe del tabbar ya es el acceso persistente acá */
   .stage { margin-left: 0; }
   .topbar { padding: calc(12px + var(--safe-t)) 14px 8px; gap: 8px; }
-  .topbar .ask { display: none; } .topbar .ws { padding-right: 4px; } .topbar .ws select { max-width: 140px; font-size: 14px; }
+  .topbar .ask { display: none; } .topbar .ws { padding-right: 4px; } .brandbtn .bname { max-width: 120px; font-size: 14px; }
   .topbar .r { margin-left: auto; } .topbar .cdot { display: none; }
   .main { padding: 4px 14px calc(120px + var(--safe-b)); }
   .cols2, .cols3, .cols4 { grid-template-columns: minmax(0, 1fr); } .span2, .span3 { grid-column: auto; }
@@ -494,9 +503,6 @@ body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: o
 .todo li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--hair2); font-size: 14px; }
 .todo li:first-child { border-top: 0; } .todo li b { display: block; font-weight: 600; } .todo li span.muted { display: block; font-size: 13px; }
 .todo .acts { display: flex; gap: 6px; }
-.lvl { display: flex; align-items: center; gap: 18px; }
-.lvl-b { width: 64px; height: 64px; border-radius: 22px; display: grid; place-content: center; text-align: center; background: var(--solid); color: var(--on-solid); flex: none; } .lvl-b b { font: 400 28px/1 var(--font); letter-spacing: -.04em; } .lvl-b small { font-size: 10.5px; opacity: .7; }
-.shelf { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; } .shelf span { display: grid; justify-items: center; gap: 6px; font-size: 11.5px; color: var(--ink2); text-align: center; }
 .medal { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 34% 28%, #fff, var(--m) 42%, color-mix(in srgb, var(--m) 55%, #000)); box-shadow: 0 10px 20px -10px var(--m), inset 0 0 0 1px rgba(255,255,255,.5); flex: none; }
 .medal .ic { color: rgba(0,0,0,.55); width: 21px; height: 21px; }
 @media (max-width: 1280px) { .hoy { grid-template-columns: minmax(0, 1fr); } .talk { padding-left: 8px; } .talk h1 { max-width: 20ch; } }
@@ -514,9 +520,7 @@ body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: o
 .rtiles { display: flex; gap: 6px; margin: 2px 0 4px; } .rtile { position: relative; width: 50px; height: 67px; border-radius: 14px; overflow: hidden; flex: none; box-shadow: 0 8px 18px -10px var(--shadow); } .rtile .xd { position: absolute; left: 0; top: 0; width: 126px; height: 168px; aspect-ratio: auto; transform: scale(.4); transform-origin: 0 0; border-radius: 0; }
 .rtile.v-keep { box-shadow: 0 0 0 2px var(--keep), 0 8px 18px -10px var(--shadow); } .rtile.v-maybe { box-shadow: 0 0 0 2px var(--maybe), 0 8px 18px -10px var(--shadow); } .rtile.v-drop { opacity: .5; }
 
-/* logros y analiticas: lo primero de Hoy */
-.tcard { cursor: pointer; transition: transform .3s var(--ease); } .tcard:hover { transform: translateY(-2px); } .tcard:focus-visible, .newchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.shelf .medal.new { animation: newPulse 2.4s ease-in-out infinite; box-shadow: 0 0 0 3px color-mix(in srgb, var(--apricot) 70%, transparent), 0 10px 20px -10px var(--m); }
+/* analiticas: lo primero de Hoy */
 .an .ch .faint { display: inline-flex; align-items: center; gap: 2px; } .an .ch .faint .ic { width: 13px; height: 13px; }
 .an-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 10px; }
 .an-s { display: grid; align-content: start; gap: 6px; min-width: 0; } .an-n { font-size: 12.5px; color: var(--ink3); }
@@ -593,6 +597,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .why li i { width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; font: 700 12px/1 var(--font); font-style: normal; color: #fff; background: var(--up); margin-top: 1px; } .why li[data-k="neg"] i { background: var(--down); }
 .why li small { display: block; color: var(--ink3); font-size: 12.5px; line-height: 1.4; margin-top: 2px; } .why li > span { font: 600 13px/1.4 var(--font); color: var(--ink2); }
 .fixes { padding: 14px 16px; border-radius: 20px; background: var(--accent-soft); font-size: 14px; } .fixes ul { margin-top: 6px; display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
+.why-toggle { margin-top: 2px; } .why-toggle > summary { cursor: pointer; list-style: none; font: 600 13.5px/1 var(--font); color: var(--accent); padding: 6px 2px; } .why-toggle > summary::-webkit-details-marker { display: none; } .why-toggle > summary::before { content: "▸"; display: inline-block; margin-right: 6px; transition: transform .2s var(--ease); } .why-toggle[open] > summary::before { transform: rotate(90deg); } .why-toggle[open] > summary { margin-bottom: 4px; } .why-toggle .why, .why-toggle .fixes { animation: rise .35s var(--ease) both; } .why-toggle .why + .fixes { margin-top: 10px; }
 .fb, .notes, .caps { display: grid; gap: 12px; } .fb h4, .notes h4, .caps h4 { font: 600 13px/1 var(--font); text-transform: uppercase; letter-spacing: .08em; color: var(--ink3); } .notes h4 small, .caps h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 6px; }
 .tags { display: flex; flex-wrap: wrap; gap: 8px; } .tg { cursor: pointer; height: 34px; } .tg[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); }
 .noteform { display: flex; gap: 8px; } .noteform input { flex: 1; min-width: 0; height: 44px; padding: 0 16px; border-radius: 22px; border: 0; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair); outline: none; } .noteform input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
@@ -616,35 +621,61 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 }
 
 /* ===== v-crear ===== */
-/* Crear */
-.crear-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-.crear-side { display: grid; gap: 16px; position: sticky; top: 90px; }
-.crform { display: grid; gap: 20px; padding: 28px; }
-.fgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; } .fgrid .span2, .crform > .span2 { grid-column: 1 / -1; }
-.send { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; } .send .status { font-size: 14px; color: var(--ink2); }
-.banner { padding: 14px 18px; border-radius: 20px; background: rgba(194,132,0,.14); color: var(--warn); font-size: 14px; }
-.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .tile { border-radius: 22px; padding: 14px 16px; display: grid; gap: 4px; } .tile span { font-size: 12px; color: var(--ink2); } .tile b { font: 300 32px/1 var(--font); letter-spacing: -.04em; } .tile small { font-size: 11.5px; color: var(--ink3); }
-.stylestrip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: thin; }
-.sty { flex: none; width: 104px; display: grid; gap: 8px; text-align: center; font-size: 12.5px; color: var(--ink2); transition: transform .25s var(--ease); } .sty:hover { transform: translateY(-2px); }
-.sty b { font-weight: 500; line-height: 1.2; } .sty-demo { display: block; height: 138px; border-radius: 18px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--hair); position: relative; } .sty-demo.plain { display: grid; place-items: center; background: var(--glass-b); color: var(--accent); } .sty-demo.plain .ic { width: 28px; height: 28px; }
-.sty.on .sty-demo { box-shadow: 0 0 0 3px var(--accent); } .sty.on b { color: var(--ink); font-weight: 600; }
-.sty-demo .xd { aspect-ratio: auto; height: 100%; border: 0; }
-.drop { display: grid; justify-items: center; gap: 8px; text-align: center; padding: 26px 20px; border-radius: 26px; border: 2px dashed var(--hair); background: var(--glass-b); cursor: pointer; color: var(--ink2); transition: border-color .2s, background .2s, transform .2s var(--ease); }
-.drop.big { padding: 44px 20px; } .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.01); } .drop .ic { width: 34px; height: 34px; color: var(--accent); } .drop strong { color: var(--ink); font-weight: 500; font-size: 16px; } .drop span { font-size: 13px; max-width: 46ch; }
-.files { display: grid; gap: 8px; margin-top: 12px; } .files:empty { display: none; }
-.file { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto 32px; gap: 12px; align-items: center; padding: 8px; border-radius: 18px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
-.file .th { width: 52px; height: 64px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); } .file .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.file .fi { min-width: 0; display: grid; gap: 4px; } .file .fi b { font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .file .fi small { font-size: 12px; color: var(--ink3); } .file .err { color: var(--down); }
-.file select.mini { height: 38px; border: 0; border-radius: 19px; padding: 0 12px; background: var(--glass-a); box-shadow: inset 0 0 0 1px var(--hair); font-size: 13px; max-width: 170px; }
-.file .x { width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; color: var(--ink3); } .file .x:hover { color: var(--down); background: rgba(217,71,58,.1); }
-.file[data-s="done"] .th { outline: 2px solid var(--up); }
-.rqs { display: grid; gap: 14px; } .rq { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--hair2); } .rq:first-child { padding-top: 0; border-top: 0; }
-.rqh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .rqh b { font-weight: 600; font-size: 15px; flex: 1; min-width: 120px; } .rqm { font-size: 13px; }
-.steps { display: grid; gap: 4px; font-size: 13px; color: var(--ink2); } .steps li { display: flex; align-items: center; gap: 8px; } .steps li i { width: 10px; height: 10px; border-radius: 50%; background: var(--hair); flex: none; } .steps li[data-s="hecho"] i { background: var(--up); } .steps li[data-s="haciendo"] i { background: var(--apricot); animation: breathe 1.2s infinite; } .steps li[data-s="error"] i { background: var(--down); }
-.reply { font-size: 14px; padding: 10px 14px; border-radius: 16px; background: var(--accent-soft); }
-.empty.small { padding: 24px 12px; } .empty.small .orb { width: 44px; height: 44px; }
-@media (max-width: 1100px) { .crear-grid { grid-template-columns: minmax(0, 1fr); } .crear-side { position: static; } }
-@media (max-width: 820px) { .crform { padding: 18px; } .fgrid { grid-template-columns: minmax(0, 1fr); } .tiles { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); } .tile b { font-size: 26px; } .file { grid-template-columns: 44px minmax(0, 1fr) 32px; } .file select.mini { grid-column: 2 / 3; max-width: none; } .file .x { grid-row: 1; grid-column: 3; } }
+/* Crear: la pantalla entera es la nube de Jarvis. Reusa las clases .jv/.msg/.chips/.confirm/.jh de shell.css
+   (mismo vidrio, mismo orbe, misma tipografia de conversacion) y solo cancela su posicionamiento de panel
+   flotante/modal (.jv ahi es position:absolute dentro de #jvwrap) para que viva normal dentro de la columna
+   de contenido. Todo lo nuevo (caminos, categorias de material, galeria de estilos) vive acá. */
+.crear-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
+.crear-cloud.jv { position: static; left: auto; top: auto; transform: none; opacity: 1; width: 100%; max-width: 760px; max-height: none; overflow: visible; box-shadow: inset 0 1px 0 var(--edge), 0 40px 90px -36px var(--shadow), 0 0 0 1px var(--edge2); }
+.crear-cloud .inner { padding-bottom: 6px; }
+.crear-cloud .log { max-height: 42vh; overflow: auto; flex: none; }
+.crear-cloud .log:empty { display: none; }
+.crear-cloud .cbody { padding: 0 22px 10px; display: grid; gap: 16px; }
+.crear-cloud .cbody:empty { display: none; }
+.crear-cloud .chips { flex-wrap: wrap; overflow: visible; padding: 2px 22px 22px; }
+.crear-cloud .chips button.pri { background: var(--solid); color: var(--on-solid); box-shadow: 0 14px 26px -12px var(--shadow); }
+.crear-cloud .span2 { grid-column: 1 / -1; }
+.crear-cloud .status { font-size: 13.5px; } .crear-cloud .status.err { color: var(--down); }
+
+/* ---- raiz y formatos: dos o tres caminos grandes, un toque y listo ---- */
+.crear-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.crear-paths.v3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.crear-path { display: grid; justify-items: start; gap: 8px; padding: 22px 20px; border-radius: 26px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); text-align: left; transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.crear-path:hover { transform: translateY(-3px); box-shadow: inset 0 0 0 1px var(--hair2), 0 20px 36px -20px var(--shadow); }
+.crear-path .ic { width: 26px; height: 26px; color: var(--accent); }
+.crear-path b { font-weight: 600; font-size: 15.5px; } .crear-path span { font-size: 13px; color: var(--ink2); line-height: 1.35; }
+@media (max-width: 640px) { .crear-paths, .crear-paths.v3 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- subir material: App.attach (mismas fichas que Jarvis/Estudio/Laboratorio) dentro de un espacio grande y minimalista.
+   .atbox es el elemento al que se liga App.attach (chips + zona de soltar juntos, asi las fichas con progreso
+   se pintan donde corresponde: att.bind() busca [data-att-chips] DENTRO de la raiz que se le pasa). ---- */
+.atbox { display: grid; gap: 10px; }
+.atdrop { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 30px 20px; border-radius: 26px; border: 2px dashed var(--hair); background: var(--glass-b); color: var(--ink2); transition: border-color .2s, background .2s; }
+.atdrop.att-over { border-color: var(--accent); background: var(--accent-soft); }
+.atdrop.sm { padding: 16px; flex-direction: row; }
+.atdrop .attbtn { width: 48px; height: 48px; } .atdrop .attbtn .ic { width: 22px; height: 22px; }
+.atdrop span { font-size: 13px; max-width: 42ch; }
+
+/* ---- que te gusto de cada referencia ---- */
+.crlikes { display: grid; gap: 10px; }
+.crlike { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "chip name" "input input"; gap: 6px 10px; padding: 12px 14px; border-radius: 18px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); align-items: center; }
+.crlike .chip { grid-area: chip; } .crlike b { grid-area: name; font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crlike input { grid-area: input; height: 40px; border: 0; border-radius: 14px; padding: 0 12px; background: var(--glass-a); box-shadow: inset 0 0 0 1px var(--hair); font-size: 13.5px; }
+.crlike.idea { grid-template-columns: 1fr; grid-template-areas: "chip" "input"; } .crlike.idea p { grid-area: input; margin: 0; font-size: 14px; }
+
+/* ---- galeria de estilos (reusa .lib-grid/.lib-card/.lib-demo/.lib-meta de Biblioteca, mismo lenguaje visual) ---- */
+.crsty-grid { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+.lib-card.crsty { cursor: pointer; }
+.lib-card.crsty .selmark { position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.88); color: var(--ink3); opacity: 0; transform: scale(.7); transition: opacity .2s, transform .2s var(--spring); }
+.lib-card.crsty .selmark .ic { width: 15px; height: 15px; }
+.lib-card.crsty.on { box-shadow: 0 0 0 3px var(--accent); } .lib-card.crsty.on .selmark { opacity: 1; transform: scale(1); background: var(--accent); color: #fff; }
+
+/* ---- tus pedidos (video y estilo, una sola cola) ---- */
+.crqueue .rqs { display: grid; gap: 14px; } .crqueue .rq { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--hair2); } .crqueue .rq:first-child { padding-top: 0; border-top: 0; }
+.crqueue .rqh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .crqueue .rqh .ic { width: 16px; height: 16px; color: var(--ink3); flex: none; } .crqueue .rqh b { font-weight: 600; font-size: 14.5px; flex: 1; min-width: 120px; }
+.crqueue .rqm { font-size: 12.5px; }
+
+@media (max-width: 820px) { .crlike { grid-template-columns: 1fr; grid-template-areas: "chip" "name" "input"; } }
 
 /* ===== v-biblioteca ===== */
 /* Biblioteca y demos animadas (se mueven solo cuando estan a la vista) */
@@ -931,7 +962,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .lab-cbox textarea { width: 100%; resize: none; border: 0; outline: none; background: transparent; padding: 6px 8px; font: 400 15px/1.45 var(--font); color: var(--ink); } .lab-cbar { display: flex; align-items: center; gap: 8px; }
 
 /* ===== v-metricas ===== */
-/* Metricas y Logros */
+/* Metricas (los hitos de redes viven aca, sin pantalla propia -- ver mas abajo y DECISIONES.md #1) */
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
 .stat { min-height: 190px; } .stat .big-num { margin-top: 4px; } .stat .spk { height: 48px; margin-top: 10px; } .stat .spk svg { width: 100%; height: 100%; display: block; }
 .bigchart { margin-bottom: 16px; } .mchips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; } .mchips .fil { height: 32px; font-size: 13px; }
@@ -946,21 +977,11 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 @media (max-width: 1100px) { .stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 @media (max-width: 820px) { .stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; } .stat { min-height: 0; padding: 16px; } .stat .big-num { font-size: 34px; } .chartbox { height: 190px; } .top li { grid-template-columns: 18px 36px minmax(0, 1fr) auto; } .top li .x { display: none; } .grid.cols2 { grid-template-columns: minmax(0, 1fr); } }
 
-/* logros */
-.lvlhero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; padding: 28px; margin-bottom: 22px; position: relative; overflow: hidden; }
+/* hitos: solo lo que todavia usa la celebracion puntual (App.views.celebrate) -- ya no hay una pantalla "Logros" con su propio
+   encabezado de nivel, tarjetas y escalones (DECISIONES.md #1). .lvbadge y .bar.big los reusa la tarjeta de nivel de la celebracion. */
 .lvbadge { width: 104px; height: 104px; border-radius: 34px; display: grid; place-content: center; text-align: center; background: var(--solid); color: var(--on-solid); box-shadow: 0 24px 40px -18px var(--shadow); } .lvbadge b { font: 300 52px/1 var(--font); letter-spacing: -.05em; } .lvbadge small { font: 600 10.5px/1 var(--font); letter-spacing: .14em; opacity: .7; margin-top: 4px; }
-.lvi { display: grid; gap: 12px; min-width: 0; } .lvt { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; } .lvt strong { font: 400 28px/1 var(--font); letter-spacing: -.03em; }
 .bar.big { height: 14px; border-radius: 7px; } .bar.big > i { border-radius: 7px; }
-.nextrow { display: flex; gap: 8px; flex-wrap: wrap; }
-.newb { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px; border-radius: 22px; background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--hair); animation: rise .6s both; } .newb b { font-weight: 600; } .newb span { color: var(--ink2); flex: 1; }
-.trs { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; padding: 20px 22px; border-radius: 28px; position: relative; } .tr.fresh { box-shadow: inset 0 0 0 2px var(--tc), 0 26px 50px -30px var(--shadow); }
-.medal.big { width: 64px; height: 64px; } .medal.big .ic { width: 28px; height: 28px; } .medal.locked { filter: grayscale(.9); opacity: .55; }
-.medal.drop { animation: medalDrop .9s var(--spring) both; } @keyframes medalDrop { 0% { transform: translateY(-40px) scale(.6) rotate(-90deg); opacity: 0; } 60% { transform: translateY(4px) scale(1.12) rotate(10deg); opacity: 1; } 100% { transform: none; } }
-.trb { display: grid; gap: 6px; min-width: 0; } .trb h3 { font: 600 16px/1.2 var(--font); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .trb h3 em { font: 600 10.5px/1 var(--font); letter-spacing: .1em; text-transform: uppercase; padding: 4px 8px; border-radius: 8px; background: var(--tc); color: #1a1208; font-style: normal; }
-.trv { font: 300 36px/1 var(--font); letter-spacing: -.045em; }
-.steps5 { display: flex; gap: 6px; margin-top: 4px; } .steps5 li { flex: 1; height: 6px; border-radius: 3px; background: var(--hair); } .steps5 li.on { background: var(--tc); }
-@media (max-width: 820px) { .lvlhero { grid-template-columns: minmax(0, 1fr); padding: 20px; gap: 16px; } .lvbadge { width: 84px; height: 84px; border-radius: 28px; } .lvbadge b { font-size: 40px; } .trs { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 820px) { .lvbadge { width: 84px; height: 84px; border-radius: 28px; } .lvbadge b { font-size: 40px; } }
 
 /* ===== v-cel ===== */
 /* Celebracion de logros: la misma gota y la misma tarjeta de vidrio que Jarvis */
@@ -993,9 +1014,6 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .cel-wrap .veil { background: radial-gradient(60% 50% at 50% 42%, color-mix(in srgb, var(--apricot) 26%, transparent), transparent 70%), var(--veil); }
 @media (max-width: 820px) { .jv.cel { top: 50%; bottom: auto; left: 50%; width: min(440px, calc(100vw - 28px)); height: auto; max-height: 92dvh; border-radius: 38px; transform: translate(-50%, -50%); } .cel-hero { height: 196px; } }
 @media (prefers-reduced-motion: reduce) { .cel-blob, .cel-ring { animation: none !important; } .cel-slide { transition: opacity .2s; transform: none; filter: none; } }
-/* marca de logros nuevos en Hoy */
-.newchip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px 0 9px; border-radius: 13px; background: var(--apricot); color: #3b1606; font: 600 12.5px/1 var(--font); cursor: pointer; animation: newPulse 2.4s ease-in-out infinite; } .newchip .ic { width: 13px; height: 13px; }
-@keyframes newPulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--apricot) 60%, transparent); } 50% { box-shadow: 0 0 0 7px transparent; } }
 
 /* ===== v-notas ===== */
 /* Notas y Ajustes */
@@ -1462,14 +1480,30 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
   const App = window.App;
   const withTimeout = (pr, ms) => Promise.race([Promise.resolve(pr).catch(() => null), new Promise((r) => setTimeout(() => r(null), ms))]);
   const assetUrl = (v) => (!v ? "" : v === "demo-video" ? (window.AuraDemo && window.AuraDemo.videoUrl) || "" : /^[0-9a-f]{32}$/.test(v) ? "/_blob/" + v : v);
+  // Guardar por la capacidad `downloads` del visor (el iframe de un artefacto bloquea los <a download>: el codigo
+  // de la pagina nunca descarga directo). Devuelve true | "declined" | false, igual que adapter.download().
+  // La capacidad solo acepta una lista cerrada de extensiones y .srt no esta en ella: como un SRT es texto plano,
+  // se ofrece una sola vez como .txt (la persona lo renombra). No se arma ninguna cadena de formatos alternativos.
+  const saveViaCapability = async (dl, filename, data) => {
+    const attempt = (name) => dl.save({ filename: name, data });
+    try { await attempt(filename); return true; } catch (e) {
+      if (e && e.code === "declined") return "declined";
+      if (e && e.code === "rejected_extension" && typeof data === "string" && !/\.txt$/i.test(filename)) {
+        try { await attempt(filename + ".txt"); return true; } catch (e2) { return e2 && e2.code === "declined" ? "declined" : false; }
+      }
+      return false;
+    }
+  };
   App.adapters = App.adapters || {};
   App.withTimeout = withTimeout;
-  App._adapterUtil = { withTimeout, assetUrl };
+  App._adapterUtil = { withTimeout, assetUrl, saveViaCapability };
 })();
 
 /* ===== core/adapters/claude ===== */
 /* Aura · adaptador claude (real). Habla con las capacidades reales del artefacto (window.claude.use). Interfaz igual a los demas adaptadores de esta carpeta:
-   connect(emit) update set add remove upload(file) assetUrl(id) deleteAsset(id) metrics(brand, q) sample() canTell() tell(text) userId() download(name, data).
+   connect(emit) update set add remove upload(file) assetUrl(id) deleteAsset(id) metrics(brand, q) sample() canTell() tell(text) userId() download(name, data) hasDownloads().
+   hasDownloads() refleja si el artefacto declaro la capacidad `downloads` al publicarse (capabilities:{downloads:true}, ver DECISIONES.md #8): si no la declaro,
+   use("downloads") resuelve null para siempre en esta vista y download() devuelve false -- la UI debe ocultar o deshabilitar el boton en vez de dejarlo fallar sin aviso.
    Este mismo codigo, sin cambios, es lo que corre contra el simulador de la fase 7 (ver adapters/simulador.js): el simulador solo reemplaza lo que hay
    detras de window.claude, nunca esta funcion. */
 (function () {
@@ -1490,6 +1524,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
         });
         cap("mcp", 12000).then((m) => { mcp = m; App.emit("mcp"); });
         cap("comments", 12000).then((c) => { comments = c; App.refreshClaudeState(); setInterval(App.refreshClaudeState, 120000); });
+        cap("downloads", 12000).then((d) => { dl = d; App.emit("downloads"); });
         return true;
       },
       async userId() { return uid; },
@@ -1507,6 +1542,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
         return { payload: res.payload, at: (res.cache && res.cache.storedAt) || Date.now() };
       },
       async sample() { sampleP = sampleP || (await cap("sample", 10000)); return sampleP; },
+      hasDownloads: () => !!dl,
       async canTell() { return comments ? await comments.canSendToClaude() : "off"; },
       async tell(text) {
         if (!comments) return false;
@@ -1516,7 +1552,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
       },
       async download(filename, data) {
         dl = dl || (await cap("downloads", 6000)); if (!dl || !dl.save) return false;
-        try { await dl.save({ filename, data }); return true; } catch (e) { if (e && e.code === "declined") return "declined"; return false; }
+        return App._adapterUtil.saveViaCapability(dl, filename, data);
       },
       canWrite: () => writer,
     };
@@ -1557,6 +1593,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
       async deleteAsset(id) { delete files[id]; },
       assetUrl: (v) => (files[v] ? files[v] : assetUrl(v)),
       hasMetrics: () => true,
+      hasDownloads: () => true,
       async metrics(brand, q) {
         await new Promise((r) => setTimeout(r, 450));
         const dm = window.AuraDemo; if (!dm) throw Object.assign(new Error("sin datos"), { code: "server_not_connected" });
@@ -1566,7 +1603,13 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
       async sample() { if (!window.claude || !window.claude.use) return null; sampleD = sampleD || (await App.withTimeout(window.claude.use("sample"), 6000)); return sampleD; },
       async canTell() { return "demo"; },
       async tell(text) { log.push(["tell", text]); return true; },
-      async download(filename, d) { log.push(["download", filename]); const blob = d instanceof Blob ? d : new Blob([d], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); return true; },
+      async download(filename, d) {
+        log.push(["download", filename]);
+        // Publicado como artefacto (aunque este en modo demostracion) el iframe bloquea el <a download>: si el
+        // visor ofrece la capacidad `downloads`, se guarda por ahi. Sin ella (pagina autonoma) sigue el ancla.
+        const dl = window.claude && window.claude.use ? await App._adapterUtil.withTimeout(window.claude.use("downloads"), 4000) : null;
+        if (dl && dl.save) return App._adapterUtil.saveViaCapability(dl, filename, d);
+        const blob = d instanceof Blob ? d : new Blob([d], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); return true; },
       canWrite: () => true,
       _data: data,
     };
@@ -1609,17 +1652,23 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 })();
 
 /* ===== core/router ===== */
-/* Aura · rutas por hash. #hoy #aprobar[/pestana] #aprobar/ver/<videoId> #crear #biblioteca[/tipo] #laboratorio[/pestana] #metricas #logros #notas #estudio[/<videoId>] #ajustes */
+/* Aura · rutas por hash. #hoy #crear #biblioteca[/tipo] #laboratorio[/pestana] #metricas #notas
+   #estudio[/pestana] (antes "Aprobar": por-aprobar/agendados/rechazados) #estudio/ver/<videoId> #estudio/editor/<videoId> #ajustes
+   "aprobar" ya no es una pantalla propia (DECISIONES.md #2): un hash viejo #aprobar... entra a #estudio... en su lugar (ver LEGACY).
+   "logros" tampoco (DECISIONES.md #1): los hitos viven dentro de Métricas, con una celebracion puntual al cruzar uno nuevo. */
 (function () {
   "use strict";
   const App = window.App;
   const NAV = [
-    ["hoy", "Hoy", "home"], ["aprobar", "Aprobar", "check"], ["crear", "Crear", "plus"], ["biblioteca", "Biblioteca", "book"], ["laboratorio", "Laboratorio", "flask"],
-    ["metricas", "Métricas", "chart"], ["logros", "Logros", "trophy"], ["notas", "Notas", "note"], ["estudio", "Estudio", "film"],
+    ["hoy", "Hoy", "home"], ["crear", "Crear", "plus"], ["biblioteca", "Biblioteca", "book"], ["laboratorio", "Laboratorio", "flask"],
+    ["metricas", "Métricas", "chart"], ["notas", "Notas", "note"], ["estudio", "Estudio", "film"],
   ];
   const ALL = NAV.map((n) => n[0]).concat(["ajustes"]);
+  // nombres de pantalla que ya no existen por su cuenta: un hash con ese nombre entra a la pantalla que lo reemplaza.
+  const LEGACY = { aprobar: "estudio", logros: "metricas" };
   const parse = () => {
-    const parts = (location.hash || "").replace(/^#\/?/, "").split("/").map(decodeURIComponent).filter(Boolean);
+    const rawParts = (location.hash || "").replace(/^#\/?/, "").split("/").map(decodeURIComponent).filter(Boolean);
+    const parts = LEGACY[rawParts[0]] ? [LEGACY[rawParts[0]], ...rawParts.slice(1)] : rawParts;
     const name = ALL.includes(parts[0]) ? parts[0] : "hoy";
     return { name, args: parts.slice(1), raw: parts.join("/") };
   };
@@ -3089,7 +3138,7 @@ return PRED; })();
     const auto = [];
     S.brands.forEach((b) => {
       const r = sel.runway(b);
-      if (r.pend) auto.push({ id: "aprobar_" + b.id, urgency: "today", title: `${r.pend} ${plural(r.pend, "video", "videos")} por aprobar en ${b.name}`, detail: `Son ${r.pendPieces} ${plural(r.pendPieces, "pieza", "piezas")} con sus versiones. Aprobar es dejarlas agendadas.`, link: "#aprobar", brand: b.id, auto: true });
+      if (r.pend) auto.push({ id: "aprobar_" + b.id, urgency: "today", title: `${r.pend} ${plural(r.pend, "video", "videos")} por aprobar en ${b.name}`, detail: `Son ${r.pendPieces} ${plural(r.pendPieces, "pieza", "piezas")} con sus versiones. Aprobar es dejarlas agendadas.`, link: "#estudio", brand: b.id, auto: true });
       if (r.days < App.config.runwayWarn) auto.push({ id: "runway_" + b.id, urgency: "now", title: `Quedan ${r.days} ${plural(r.days, "día", "días")} de contenido en ${b.name}`, detail: "Hay que producir o aprobar más piezas.", link: "#crear", brand: b.id, auto: true });
     });
     const mine = (S.homeTodo || []).filter((t) => t && t.id && !S.homeDone[t.id]);
@@ -3263,6 +3312,21 @@ return PRED; })();
     const told = await D.tell(`RECREAR UN ESTILO DESDE EL LABORATORIO: «${recipe.name}» (requests/${id}). La receta (letra, acento, ritmo, entrada, transición, fondo) está en requests/${id}.recipe${ref ? `; la referencia y su ADN en refs/${ref.id}` : ""}.${note ? ` Nota: "${String(note).slice(0, 400)}".` : ""}${assetsNote(as)} ${App.ai.tellNote(m)} Arma el estilo completo para el Estudio y déjalo en exp_styles con status "prueba".`);
     return { id, told };
   };
+  // una idea escrita (sin archivo ni link) como referencia: mismo kind que Laboratorio, con "idea" nuevo (ver CONTRATO-DE-DATOS.md)
+  A.addRefIdea = (text, note) => D.add("refs", { kind: "idea", url: "", assetId: "", name: String(text || "").trim().slice(0, 60), note: (note || String(text || "")).trim().slice(0, 1500), status: "nueva", sent: false, by: S.userId, created: App.stamp() });
+  // una referencia recien guardada se envia de una (Crear: "nuevo estilo" no la deja en el cajon de Notas)
+  A.sendRefNow = async (id) => D.write("refs", id, { sent: true, status: "enviada", sentAt: App.stamp() });
+
+  // ---------- Crear: estilo nuevo a partir de referencias sin analizar (distinto de askRecreate: ahi no hay
+  // todavia una receta de Laboratorio armada, solo material crudo + lo que le gusto a la persona). Termina
+  // igual en exp_styles con status "prueba", dentro de Laboratorio. ----------
+  A.createStyleRequest = async (o) => {
+    o = o || {}; const id = "style_" + Date.now(), m = App.ai.stamp("draft");
+    const body = { kind: "new_style", at: App.stamp(), by: S.userId, status: "pedido", steps: [], refs: o.refIds || [], notes: String(o.notes || "").trim(), model: m.model, effort: m.effort };
+    if (!(await D.set("requests", id, body))) return null;
+    const told = await D.tell(`PEDIDO DE ESTILO NUEVO de ${App.config.owner}: a partir de ${(o.refIds || []).length} referencias ya guardadas en refs/ (requests/${id}). Lee cada referencia (video, link o idea) y su campo "note" (qué le gustó a la persona de eso). Arma un estilo nuevo en exp_styles con status "prueba" y su demo, probándolo con algún video ya subido entre esas referencias. ${App.ai.tellNote(m)} Cuando esté listo para que la persona lo prueba en el Laboratorio, escribe status:"listo" en requests/${id} con un "reply" corto. Sin que te lo repita.`);
+    return { id, told };
+  };
   // ---------- Laboratorio ----------
   A.setVerdict = (c, verdict) => D.write("exp_cards", c.id, { verdict, dirty: true });
   A.setCardNote = (c, note) => D.write("exp_cards", c.id, { note, dirty: true });
@@ -3426,10 +3490,11 @@ return PRED; })();
   "use strict";
   const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon } = App;
   App.views = App.views || {}; App.acts = App.acts || {};
-  const MORE = ["biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  const MORE = ["biblioteca", "laboratorio", "metricas", "notas", "ajustes"];
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
-  function counts() { return { aprobar: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, logros: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
+  // el conteo de hitos nuevos (antes el badge de "Logros") marca ahora el item de nav de Métricas, donde viven los hitos -- DECISIONES.md #1
+  function counts() { return { estudio: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
     const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
@@ -3438,13 +3503,49 @@ return PRED; })();
   function topHtml() {
     const b = sel.brand(), night = App.theme.effective() === "night", cs = S.claudeState;
     const claude = cs === "available" ? ["available", "Claude conectado"] : S.mode === "demo" ? ["demo", "Demo"] : ["off", cs === "no_session" ? "Claude sin sesión" : "Sin aviso a Claude"];
-    return `<div class="ws lg"><span class="mono">${esc(App.config.short)}</span><label class="sr" for="brandsel">Cuenta</label><select id="brandsel" data-change="brand">${S.brands.map((x) => `<option value="${esc(x.id)}" ${x.id === b.id ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></div>
+    return `<div class="ws lg"><span class="mono">${esc(App.config.short)}</span>${brandBtnHtml(b)}</div>
       <button class="ask lg" type="button" data-act="jarvis" aria-label="Hablar con Jarvis"><span class="orb" data-orb></span><span class="ph">${esc(App.say("Preguntale a Jarvis o andá a…", "Pregunta a Jarvis o ve a…"))}</span><kbd>⌘K</kbd></button>
       <div class="r"><span class="cdot" data-s="${claude[0]}" title="${esc(claude[1])}">${esc(claude[1])}</span><button class="iconbtn" type="button" data-act="theme" aria-label="${night ? "Cambiar a día" : "Cambiar a noche"}">${icon(night ? "sun" : "moon")}</button><span class="av" title="${esc(App.config.owner)}">${esc(App.config.owner.slice(0, 1))}</span></div>`;
   }
+
+  // ---------- selector de cuenta: menu propio (mismo lenguaje que el selector de modelo de App.ai: boton + menu flotante con los mismos
+  // tokens/vidrio/sombras), no el <select> nativo (ese mostraba el estilo del sistema operativo al abrirse -- DECISIONES.md #6). ----------
+  function brandBtnHtml(b) {
+    return `<button class="brandbtn" type="button" id="brandbtn" data-act="brandmenu" aria-haspopup="menu" aria-expanded="false" aria-label="Cuenta: ${esc(b.name)}" title="Cambiar de cuenta"><i class="bdot" style="--c:${esc(b.color || "var(--accent)")}" aria-hidden="true"></i><span class="bname">${esc(b.name)}</span>${icon("chevdown")}</button>`;
+  }
+  let brandMenu = null, brandOff = [];
+  function closeBrandMenu() {
+    if (!brandMenu) return; const m = brandMenu, btn = $("#brandbtn"); brandMenu = null; brandOff.forEach((f) => f()); brandOff = [];
+    if (btn) { btn.setAttribute("aria-expanded", "false"); try { btn.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
+    if (App.reduceMotion() || !m.animate) { m.remove(); return; }
+    m.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.94)" }], { duration: 140, easing: "ease-in", fill: "forwards" }).finished.then(() => m.remove(), () => m.remove());
+  }
+  function openBrandMenu(btn) {
+    if (brandMenu) { closeBrandMenu(); return; }
+    const cur = sel.brand(), el = document.createElement("div");
+    el.className = "brandmenu lg solid-glass"; el.setAttribute("role", "menu"); el.setAttribute("aria-label", "Cuenta");
+    el.innerHTML = S.brands.map((x) => `<button type="button" role="menuitemradio" class="bm-i" aria-checked="${x.id === cur.id}" data-id="${esc(x.id)}"><i class="bdot" style="--c:${esc(x.color || "var(--accent)")}" aria-hidden="true"></i><span>${esc(x.name)}</span>${icon("check")}</button>`).join("");
+    (document.querySelector(".aura-app") || document.body).appendChild(el);
+    const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, below = innerHeight - r.bottom, up = r.top > below && below < h + 14;
+    const left = Math.max(10, Math.min(innerWidth - w - 10, r.left)), top = up ? Math.max(10, r.top - h - 10) : Math.min(innerHeight - h - 10, r.bottom + 10);
+    el.style.left = left + "px"; el.style.top = top + "px"; el.style.transformOrigin = `${Math.round(r.left + r.width / 2 - left)}px ${up ? h : 0}px`;
+    brandMenu = el; btn.setAttribute("aria-expanded", "true");
+    const on = el.querySelector('[aria-checked="true"]'); if (on) on.focus({ preventScroll: true });
+    el.addEventListener("click", (e) => { const b = e.target.closest("[data-id]"); if (!b) return; if (b.dataset.id !== cur.id) sel.setBrand(b.dataset.id); closeBrandMenu(); });
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { e.stopPropagation(); closeBrandMenu(); return; }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { const items = $$(".bm-i", el), i = items.indexOf(document.activeElement); if (i >= 0) { e.preventDefault(); items[(i + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus(); } }
+    });
+    const out = (e) => { if (brandMenu && !brandMenu.contains(e.target) && !btn.contains(e.target)) closeBrandMenu(); };
+    setTimeout(() => document.addEventListener("pointerdown", out, true), 0); brandOff.push(() => document.removeEventListener("pointerdown", out, true));
+    const esc2 = (e) => { if (e.key === "Escape" && brandMenu) { e.stopPropagation(); closeBrandMenu(); } };
+    document.addEventListener("keydown", esc2, true); brandOff.push(() => document.removeEventListener("keydown", esc2, true));
+    window.addEventListener("resize", closeBrandMenu, { once: true });
+  }
+  App.acts.brandmenu = (el) => openBrandMenu(el);
   function tabHtml() {
     const c = counts(), cur = App.route().name, tb = (k, n, ic) => `<a class="tb" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`;
-    return `${tb("hoy", "Hoy", "home")}${tb("aprobar", "Aprobar", "check")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${MORE.includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
+    return `${tb("hoy", "Hoy", "home")}${tb("estudio", "Estudio", "film")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${MORE.includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
   }
   // el riel y la barra solo se reescriben si cambiaron (asi no se pierden hovers ni foco)
   const setHtml = (el, html) => { if (el && el._h !== html) { el.innerHTML = html; el._h = html; } };
@@ -3454,7 +3555,7 @@ return PRED; })();
   App.float = (html) => { const f = $("#floating"); if (!f) return null; f.innerHTML = html || ""; return f.firstElementChild; };
 
   // ---------- nube de fondo: tono por seccion y animo (jarvis escuchando, pensando) ----------
-  const TONE = { hoy: "base", aprobar: "warm", crear: "warm", biblioteca: "cool", laboratorio: "vivid", metricas: "cool", logros: "gold", notas: "base", estudio: "cool", ajustes: "base" };
+  const TONE = { hoy: "base", crear: "warm", biblioteca: "cool", laboratorio: "vivid", metricas: "cool", notas: "base", estudio: "warm", ajustes: "base" };
   App.aura = {
     el: () => $(".aura"),
     mood(m, at) { const a = $(".aura"); if (!a) return; if (m) a.dataset.mood = m; else delete a.dataset.mood; if (at) { a.style.setProperty("--gx", ((at.x / innerWidth - 0.5) * 30).toFixed(1) + "vmax"); a.style.setProperty("--gy", ((at.y / innerHeight - 0.5) * 30).toFixed(1) + "vmax"); } },
@@ -3474,7 +3575,7 @@ return PRED; })();
     const same = key === lastKey, y = same ? window.scrollY : 0, my = ++token;
     lastKey = key; lastHtml = html;
     document.title = v.title ? `${v.title} · ${App.config.name}` : App.config.name;
-    document.body.classList.toggle("in-review", r.name === "aprobar" && r.args[0] === "ver");
+    document.body.classList.toggle("in-review", r.name === "estudio" && r.args[0] === "ver");
     App.aura.tone(TONE[r.name]);
     const upd = () => {
       if (my !== token) return;
@@ -3531,7 +3632,7 @@ return PRED; })();
     document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[role=button][data-act], [role=radio][data-act], [role=button][data-go]")) { e.preventDefault(); e.target.click(); } });
     document.addEventListener("change", (e) => {
       const t = e.target.closest("[data-change]"); if (!t) return;
-      if (t.dataset.change === "brand") sel.setBrand(t.value); else if (App.acts[t.dataset.change]) App.acts[t.dataset.change](t, e);
+      if (App.acts[t.dataset.change]) App.acts[t.dataset.change](t, e);
     });
     document.addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); App.jarvis.toggle(); return; }
@@ -3741,7 +3842,7 @@ return PRED; })();
     const list = sel.allPending(), groups = sel.groupByPiece(list), first = list.slice(0, 5);
     if (!list.length) return `<div class="card lg"><div class="ch">${icon("check")}Por aprobar</div><div class="mini-empty"><b class="big-num">0</b><p class="muted">Todo decidido. ${App.say("Pedí", "Pide")} contenido nuevo para seguir.</p><a class="btn sm" href="#crear">Pedir un video</a></div></div>`;
     const thumbs = first.map((v) => { const r = App.pred.scoreVideo(v); return vidThumb(v, { score: r ? r.score : null, color: r ? App.pred.TIER_COLOR[r.tier] : undefined, cs: 8, style: "width:62px;height:110px" }); }).join("");
-    return `<a class="card lg" href="#aprobar" data-go="aprobar"><div class="ch">${icon("check")}Por aprobar<span class="sp"></span><span class="chip apricot">${list.length}</span></div><div class="thumbs">${thumbs}</div><p class="muted" style="margin-top:12px">${groups.length} ${plural(groups.length, "pieza", "piezas")} · aprobar es dejarlas agendadas</p></a>`;
+    return `<a class="card lg" href="#estudio" data-go="estudio"><div class="ch">${icon("check")}Por aprobar<span class="sp"></span><span class="chip apricot">${list.length}</span></div><div class="thumbs">${thumbs}</div><p class="muted" style="margin-top:12px">${groups.length} ${plural(groups.length, "pieza", "piezas")} · aprobar es dejarlas agendadas</p></a>`;
   }
   // analiticas a la vista apenas entras: las cuatro cifras de la semana con su curva, de todas las cuentas juntas
   function analyticsCard() {
@@ -3764,12 +3865,6 @@ return PRED; })();
     const li = items.map((t) => { const u = sel.URGENCY[t.urgency] || sel.URGENCY.week; return `<li><i class="dot" style="--c:${t.urgency === "now" ? "var(--down)" : t.urgency === "today" ? "var(--apricot)" : "var(--ink3)"}"></i><div><b>${esc(t.title)}</b>${t.detail ? `<span class="muted">${esc(t.detail)}</span>` : ""}</div><span class="acts">${t.link ? `<a class="btn sm" href="${esc(t.link)}">Ir</a>` : ""}${t.auto ? "" : `<button class="btn sm ghost" data-act="tododone" data-id="${esc(t.id)}">Hecho</button>`}</span></li>`; }).join("");
     return `<div class="card lg span2"><div class="ch">${icon("flag")}${App.say("Para vos", "Para ti")}<span class="sp"></span><span class="faint">${all.length > 3 ? `${all.length - 3} más` : ""}</span></div>${li ? `<ul class="todo">${li}</ul>` : `<div class="mini-empty"><p class="muted">Todo al día. Nada que requiera tu mano ahora.</p></div>`}</div>`;
   }
-  function trophyCard() {
-    const T = App.trophies, cs = T.cards(), all = T.all(cs), lv = T.level(T.totalXp(cs)), nw = T.newIds(all), nwSet = new Set(nw), near = all.filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 5);
-    const shelf = near.map((x) => `<span title="${esc(x.def.name)}"><i class="medal ${x.ids.some((id) => nwSet.has(id)) ? "new" : ""}" style="--m:${x.tier >= 0 ? T.TIERS[x.tier][1] : "#9fb0ac"}">${icon(x.def.icon)}</i><small>${esc(x.def.name.split(" ")[0])}</small></span>`).join("");
-    const tag = nw.length ? `<span class="newchip" role="button" tabindex="0" data-act="celebrate" aria-label="Ver los logros nuevos">${icon("sparkles")}${nw.length} ${plural(nw.length, "nuevo", "nuevos")}</span>` : `<span class="faint">Nivel ${lv.level}</span>`;
-    return `<div class="card lg span2 tcard" role="button" tabindex="0" data-go="logros" aria-label="Logros, nivel ${lv.level}"><div class="ch">${icon("trophy")}Logros<span class="sp"></span>${tag}</div><div class="lvl"><div class="lvl-b"><b class="num">${lv.level}</b><small>nivel</small></div><div style="flex:1;min-width:0"><div class="bar" style="--p:${Math.round(Math.min(1, lv.ratio) * 100)}%"><i></i></div><p class="muted" style="margin-top:8px">${fmt(lv.xp)} XP · faltan ${fmt(lv.to - lv.xp)} para el nivel ${lv.level + 1}</p></div></div><div class="shelf">${shelf}</div></div>`;
-  }
   function labCard() {
     const r = S.expRounds.filter((x) => x.status !== "cerrada").sort((a, b) => String(b.created || "").localeCompare(String(a.created || "")))[0];
     if (!r) return `<a class="card lg" href="#laboratorio" data-go="laboratorio"><div class="ch">${icon("flask")}Laboratorio</div><div class="mini-empty"><p class="muted">Sin ronda abierta. ${App.say("Guardá", "Guarda")} referencias para armar la próxima.</p></div></a>`;
@@ -3781,7 +3876,7 @@ return PRED; })();
   App.views.hoy = {
     title: "Hoy",
     render() {
-      const ph = sel.phrase(), n = sel.allPending().length, prim = ph.cta === "aprobar" || n ? `<a class="btn pri lg2" href="#aprobar" data-go="aprobar">Empezar a aprobar${n ? `<b>${n}</b>` : ""}</a>` : `<a class="btn pri lg2" href="#crear" data-go="crear">Pedir un video</a>`;
+      const ph = sel.phrase(), n = sel.allPending().length, prim = ph.cta === "aprobar" || n ? `<a class="btn pri lg2" href="#estudio" data-go="estudio">Empezar a aprobar${n ? `<b>${n}</b>` : ""}</a>` : `<a class="btn pri lg2" href="#crear" data-go="crear">Pedir un video</a>`;
       return `<div class="hoy">
         <section class="talk">
           <button class="orb" data-orb data-act="jarvis" type="button" aria-label="Hablar con Jarvis" style="width:var(--orb,132px);height:var(--orb,132px)"></button>
@@ -3789,9 +3884,9 @@ return PRED; })();
           <h1 class="h-xl" aria-live="polite">${ph.html}</h1>
           <div class="acts">${prim}${n ? `<a class="btn lg2" href="#crear" data-go="crear">${icon("plus")}Pedir un video</a>` : ""}<a class="btn lg2" href="#estudio" data-go="estudio">${icon("film")}Abrir el Estudio</a></div>
         </section>
-        <section class="cards rise">${trophyCard()}${analyticsCard()}${runwayCard()}${todoCard()}${approveCard()}${labCard()}${requestsCard()}</section></div>`;
+        <section class="cards rise">${analyticsCard()}${runwayCard()}${todoCard()}${approveCard()}${labCard()}${requestsCard()}</section></div>`;
     },
-    bind(root) { App.observeDemos(root); App.celebrate.check(); },
+    bind(root) { App.observeDemos(root); App.trophies.ensureBaseline(App.trophies.all(App.trophies.cards())); App.celebrate.check(); },
   };
   App.acts.tododone = async (el) => { el.disabled = true; await App.act.markTodoDone(el.dataset.id); App.toast("Hecho. Un pendiente menos."); };
 })();
@@ -3812,7 +3907,7 @@ return PRED; })();
   const COMMANDS = () => [
     ...App.nav.map(([k, n, ic]) => ({ id: "go:" + k, label: "Ir a " + n, icon: ic, run: () => nav("#" + k), kw: n })),
     { id: "go:ajustes", label: "Ir a Ajustes", icon: "settings", run: () => nav("#ajustes"), kw: "ajustes configuracion" },
-    { id: "act:approve", label: App.say("Empezar a aprobar", "Empezar a aprobar"), icon: "check", run: () => nav("#aprobar"), kw: "aprobar decidir videos pendientes" },
+    { id: "act:approve", label: App.say("Empezar a aprobar", "Empezar a aprobar"), icon: "check", run: () => nav("#estudio"), kw: "aprobar decidir videos pendientes estudio" },
     { id: "act:new", label: "Pedir un video nuevo", icon: "plus", run: () => nav("#crear"), kw: "crear nuevo pedir video subir" },
     { id: "act:upload", label: "Subir videos", icon: "upload", run: () => nav("#crear/subir"), kw: "subir archivos crudos" },
     { id: "act:theme", label: "Cambiar entre día y noche", icon: "moon", run: () => { close(); setTimeout(() => App.theme.toggle(), 380); }, kw: "tema dia noche oscuro claro" },
@@ -3831,7 +3926,7 @@ return PRED; })();
     const T = App.trophies, cs = T.cards(), lv = T.level(T.totalXp(cs));
     return JSON.stringify({ ahora: `${l.getUTCDate()} ${App.MONTHS[l.getUTCMonth()]} ${App.pad(l.getUTCHours())}:${App.pad(l.getUTCMinutes())}`, marcas,
       pendientes: sel.todoItems().map((t) => ({ id: t.id, urgencia: t.urgency, titulo: t.title, detalle: t.detail || "" })), notasAbiertas: S.notes.filter((n) => !sel.closedNote(n)).length, cambiosSinEnviar: sel.unsentCount(),
-      pedidosEnCurso: sel.activeRequests().length, biblioteca: App.lib.countByType(), logros: { nivel: lv.level, xp: lv.xp, proximos: T.all(cs).filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 3).map((x) => ({ logro: x.def.name, falta: x.next - x.value })) } });
+      pedidosEnCurso: sel.activeRequests().length, biblioteca: App.lib.countByType(), hitos: { nivel: lv.level, xp: lv.xp, proximos: T.all(cs).filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 3).map((x) => ({ hito: x.def.name, falta: x.next - x.value })) } });
   }
   const RULES = () => `Eres JARVIS, ${App.config.jarvis.persona}.
 Cómo hablas: español claro${App.config.voice === "vos" ? " con voseo" : ""}, frases cortas y directas, sin saludos largos ni relleno. Responde en 1 a 3 frases salvo que pidan detalle. Si hay varios pasos, una lista numerada corta.
@@ -3848,20 +3943,24 @@ Reglas:
     hits.forEach((v) => { const k = v.brand + "|" + v.piece; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(v); });
     return [...groups.values()];
   }
-  const ROUTES = ["hoy", "aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"];
+  // "aprobar" ya no es una pantalla propia (se fusiono en Estudio, DECISIONES.md #2) y "logros" tampoco (DECISIONES.md #1,
+  // los hitos viven en Metricas con celebracion puntual): un link, un tool call o una frase vieja que todavia los nombre
+  // sigue entrando, pero a la pantalla que los reemplaza -- no se rompen ni se recrean las pantallas viejas.
+  const LEGACY_VIEW = { aprobar: "estudio", logros: "metricas" };
   function tools() {
     const stat = (t) => { const s = $("#jvstat"); if (s) s.textContent = t; };
     return [
-      { name: "go_to", description: "Abre una pantalla. view = hoy, aprobar, crear, biblioteca, laboratorio, metricas, logros, notas, estudio o ajustes. Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
+      { name: "go_to", description: "Abre una pantalla. view = hoy, crear, biblioteca, laboratorio, metricas, notas, estudio o ajustes ('estudio' es tambien donde se aprueba, agenda o rechaza; 'metricas' tambien muestra los hitos de redes). Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
         inputSchema: { type: "object", properties: { view: { type: "string" }, brand: { type: "string" } }, required: ["view"] },
-        execute: ({ view, brand }) => { const v = norm(view).replace(/^#/, ""); if (!ROUTES.includes(v)) throw new Error("pantalla desconocida: " + view); if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); stat("abriendo…"); setTimeout(() => nav("#" + v), 350); return "ok"; } },
+        execute: ({ view, brand }) => { const raw = norm(view).replace(/^#/, ""), v = LEGACY_VIEW[raw] || raw; if (!ROUTES.includes(v)) throw new Error("pantalla desconocida: " + view); if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); stat("abriendo…"); setTimeout(() => nav("#" + v), 350); return "ok"; } },
       { name: "propose_approval", description: "Prepara aprobar TODAS las versiones por aprobar de UNA pieza. NO aprueba nada: muestra un botón de confirmación. piece = nombre o parte del nombre; brand opcional.",
         inputSchema: { type: "object", properties: { piece: { type: "string" }, brand: { type: "string" } }, required: ["piece"] },
         execute: ({ piece, brand }) => { const g = findPending(piece, brand); if (!g.length) throw new Error("no hay videos por aprobar que coincidan con " + piece); if (g.length > 1) return "Coinciden varias piezas, pide que elija: " + g.map((x) => `${x[0].pieceName || x[0].piece} (${x[0].brand})`).join("; "); const b = sel.brandOf(g[0][0]); confirmCtx = { ids: g[0].map((v) => v.id), label: g[0][0].pieceName || g[0][0].piece, brand: b ? b.name : g[0][0].brand }; showConfirm(); return `Mostré el botón para aprobar ${g[0].length} versiones de ${confirmCtx.label}. Falta que confirme.`; } },
       { name: "mark_todo_done", description: "Marca como hecho un pendiente de la lista por su id (solo los no automáticos).", inputSchema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
         execute: async ({ id }) => { if (!S.homeTodo.some((t) => t && t.id === String(id))) throw new Error("ese pendiente no se puede marcar acá"); await App.act.markTodoDone(String(id)); return "ok"; } },
       { name: "open_studio", description: "Abre el Estudio (editor) con un video. piece = nombre de la pieza; version opcional (número).", inputSchema: { type: "object", properties: { piece: { type: "string" }, version: { type: "number" } }, required: ["piece"] },
-        execute: ({ piece, version }) => { const q = norm(piece), vs = S.videos.filter((v) => norm(`${v.piece} ${v.pieceName || ""}`).includes(q) && (!version || v.version === version)); if (!vs.length) throw new Error("no encontré esa pieza"); const v = vs[0]; setTimeout(() => nav("#estudio/" + encodeURIComponent(v.id)), 350); return "Abriendo " + sel.label(v); } },
+        execute: ({ piece, version }) => { const q = norm(piece), vs = S.videos.filter((v) => norm(`${v.piece} ${v.pieceName || ""}`).includes(q) && (!version || v.version === version)); if (!vs.length) throw new Error("no encontré esa pieza"); const v = vs[0]; setTimeout(() => nav("#estudio/editor/" + encodeURIComponent(v.id)), 350); return "Abriendo " + sel.label(v); } },
       { name: "new_request", description: "Lleva a Crear con un pedido empezado. topic = la idea del video; brand opcional.", inputSchema: { type: "object", properties: { topic: { type: "string" }, brand: { type: "string" } }, required: ["topic"] },
         execute: ({ topic, brand }) => { if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); App.ui.draft = Object.assign(App.ui.draft || {}, { topic: String(topic || "").slice(0, 600) }); setTimeout(() => nav("#crear"), 350); return "Abrí Crear con la idea cargada; falta que confirme y envíe."; } },
       { name: "leave_feedback", description: "Guarda feedback general como borrador en Notas; llega a Claude con Enviar cambios. scope = general o brand (con brand).", inputSchema: { type: "object", properties: { text: { type: "string" }, scope: { type: "string" }, brand: { type: "string" } }, required: ["text"] },
@@ -3974,10 +4073,11 @@ Reglas:
   function local(text, files) {
     const q = norm(text), reply = (t, extra) => { const d = add("a", t, true); if (extra) d.insertAdjacentHTML("beforeend", extra); turns.push({ role: "assistant", content: d.textContent }); speak(d.textContent); };
     const rs = S.brands.map((b) => [b, sel.runway(b)]);
-    const goto = /(llevame|llevame a|llevame|ve a|ir a|abre|abrir|muestrame|llevame)/.test(q) && ROUTES.find((r) => q.includes(r) || (r === "metricas" && /redes|numeros/.test(q)));
+    const hit = /(llevame|llevame a|llevame|ve a|ir a|abre|abrir|muestrame|llevame)/.test(q) && ROUTES.concat(Object.keys(LEGACY_VIEW)).find((r) => q.includes(r) || (r === "metricas" && /redes|numeros/.test(q)));
+    const goto = hit && (LEGACY_VIEW[hit] || hit);
     if (goto) { reply(`Te llevo a ${goto}.`); setTimeout(() => nav("#" + goto), 450); return; }
     if (/estudio|editor/.test(q)) { reply("Abro el Estudio."); setTimeout(() => nav("#estudio"), 450); return; }
-    if (/pendiente|aprobar|decidir|que tengo/.test(q)) { const n = sel.allPending().length; reply(n ? `Tienes <b>${n} ${plural(n, "video", "videos")}</b> por aprobar. ` + rs.filter((x) => x[1].pend).map((x) => `${esc(x[0].name)}: ${x[1].pend}`).join(" · ") : "No tienes nada por aprobar. Todo decidido.", n ? '<p><button class="btn sm" data-cmd-go="aprobar" onclick="location.hash=\'#aprobar\'">Ir a aprobar</button></p>' : ""); return; }
+    if (/pendiente|aprobar|decidir|que tengo/.test(q)) { const n = sel.allPending().length; reply(n ? `Tienes <b>${n} ${plural(n, "video", "videos")}</b> por aprobar. ` + rs.filter((x) => x[1].pend).map((x) => `${esc(x[0].name)}: ${x[1].pend}`).join(" · ") : "No tienes nada por aprobar. Todo decidido.", n ? '<p><button class="btn sm" data-cmd-go="estudio" onclick="location.hash=\'#estudio\'">Ir a aprobar</button></p>' : ""); return; }
     if (/contenido|queda|runway|dias/.test(q)) { reply(rs.map((x) => `<b>${esc(x[0].name)}</b>: ${x[1].days} ${plural(x[1].days, "día", "días")}${x[1].last ? " (hasta el " + sel.showDateL(x[1].last) + ")" : ""}`).join("<br>")); return; }
     if (/redes|vistas|seguidor|instagram|metrica|resultado/.test(q)) { const ev = S.brands.map((b) => [b, sel.evoOf(b)]).filter((x) => x[1]); reply(ev.length ? ev.map((x) => `<b>${esc(x[0].name)}</b>: ${fmt(x[1].views)} vistas, ${x[1].net >= 0 ? "+" : ""}${x[1].net} seguidores esta semana`).join("<br>") : "Todavía no tengo datos de Metricool cargados."); return; }
     if (/ventas|comision|dinero|stripe/.test(q)) { reply("Esa parte no está en esta plataforma: nos enfocamos en redes sociales."); return; }
@@ -4044,7 +4144,8 @@ Reglas:
 })();
 
 /* ===== views/aprobar-list ===== */
-/* Aura · Aprobar (lista): piezas con sus versiones, en tres pestañas (por aprobar, agendados, rechazados), seleccion en lote y entrada a la revision. */
+/* Aura · Estudio - listado (antes "Aprobar"): piezas con sus versiones, en tres pestañas (por aprobar, agendados, rechazados), seleccion en lote
+   y entrada a la vista general. Fusionado dentro de Estudio, ver DECISIONES.md #2: "Aprobar" ya no es una seccion de nav propia. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, UI = App.ui, { esc, icon, plural, vidThumb } = App;
@@ -4060,7 +4161,7 @@ Reglas:
     const notes = sel.openNotes(v).length;
     return `<div class="ver ${on ? "on" : ""}" data-id="${esc(v.id)}">
       <button class="pick" type="button" data-act="pick" data-id="${esc(v.id)}" aria-pressed="${on}" aria-label="Elegir ${esc(sel.label(v))}">${icon("check")}</button>
-      <a class="vlink" href="#aprobar/ver/${encodeURIComponent(v.id)}" data-go="aprobar/ver/${encodeURIComponent(v.id)}" aria-label="Revisar ${esc(sel.label(v))}">${vidThumb(v, { cs: 10, style: "width:100%;aspect-ratio:9/16" })}
+      <a class="vlink" href="#estudio/ver/${encodeURIComponent(v.id)}" data-go="estudio/ver/${encodeURIComponent(v.id)}" aria-label="Revisar ${esc(sel.label(v))}">${vidThumb(v, { cs: 10, style: "width:100%;aspect-ratio:9/16" })}
         ${r ? `<span class="rk" style="--c:${color}" title="Puntaje ${r.score}">${r.score}</span>` : ""}<span class="vn">v${v.version}</span></a>
       <div class="vm">${meta}${notes ? `<span class="chip">${notes} ${plural(notes, "nota", "notas")}</span>` : ""}</div></div>`;
   }
@@ -4071,7 +4172,7 @@ Reglas:
         ${gs ? `<span class="chip" style="color:${App.pred.TIER_COLOR[gs.tier]}" title="Puntaje promedio de la pieza">Promedio ${gs.avg}</span>` : ""}
         <button class="btn sm ghost" type="button" data-act="pickpiece" data-piece="${esc(g.brand + "|" + g.piece)}" aria-pressed="${allOn}">${allOn ? "Quitar elección" : "Elegir las " + g.vs.length}</button></header>
       <div class="vers">${g.vs.map((v) => versionCard(v, tab)).join("")}</div>
-      <footer>${tab === "por-aprobar" ? `<a class="btn sm pri" href="#aprobar/ver/${encodeURIComponent(first.id)}" data-go="aprobar/ver/${encodeURIComponent(first.id)}">Revisar${g.vs.length > 1 ? " las " + g.vs.length : ""}</a><button class="btn sm good" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="approved">${icon("check")}Aprobar todas</button><button class="btn sm bad" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="rejected">${icon("x")}Rechazar</button>`
+      <footer>${tab === "por-aprobar" ? `<a class="btn sm pri" href="#estudio/ver/${encodeURIComponent(first.id)}" data-go="estudio/ver/${encodeURIComponent(first.id)}">Revisar${g.vs.length > 1 ? " las " + g.vs.length : ""}</a><button class="btn sm good" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="approved">${icon("check")}Aprobar todas</button><button class="btn sm bad" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="rejected">${icon("x")}Rechazar</button>`
         : tab === "agendados" ? `<button class="btn sm ghost" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="pending">Devolver a Por aprobar</button><button class="btn sm bad ghost" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="rejected">Rechazar</button>`
         : `<button class="btn sm" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="pending">Recuperar</button>`}</footer></article>`;
   }
@@ -4083,7 +4184,7 @@ Reglas:
       const total = sel.allPending().length, others = total - np;
       const head = `<div class="vhead"><div class="t"><span class="eyebrow">${esc(b.name)}</span><h1 class="h-l">${tab === "por-aprobar" ? (np ? `<em>${np} ${plural(np, "video", "videos")}</em> por decidir` : "Todo <em>decidido</em>") : tab === "agendados" ? `<em>${na}</em> ${plural(na, "agendado", "agendados")}` : `<em>${nr}</em> ${plural(nr, "rechazado", "rechazados")}`}</h1>
         <p class="muted">${tab === "por-aprobar" ? (np ? `${groups.length} ${plural(groups.length, "pieza", "piezas")}. Aprobar es dejarlas agendadas; Claude las programa en Metricool.` : others ? `${others} ${plural(others, "video", "videos")} esperan en otra cuenta.` : "No queda nada por aprobar.") : tab === "agendados" ? "Aprobadas. Las que dicen «Esperando agendar» las programa Claude en un momento." : "Rechazadas. Se pueden recuperar."}</p></div>
-        <div class="r">${tab === "por-aprobar" && np ? `<a class="btn pri lg2" href="#aprobar/ver/${encodeURIComponent(groups[0].vs[0].id)}" data-go="aprobar/ver/${encodeURIComponent(groups[0].vs[0].id)}">Empezar<b>${np}</b></a>` : ""}</div></div>
+        <div class="r">${tab === "por-aprobar" && np ? `<a class="btn pri lg2" href="#estudio/ver/${encodeURIComponent(groups[0].vs[0].id)}" data-go="estudio/ver/${encodeURIComponent(groups[0].vs[0].id)}">Empezar<b>${np}</b></a>` : ""}</div></div>
         <div class="tabs"><div class="seg lg" role="tablist">${TABS.map(([k, n]) => `<button role="tab" type="button" class="${k === tab ? "on" : ""}" aria-pressed="${k === tab}" data-act="aptab" data-tab="${k}">${n}${cnt[k] ? `<b>${cnt[k]}</b>` : ""}</button>`).join("")}</div></div>`;
       const body = groups.length ? `<div class="pieces rise">${groups.map((g) => pieceCard(g, tab)).join("")}</div>`
         : `<div class="empty card lg"><span class="orb"></span><h3>${tab === "por-aprobar" ? "No hay nada por aprobar" : tab === "agendados" ? "Todavía no hay agendados" : "Nada rechazado"}</h3><p>${tab === "por-aprobar" ? App.say("Pedí un video nuevo y aparece acá apenas Claude lo termine.", "Pide un video nuevo y aparece aquí apenas Claude lo termine.") : "Cuando apruebes videos, los verás aquí."}</p><a class="btn pri" href="#crear" data-go="crear">Pedir un video</a></div>`;
@@ -4095,7 +4196,7 @@ Reglas:
     return `<div class="bulk lg" id="bulk"><span><b class="num">${picked.size}</b> ${plural(picked.size, "elegido", "elegidos")}</span><button class="btn sm good" type="button" data-act="bulk" data-st="approved">${icon("check")}Aprobar</button><button class="btn sm bad" type="button" data-act="bulk" data-st="rejected">${icon("x")}Rechazar</button><button class="btn sm ghost" type="button" data-act="bulk" data-st="clear">Soltar</button></div>`;
   }
   const A = App.acts;
-  A.aptab = (el) => { picked.clear(); App.go("aprobar" + (el.dataset.tab === "por-aprobar" ? "" : "/" + el.dataset.tab)); };
+  A.aptab = (el) => { picked.clear(); App.go("estudio" + (el.dataset.tab === "por-aprobar" ? "" : "/" + el.dataset.tab)); };
   A.pick = (el) => { const id = el.dataset.id; picked.has(id) ? picked.delete(id) : picked.add(id); App.render(true); };
   A.pickpiece = (el) => { const [b, p] = el.dataset.piece.split("|"), vs = S.videos.filter((v) => v.brand === b && v.piece === p && !v.published && listMatches(v)), on = vs.every((v) => picked.has(v.id)); vs.forEach((v) => (on ? picked.delete(v.id) : picked.add(v.id))); App.render(true); };
   const listMatches = (v) => { const t = tabOf(App.route()); return t === "agendados" ? v.status === "approved" : t === "rechazados" ? v.status === "rejected" : sel.isPending(v); };
@@ -4104,8 +4205,10 @@ Reglas:
 })();
 
 /* ===== views/aprobar-review ===== */
-/* Aura · Aprobar (revision): el video al centro, versiones a la izquierda, Jarvis y el predictor a la derecha, y la capsula de decision abajo.
-   Notas por cuadro, zona segura, subtitulos por palabra, atajos A/Q/R, ←/→ versiones, espacio, N. Todo en una sola pantalla sin recargar el video. */
+/* Aura · Estudio - vista general (antes "Aprobar"): el video al centro, versiones a la izquierda, Jarvis y el predictor a la derecha, y la capsula
+   de decision abajo. Notas por cuadro, zona segura, subtitulos por palabra, atajos A/Q/R, ←/→ versiones, espacio, N. Todo en una sola pantalla sin
+   recargar el video. Se entra aca desde el listado de Estudio (antes "Aprobar"); desde aca, "Abrir en editor" lleva al editor completo (ver
+   estudio-core.js, App.views.estudio). Ver DECISIONES.md #2. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, { $, $$, esc, icon, plural, ring, mmss } = App;
@@ -4113,6 +4216,45 @@ Reglas:
   const CAP_FONTS = [["aston", "Aston (especial)"], ["normal", "Normal"], ["cursive", "Cursiva"]];
   const CAP_COLORS = [["#FFFFFF", "Blanco"], ["#FFD84D", "Amarillo"], ["#4FD8FF", "Cian"], ["#5DFFB8", "Verde"], ["#FF6A5E", "Rojo"], ["#FFB54A", "Naranja"]];
   const V = () => (RV ? sel.video(RV.id) : null);
+
+  // ---------- predictor: traduce los "parts" crudos de scoreVideo() a categorias simples (DECISIONES.md #9) ----------
+  // No toca pred.js ni la formula: solo agrupa y renombra en espanol llano lo que ya calculo scoreVideo(). El predictor
+  // de hoy solo mide el texto del gancho y que tan distinta es esta version de sus hermanas -- no hay datos de iluminacion
+  // o subtitulos que agrupar, asi que esas categorias no aparecen (no se inventan datos que el modelo no produce).
+  const FACTOR_GROUPS = [
+    { key: "claridad", title: "Claridad del mensaje" },
+    { key: "evitar", title: "Qué evitar en el gancho" },
+    { key: "nueva", title: "Qué tan nueva se ve esta versión" },
+  ];
+  const FACTOR_MAP = {
+    "Largo ideal": ["claridad", "El gancho tiene el largo justo para leerse rápido."],
+    "Largo justo": ["claridad", "El gancho entra en dos líneas, al límite."],
+    "Muy largo": ["claridad", "El gancho es muy largo: no entra cómodo en dos líneas."],
+    "Muy corto": ["claridad", "El gancho es muy corto: casi no promete nada."],
+    "Palabras simples (ninguna de 11 letras o más)": ["claridad", "Usa palabras simples, fáciles de entender rápido."],
+    "Rompe una creencia (no, nunca, nadie, deja de)": ["claridad", "Rompe una creencia (no, nunca, nadie), algo que suele atrapar."],
+    "Pregunta directa con signo de interrogación": ["evitar", "Termina en pregunta: en los datos, eso no funcionó."],
+    "Le habla al espectador con 'tú/vos/you'": ["evitar", "Le habla directo a la persona (tú/vos/you)."],
+    "Nombra a Kevin Trudeau en el gancho": ["evitar", "Nombra a Kevin Trudeau en el gancho."],
+    "Anuncio de evento (join, free, reto, gratis)": ["evitar", "Suena a anuncio de evento o promoción."],
+    "Cliché de ley de atracción (tus palabras crean tu realidad)": ["evitar", "Usa una frase muy repetida de autoayuda."],
+    "Palabra muy repetida": ["nueva", "Repite una palabra que ya usaste en muchos ganchos."],
+    "Se ve distinta a las otras versiones": ["nueva", "Se ve distinta a las otras versiones de la pieza."],
+    "Se parece demasiado a las otras versiones": ["nueva", "Se parece mucho a otra versión de esta pieza."],
+    "Intro repetido en otra pieza": ["nueva", "Este intro ya se usó en otra pieza."],
+  };
+  const factorOf = (label) => {
+    if (FACTOR_MAP[label]) return FACTOR_MAP[label];
+    if (/^Promesa directa/.test(label)) return ["claridad", "Abre con una promesa directa."];
+    if (/^Objeto o ritual concreto/.test(label)) return ["claridad", "Usa un objeto o dato bien concreto."];
+    if (/^Tiempo o cifra concreta/.test(label)) return ["claridad", "Da un tiempo o una cifra concreta."];
+    return ["claridad", label]; // factor nuevo sin traducir todavia: no lo escondemos, pero avisa en consola para agregarlo
+  };
+  function friendlyGroups(parts) {
+    const byKey = {};
+    parts.forEach((p) => { const [key, text] = factorOf(p.label); (byKey[key] = byKey[key] || []).push({ text, pts: p.pts }); });
+    return FACTOR_GROUPS.map((g) => { const items = byKey[g.key] || []; if (!items.length) return null; return { title: g.title, net: items.reduce((a, x) => a + x.pts, 0), items }; }).filter(Boolean);
+  }
   const safeSvg = () => { const P = (window.StudioModel && StudioModel.SAFE) || [[91, 237], [990, 237], [990, 997], [899, 997], [899, 1650], [366, 1650], [366, 1479], [91, 1479]]; return `<svg class="safe" viewBox="0 0 1080 1920" preserveAspectRatio="none" aria-hidden="true"><path fill-rule="evenodd" d="M0 0H1080V1920H0Z M${P.map((p) => p.join(" ")).join(" L")}Z" fill="rgba(0,0,0,.5)"/><path d="M${P.map((p) => p.join(" ")).join(" L")}Z" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="4" stroke-dasharray="14 10"/></svg>`; };
 
   // ---------- esqueleto (no cambia mientras se revisa; los paneles se pintan aparte) ----------
@@ -4123,7 +4265,7 @@ Reglas:
         <section class="rv-center" aria-label="Video"><div class="glow" aria-hidden="true"></div>
           <div class="frame lg" data-shared-target><div class="screen" id="rvscreen"><div class="still" id="rvstill"></div><video id="rvvideo" playsinline preload="auto" loop></video><div class="ov" id="rvov"></div><div class="vmsg" id="rvmsg" hidden></div><div class="safewrap" id="rvsafe" hidden>${safeSvg()}</div><button class="playhit" type="button" data-act="rvplay" aria-label="Reproducir o pausar"></button></div>
             <div class="ctrl"><button class="iconbtn sm" type="button" data-act="rvplay" id="rvplaybtn" aria-label="Reproducir">${icon("play")}</button><div class="scrub" id="rvscrub" role="slider" aria-label="Posición del video" tabindex="0"><i class="fill" id="rvfill"></i><span id="rvmarks"></span><b class="knob" id="rvknob"></b></div><span class="tc num" id="rvtc">0:00</span></div></div>
-          <div class="rv-tools"><button class="chip" type="button" data-act="rvsafe" id="rvsafebtn" aria-pressed="false">${icon("frame")}Zona segura</button><button class="chip" type="button" data-act="rvmute" id="rvmutebtn" aria-pressed="false">${icon("volume")}Sonido</button><a class="chip" id="rvstudio" href="#estudio">${icon("film")}Abrir en el Estudio</a></div></section>
+          <div class="rv-tools"><button class="chip" type="button" data-act="rvsafe" id="rvsafebtn" aria-pressed="false">${icon("frame")}Zona segura</button><button class="chip" type="button" data-act="rvmute" id="rvmutebtn" aria-pressed="false">${icon("volume")}Sonido</button><a class="chip" id="rvstudio" href="#estudio">${icon("film")}Abrir en editor</a></div></section>
         <aside class="rv-right" id="rvright" aria-label="Análisis"></aside></div></div>`;
   }
 
@@ -4147,12 +4289,14 @@ Reglas:
   }
   function paintRight() {
     const v = V(); if (!v) return; const sibs = sel.siblings(v), r = App.pred.scoreVideo(v), notes = sel.notesOf(v);
-    const factors = r ? r.parts.slice().sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts)).slice(0, 6).map((p) => `<li data-k="${p.pts >= 0 ? "pos" : "neg"}"><i>${p.pts >= 0 ? "✓" : "!"}</i><div><b>${esc(p.label)}</b><small>${esc(p.why)}</small></div><span>${p.pts >= 0 ? "+" : "−"}${Math.abs(p.pts)}</span></li>`).join("") : "";
+    // circulo del score: unico visible por default. Los factores van agrupados en espanol llano detras de "¿Por qué este score?" (DECISIONES.md #9)
+    const groups = r ? friendlyGroups(r.parts) : [];
+    const groupsHtml = groups.map((g) => { const dn = Math.round(g.net), sign = dn > 0 ? "+" : dn < 0 ? "−" : "±"; return `<li data-k="${g.net >= 0 ? "pos" : "neg"}"><i>${g.net >= 0 ? "✓" : "!"}</i><div><b>${esc(g.title)}</b><small>${g.items.map((x) => esc(x.text)).join(" ")}</small></div><span>${sign}${Math.abs(dn)}</span></li>`; }).join("");
     const fix = r && (r.fb.length || r.fbClaude.length) ? `<div class="fixes"><b>${r.fb.length ? "Lo que puedes hacer" : "Lo ajusta Claude solo"}</b><ul>${(r.fb.length ? r.fb : r.fbClaude).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
     const tags = App.config.tags.map((t) => `<button type="button" class="chip tg" data-act="rvtag" data-t="${esc(t)}" aria-pressed="${(v.tags || []).includes(t)}">${esc(t)}</button>`).join("");
     const noteRows = notes.map((n) => `<li class="${sel.closedNote(n) ? "done" : ""}"><button class="chip tcb" type="button" data-act="rvseek" data-t="${n.t || 0}">${esc(n.tc || mmss(n.t))}</button><span>${esc(n.text)}</span>${n.sent === false ? `<button class="x" type="button" data-act="rvnotedel" data-id="${esc(n.id)}" aria-label="Borrar nota">${icon("x")}</button>` : `<em class="chip ${sel.closedNote(n) ? "good" : ""}">${sel.closedNote(n) ? "Resuelta" : "Enviada"}</em>`}</li>`).join("");
     $("#rvright").innerHTML = `<div class="say"><div class="who"><span class="orb"></span><b>Jarvis</b></div><div class="msg lg">${opinion(v, sibs)}</div></div>
-      ${r ? `<section class="factors"><div class="fh">${ring(r.score / 100, 64, { r: 40, sw: 8, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num" style="font:500 20px/1">${r.score}</b>` })}<div><b>${esc(App.pred.TIER_TXT[r.tier])}</b><small class="muted">Aprox. ${r.prob}% de chance de pasar ${App.config.viralThreshold} vistas</small></div></div><ul class="why">${factors}</ul>${fix}</section>` : ""}
+      ${r ? `<section class="factors"><div class="fh">${ring(r.score / 100, 64, { r: 40, sw: 8, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num" style="font:500 20px/1">${r.score}</b>` })}<div><b>${esc(App.pred.TIER_TXT[r.tier])}</b><small class="muted">Aprox. ${r.prob}% de chance de pasar ${App.config.viralThreshold} vistas</small></div></div>${groupsHtml || fix ? `<details class="why-toggle"><summary>¿Por qué este score?</summary><ul class="why">${groupsHtml}</ul>${fix}</details>` : ""}</section>` : ""}
       <section class="fb"><h4>Qué falla</h4><div class="tags">${tags}</div>
         <div class="field"><label for="rvfb">Cambio para esta versión</label><textarea id="rvfb" rows="2" maxlength="2000" placeholder="${esc(App.say("Qué querés que cambie. Queda guardado y se envía con Enviar cambios.", "Qué quieres que cambie. Queda guardado y se envía con Enviar cambios."))}">${esc(v.feedback || "")}</textarea><span class="hint" id="rvfbstat">${v.feedbackDirty ? "Guardado. Se envía con Enviar cambios." : ""}</span></div></section>
       <section class="notes"><h4>Notas por cuadro <small id="rvnotet">en <b class="num">${mmss(vEl ? vEl.currentTime : 0)}</b></small></h4>
@@ -4201,7 +4345,7 @@ Reglas:
     else if (v.caps && v.caps.length) { const f = Math.floor(t * (v.capFps || 30)); const i = v.caps.findIndex((c) => f >= c[1] && f < c[2]); if (i >= 0) { const e = capEff(v, i); html = `<div class="wordcap ${e.font}"${e.color ? ` style="color:${esc(e.color)}"` : ""}>${esc(v.caps[i][0])}</div>`; } }
     ov.innerHTML = html;
   }
-  function paintAll() { paintLeft(); paintRight(); paintDecide(); paintProgress(); const v = V(); if (v) { const a = $("#rvstudio"); if (a) a.href = "#estudio/" + encodeURIComponent(v.id); } }
+  function paintAll() { paintLeft(); paintRight(); paintDecide(); paintProgress(); const v = V(); if (v) { const a = $("#rvstudio"); if (a) a.href = "#estudio/editor/" + encodeURIComponent(v.id); } }
 
   // ---------- video ----------
   const vmsg = (h) => { const m = $("#rvmsg"); if (m) { m.hidden = !h; m.innerHTML = h || ""; } };
@@ -4238,17 +4382,17 @@ Reglas:
   }
   function finish() {
     const c = RV.counts, el = $("#rv"); if (!el) return; if (vEl) vEl.pause();
-    el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#aprobar/agendados">Ver agendados</a></div></div>`;
+    el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#estudio/agendados">Ver agendados</a></div></div>`;
     App.float(""); App.morph.sparkles(el.querySelector(".orb"), 6); RV.finished = true; cancelAnimationFrame(raf);
   }
   function switchTo(id) {
-    RV.id = id; history.replaceState(null, "", "#aprobar/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
+    RV.id = id; history.replaceState(null, "", "#estudio/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
     const el = $("#rv"); if (el) el.dataset.id = id; if (vEl) vEl.pause(); loadVideo(); paintAll(); if (vEl) vEl.play().catch(() => {});
   }
 
   // ---------- acciones ----------
   const A = App.acts;
-  A.rvback = () => App.go("aprobar");
+  A.rvback = () => App.go("estudio");
   A.rvplay = () => { if (!vEl) return; if (vEl.paused) vEl.play().catch(() => {}); else vEl.pause(); };
   A.rvsafe = (el) => { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); $("#rvsafe").hidden = !on; App.store.set("safe", on); };
   A.rvmute = (el) => { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); vEl.muted = on; };
@@ -4271,7 +4415,7 @@ Reglas:
     render(r) { return skeleton(r.args[1] || ""); },
     bind(root, r) {
       const id = r.args[1] || "", v = sel.video(id);
-      if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#aprobar">Volver a la lista</a></div>`; return; }
+      if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#estudio">Volver a la lista</a></div>`; return; }
       if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
       App.float('<div class="capsule lg" id="rvdecide" role="group" aria-label="Decisión"></div>');
       cancelAnimationFrame(raf); RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
@@ -4289,7 +4433,7 @@ Reglas:
     },
     // un cambio de ruta dentro de la revision (otra version) no reconstruye la pantalla
     routeChanged(r) {
-      if (r.name !== "aprobar" || r.args[0] !== "ver" || !RV || RV.finished || !$("#rv")) return false;
+      if (r.name !== "estudio" || (r.args[0] !== "ver" && r.args[0] !== "editor") || !RV || RV.finished || !$("#rv")) return false;
       const id = r.args[1] || ""; if (id === RV.id) return true; if (sel.video(id)) { switchTo(id); return true; } return false;
     },
     update(kinds) {
@@ -4300,152 +4444,538 @@ Reglas:
       paintAll(); return true;
     },
     key(e) {
-      if (!RV || RV.finished) { if (e.key === "Escape") App.go("aprobar"); return; }
+      if (!RV || RV.finished) { if (e.key === "Escape") App.go("estudio"); return; }
       const k = e.key.toLowerCase();
       if (k === "a") decide("approved"); else if (k === "q") decide("maybe"); else if (k === "r") decide("rejected");
       else if (k === " ") { e.preventDefault(); A.rvplay(); }
       else if (k === "arrowright" || k === "arrowleft") { const v = V(), sibs = sel.siblings(v), i = sibs.findIndex((x) => x.id === v.id), n = sibs[(i + (k === "arrowright" ? 1 : -1) + sibs.length) % sibs.length]; if (n && n.id !== v.id) switchTo(n.id); }
       else if (k === "n") { e.preventDefault(); const i = $("#rvnote"); if (i) { vEl.pause(); i.focus(); } }
       else if (k === "," || k === ".") { vEl.pause(); vEl.currentTime += (k === "." ? 1 : -1) / 30; }
-      else if (k === "escape") App.go("aprobar");
+      else if (k === "escape") App.go("estudio");
     },
     teardown() { cancelAnimationFrame(raf); if (vEl) { try { vEl.pause(); } catch (x) { /* ya cerrado */ } } RV = null; },
   };
-  App.views.aprobar = {
-    title: "Aprobar", wide: true,
-    render(r) { return r.args[0] === "ver" ? App.reviewView.render(r) : (App.reviewView.teardown(), App.listView.render(r)); },
-    bind(root, r) { return r.args[0] === "ver" ? App.reviewView.bind(root, r) : App.listView.bind(root, r); },
-    routeChanged(r) { return App.reviewView.routeChanged(r); },
-    update(kinds) { return App.route().args[0] === "ver" ? App.reviewView.update(kinds) : false; },
-    key(e) { if (App.route().args[0] === "ver") App.reviewView.key(e); },
-  };
+  // El dispatcher de la pantalla (listado / vista general / editor) vive en App.views.estudio, ver estudio-core.js --
+  // "Aprobar" ya no es una vista propia (DECISIONES.md #2): esto solo expone App.reviewView para que ese dispatcher lo use.
 })();
 
 /* ===== views/crear ===== */
-/* Aura · Crear: pedir videos nuevos a Claude y subir material (videos crudos, clips, intros, referencias). Un solo pedido, dos puntos de partida. */
+/* Aura · Crear: flujo conversacional sobre la nube de Jarvis (reemplazo completo de la v1, ver DECISIONES.md #10).
+   "¿Qué querés crear?" y dos caminos: un estilo nuevo (crear-estilo.js, conecta con Laboratorio) o un video
+   nuevo (crear-video.js, elegís estilo(s) y subís lo que hay que editar). Este archivo es el cascarón: la
+   misma nube/vidrio que Jarvis (clases .jv/.msg/.chips/.confirm de shell.css, reusadas, no reinventadas), el
+   router entre los dos caminos, los pedidos en curso y el aviso cuando un estilo nuevo queda listo. */
 (function () {
   "use strict";
-  const App = window.App, S = App.S, sel = App.sel, UI = App.ui, { $, $$, esc, icon, plural, bytes } = App;
-  UI.draft = UI.draft || {}; UI.files = UI.files || [];
-  const STATUS = { pedido: ["Pedido", ""], produccion: ["En producción", "apricot"], revisar: ["Listo para revisar", "good"], listo: ["Terminado", "good"], bloqueado: ["Bloqueado", "bad"], cancelado: ["Cancelado", ""] };
-  const PURPOSES = () => [["crudo", "Crudo para editar"], ["clip", "Clip para usar (B-roll)"], ["intro", "Intro"], ...(App.config.hasTeacher ? [["teacher", "Teacher"]] : []), ["referencia", "Referencia de estilo"]];
-  const mode = (r) => (r.args[0] === "subir" ? "subir" : "pedir");
-  const D = () => UI.draft;
-  // el modelo de este pedido: arranca en el de siempre (Sonnet 5.5) y, si lo cambias aqui, vale solo para este pedido
+  const App = window.App, S = App.S, sel = App.sel, UI = App.ui, { $, $$, esc, icon, plural, bytes, toast } = App;
+  UI.crear = UI.crear || {};
+  const CAMINOS = ["estilo", "video"];
+  const caminoOf = (r) => (CAMINOS.includes(r.args[0]) ? r.args[0] : null);
+  const STATUS = { pedido: ["Pedido", ""], produccion: ["En producción", "apricot"], revisar: ["Listo para revisar", "good"], listo: ["Listo", "good"], bloqueado: ["Bloqueado", "bad"], cancelado: ["Cancelado", ""] };
+  // el modelo de este pedido: arranca en el de siempre y, si se cambia aqui (pill en el encabezado de la nube),
+  // vale solo para el pedido que se esta armando en Crear (igual mecanismo que ya usan Jarvis/Estudio/Laboratorio).
+  UI.crear.ai = UI.crear.ai || {};
   App.ai.contexts.draft = {
-    get: () => { const g = App.ai.get("global"), d = UI.draft || {}; return { model: App.ai.MODELS.some((m) => m.id === d.model) ? d.model : g.model, effort: App.ai.EFFORTS.some((x) => x[0] === d.effort) ? d.effort : g.effort }; },
-    set: (p) => { UI.draft = Object.assign(UI.draft || {}, p); },
+    get: () => { const g = App.ai.get("global"), d = UI.crear.ai; return { model: App.ai.MODELS.some((m) => m.id === d.model) ? d.model : g.model, effort: App.ai.EFFORTS.some((x) => x[0] === d.effort) ? d.effort : g.effort }; },
+    set: (p) => { Object.assign(UI.crear.ai, p); },
     note: "Solo para este pedido. Tu modelo de siempre no cambia.",
   };
-  const opts = (list, cur) => list.map(([k, t]) => `<option value="${esc(k)}" ${String(cur) === String(k) ? "selected" : ""}>${esc(t)}</option>`).join("");
 
-  function styleStrip() {
-    const items = sel.approvedStyles().map((s) => ({ id: s.id, name: s.name, demo: s.demo || "e-palabra-ancla" })).concat(App.lib.catalog().filter((i) => i.type === "estilos" && i.source === "estudio").map((i) => ({ id: i.id, name: i.name, demo: i.demo })));
-    const cur = D().style || "";
-    return `<div class="stylestrip" role="radiogroup" aria-label="Estilo"><div class="sty ${cur === "" ? "on" : ""}" role="radio" tabindex="0" aria-checked="${cur === ""}" data-act="crstyle" data-id=""><span class="sty-demo plain">${icon("sparkles")}</span><b>El de siempre</b></div>${items.map((s) => `<div class="sty ${cur === s.id ? "on" : ""}" role="radio" tabindex="0" aria-checked="${cur === s.id}" data-act="crstyle" data-id="${esc(s.id)}"><span class="sty-demo">${App.demoHtml ? App.demoHtml(s.demo, { mini: true }) : ""}</span><b>${esc(s.name)}</b></div>`).join("")}</div>`;
+  // ---------- la misma gota, siempre: transicion entre pasos de esta conversacion (motion-doctrine: un solo carrier,
+  // nunca un fundido de pantalla aparte compitiendo con esto). App.morph.wilt/bloom ya existen (motion.js, no se
+  // tocan); esta es la pieza nueva que falta: encoger el panel actual a un punto y florecer el que sigue desde ahi.
+  // advanceStep: un paso nuevo DENTRO del mismo camino (no cambia el hash) -> mutamos el estado y nos re-renderizamos
+  // nosotros mismos. advanceNav: cambiar de camino (si cambia el hash) -> dejamos que App.go/el router re-rendericen
+  // (igual que jarvis.js lo hace al navegar) y solo nos ocupamos del florecido una vez que el contenido nuevo esta. ----------
+  function liftOff(cb) {
+    const old = $(".crear-cloud");
+    if (!old || App.reduceMotion()) { cb(null); return; }
+    const r = App.morph.rectOf(old), at = { x: r.x + r.w / 2, y: r.y + Math.min(r.h * 0.3, 150) };
+    old.style.pointerEvents = "none";
+    App.morph.wilt(old, at, 230).then(() => cb(at));
   }
-  function filesHtml() {
-    return UI.files.map((f, i) => `<li class="file" data-s="${f.state}"><span class="th">${f.thumb ? `<img src="${f.thumb}" alt="">` : icon("film")}</span>
-      <div class="fi"><b>${esc(f.name)}</b><small>${bytes(f.size)}${f.state === "err" ? ` · <span class="err">${esc(f.err)}</span>` : f.state === "done" ? " · Subido" : ""}</small>${f.state === "up" || f.state === "wait" ? `<div class="bar" style="--p:${Math.round((f.progress || 0) * 100)}%"><i></i></div>` : ""}</div>
-      <label class="sr" for="fp${i}">Para qué es</label><select id="fp${i}" class="mini" data-change="crpurpose" data-i="${i}">${opts(PURPOSES(), f.purpose)}</select>
-      <button class="x" type="button" data-act="crfiledel" data-i="${i}" aria-label="Quitar ${esc(f.name)}">${icon("x")}</button></li>`).join("");
+  function advanceStep(mutate) {
+    liftOff((at) => {
+      mutate(); App.render(true);
+      if (!at) return;
+      requestAnimationFrame(() => { const el = $(".crear-cloud"); if (el) App.morph.bloom(el, at, 560); });
+    });
   }
-  function dropzone(big) {
-    return `<label class="drop ${big ? "big" : ""}" id="crdrop" for="crfile">${icon("upload")}<strong>${App.say("Soltá tus videos acá o tocá para elegirlos", "Suelta tus videos aquí o toca para elegirlos")}</strong><span>Crudos, clips, intros o referencias. Hasta 19 MB cada uno. Más pesado: pega el link abajo.</span>
-      <input id="crfile" type="file" accept="video/*,image/*" multiple hidden></label><ul class="files" id="crfiles">${filesHtml()}</ul>`;
+  function advanceNav(hash) {
+    liftOff((at) => {
+      App._morphNav = true;
+      const unsub = App.on((ks) => { if (ks.has("route")) { unsub(); const el = $(".crear-cloud"); if (el && at) App.morph.bloom(el, at, 560); } });
+      App.go(hash);
+    });
   }
-  function rawTiles(b) {
-    const sys = S.system || {}, bs = (sys.brands || {})[b.id] || {}, L = App.config.rawLabels, open = sel.newRequests(b.id).filter((r) => !["listo", "cancelado"].includes(r.status)).length;
-    const t = (n, v, sub, warn) => `<div class="tile lg"><span>${n}</span><b ${warn ? 'style="color:var(--warn)"' : ""}>${esc(v)}</b><small>${esc(sub || "")}</small></div>`;
-    return `<div class="tiles">${t(L.intro, bs.introsFree ?? "—", bs.introsNote || "sin usar en esta cuenta", (bs.introsFree ?? 1) === 0)}${App.config.hasTeacher ? t(L.teacher, sys.teachersFree ?? "—", sys.teachersNote || "según el registro") : ""}${t("Pedidos abiertos", String(open), "esperando a Claude")}</div>`;
+
+  // ---------- piezas de conversacion compartidas por los dos caminos ----------
+  function msg(who, html) { return `<div class="msg ${who === "me" ? "me" : "ai"}">${html}</div>`; }
+  function trail(list) { return (list || []).map((m) => msg(m.who, m.html)).join(""); }
+  function chips(list) { return list && list.length ? `<div class="chips static">${list.map((c) => `<button type="button" class="${c.pri ? "pri" : ""}" data-act="${esc(c.act)}" ${c.data ? Object.entries(c.data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ") : ""}>${c.icon ? icon(c.icon) : ""}${esc(c.label)}</button>`).join("")}</div>` : "";
   }
-  function queue(b) {
-    const list = sel.newRequests(b.id);
-    const rows = list.map((r) => { const s = STATUS[r.status || "pedido"] || [r.status, ""], steps = r.steps || [], done = steps.filter((x) => x.status === "hecho").length, p = steps.length ? done / steps.length : r.status === "listo" ? 1 : r.status === "produccion" ? 0.4 : 0.06;
-      return `<li class="rq"><div class="rqh"><span class="chip ${s[1]}">${esc(s[0])}</span><b>${esc((r.topic || (r.hooks || [])[0] || (r.assets || []).length + " archivos").slice(0, 70))}</b><span class="faint">${r.at ? App.ago(r.at) : ""}</span></div>
-        <div class="rqm muted">${r.count || 1} ${plural(r.count || 1, "pieza", "piezas")}${r.format ? " · " + esc((App.config.formats.find((f) => f[0] === r.format) || [0, r.format])[1]) : ""}${(r.assets || []).length ? ` · ${(r.assets || []).length} ${plural((r.assets || []).length, "archivo", "archivos")}` : ""}${(r.links || []).length ? ` · ${(r.links || []).length} links` : ""}${r.model ? ` · ${esc(App.ai.byId(r.model).name)}` : ""}</div>
-        ${r.status !== "cancelado" ? `<div class="bar" style="--p:${Math.round(p * 100)}%"><i></i></div>` : ""}${steps.length ? `<ol class="steps">${steps.map((x) => `<li data-s="${esc(x.status)}"><i></i>${esc(x.text || x.label || "")}</li>`).join("")}</ol>` : ""}
-        ${r.reply ? `<p class="reply">${esc(r.reply)}</p>` : ""}${(r.status || "pedido") === "pedido" ? `<button class="btn sm ghost" type="button" data-act="crcancel" data-id="${esc(r.id)}">Cancelar pedido</button>` : ""}</li>`; }).join("");
-    return `<section class="card lg"><div class="ch">${icon("wand")}Cola de pedidos<span class="sp"></span><span class="faint">${list.length}</span></div>${rows ? `<ul class="rqs">${rows}</ul>` : `<div class="empty small"><span class="orb"></span><p>Todavía no pediste nada para ${esc(b.name)}.</p></div>`}</section>`;
+  function cloud(o) {
+    o = o || {};
+    return `<div class="crear-wrap"><div class="crear-cloud jv solid-glass" role="group" aria-label="Crear"><div class="inner">
+      <div class="jh"><span class="orb${o.busy ? " fast" : ""}"></span><div class="nm">Crear<small>${esc(o.status || "")}</small></div><span class="sp"></span>${App.ai.pillHtml("draft")}${o.back ? `<button class="iconbtn" type="button" data-act="crback" aria-label="Volver atrás">${icon("chevleft")}</button>` : ""}</div>
+      <div class="log">${trail(o.trail)}</div>
+      <div class="cbody">${o.body || ""}</div>
+      ${o.chips ? chips(o.chips) : ""}
+    </div></div></div>`;
+  }
+  function queueList() {
+    const b = sel.brand();
+    const videos = sel.newRequests(b.id).map((r) => ({ r, kind: "video" }));
+    const styles = S.requests.filter((r) => r.kind === "new_style").sort((a, c) => (c.at || "").localeCompare(a.at || "")).map((r) => ({ r, kind: "estilo" }));
+    const all = videos.concat(styles).sort((a, c) => (c.r.at || "").localeCompare(a.r.at || ""));
+    if (!all.length) return "";
+    const row = ({ r, kind }) => {
+      const s = STATUS[r.status || "pedido"] || [r.status, ""], steps = r.steps || [], done = steps.filter((x) => x.status === "hecho").length;
+      const p = steps.length ? done / steps.length : r.status === "listo" ? 1 : r.status === "produccion" ? 0.4 : 0.06;
+      const title = kind === "estilo" ? (r.notes || "Estilo nuevo").slice(0, 70) : (r.topic || (r.styles || []).join(" + ") || (r.assets || []).length + " archivos").slice(0, 70);
+      return `<li class="rq"><div class="rqh">${icon(kind === "estilo" ? "sparkles" : "film")}<span class="chip ${s[1]}">${esc(s[0])}</span><b>${esc(title)}</b><span class="faint">${r.at ? App.ago(r.at) : ""}</span></div>
+        ${r.model ? `<div class="rqm muted">${esc(App.ai.byId(r.model).name)}${r.effort ? " · " + esc(App.ai.effName(r.effort)) : ""}</div>` : ""}
+        ${r.status !== "cancelado" ? `<div class="bar" style="--p:${Math.round(p * 100)}%"><i></i></div>` : ""}
+        ${r.reply ? `<p class="reply">${esc(r.reply)}</p>` : ""}
+        ${(r.status || "pedido") === "pedido" ? `<button class="btn sm ghost" type="button" data-act="crcancel" data-id="${esc(r.id)}">Cancelar</button>` : ""}</li>`;
+    };
+    return `<section class="card lg crqueue"><div class="ch">${icon("clock")}Tus pedidos<span class="sp"></span><span class="faint">${all.length}</span></div><ul class="rqs">${all.map(row).join("")}</ul></section>`;
+  }
+
+  // ---------- raiz: "¿Qué querés crear?" ----------
+  function rootBody() {
+    return `<div class="crear-paths">
+      <button class="crear-path" type="button" data-act="crgo" data-c="estilo">${icon("sparkles")}<b>Un estilo nuevo</b><span>A partir de referencias, videos o ideas que te gustan.</span></button>
+      <button class="crear-path" type="button" data-act="crgo" data-c="video">${icon("wand")}<b>Un video nuevo</b><span>Elegís el estilo y subís lo que hay que editar.</span></button>
+    </div>`;
+  }
+  function renderRoot() {
+    return cloud({ status: "¿qué armamos?", trail: [{ who: "ai", html: `<p>${esc(App.say("¿Qué querés crear?", "¿Qué quieres crear?"))}</p>` }], body: rootBody() }) + queueList();
+  }
+
+  // ---------- entrada desde afuera: Biblioteca y Laboratorio ("Usar en un video nuevo") dejan UI.draft.style/.notes;
+  // Jarvis (new_request) deja UI.draft.topic. Los tres siguen funcionando sin tocar esos archivos: los leemos
+  // una vez al llegar a la raiz y saltamos directo al camino que corresponde. ----------
+  function consumeIncoming() {
+    const d = UI.draft; if (!d || (!d.style && !d.topic && !d.notes)) return false;
+    const pre = { style: d.style || "", notes: d.notes || d.topic || "" };
+    UI.draft = {};
+    App.crearVideo.arriveWith(pre);
+    App.go("crear/video", { replace: true });
+    return true;
   }
 
   App.views.crear = {
     title: "Crear",
     render(r) {
-      const b = sel.brand(), m = mode(r), d = D(), sys = (S.system || {}).brands || {}, blocked = ((sys[b.id] || {}).introsFree ?? 1) === 0 && App.config.hasTeacher;
-      const head = `<div class="vhead"><div class="t"><span class="eyebrow">${esc(b.name)}</span><h1 class="h-l">${m === "pedir" ? App.say("Contale a Claude <em>qué video</em> querés", "Cuéntale a Claude <em>qué video</em> quieres") : App.say("Subí tu <em>material</em> y Claude lo edita", "Sube tu <em>material</em> y Claude lo edita")}</h1><p class="muted">Todo termina en un pedido. Claude lo produce y lo deja en <b>Por aprobar</b>.</p></div></div>
-        <div class="tabs"><div class="seg lg" role="tablist"><button role="tab" type="button" class="${m === "pedir" ? "on" : ""}" aria-pressed="${m === "pedir"}" data-act="crmode" data-m="pedir">${icon("wand")}Pedir con Claude</button><button role="tab" type="button" class="${m === "subir" ? "on" : ""}" aria-pressed="${m === "subir"}" data-act="crmode" data-m="subir">${icon("upload")}Subir videos</button></div></div>`;
-      const idea = `<div class="field span2"><label for="crtopic">Tema o idea</label><textarea id="crtopic" data-draft="topic" placeholder="Qué tiene que decir el video, qué quieres que sienta quien lo ve, o un ejemplo que te gustó">${esc(d.topic || "")}</textarea></div>
-        <div class="field span2"><label for="crhooks">Ganchos que ya tienes en mente</label><textarea id="crhooks" data-draft="hooks" rows="3" placeholder="Uno por línea. Si lo dejas vacío, Claude propone y te los muestra">${esc(d.hooks || "")}</textarea></div>`;
-      const common = `<div class="field"><label for="crcount">Cuántas piezas</label><input id="crcount" type="number" min="1" max="10" data-draft="count" value="${esc(d.count || 1)}"></div>
-        <div class="field"><label for="crformat">Formato</label><select id="crformat" data-draft="format">${opts(App.config.formats, d.format || App.config.formats[0][0])}</select></div>
-        ${App.config.hasTeacher ? `<div class="field"><label for="crteacher">Teacher</label><input id="crteacher" type="text" data-draft="teacher" placeholder="Vacío: Claude elige uno libre" value="${esc(d.teacher || "")}"></div>` : ""}
-        <div class="field"><label for="crintro">Intro</label><select id="crintro" data-draft="intro">${opts(App.config.intros, d.intro || App.config.intros[0][0])}</select></div>
-        <div class="field"><label for="crver">Versiones</label><select id="crver" data-draft="versions">${opts(App.config.versionsOpts, d.versions || App.config.versionsOpts[0][0])}</select></div>
-        <div class="field"><label for="crmusic">Música</label><select id="crmusic" data-draft="music">${opts(App.config.musicOpts, d.music || App.config.musicOpts[0][0])}</select></div>
-        <div class="field"><label for="crdue">Para cuándo (opcional)</label><input id="crdue" type="date" data-draft="due" value="${esc(d.due || "")}"></div>`;
-      const form = `<form class="card lg crform" id="crform" novalidate>
-        ${blocked ? `<div class="banner"><b>Atención:</b> no hay ${esc(App.config.rawLabels.intro.toLowerCase())} en ${esc(b.name)}. Elige grabar uno nuevo o generarlo.</div>` : ""}
-        ${m === "subir" ? `<div class="field span2"><span class="l">Material</span>${dropzone(true)}</div>` : ""}
-        <div class="fgrid">${m === "pedir" ? idea : ""}
-          <div class="field span2"><span class="l">Estilo</span>${styleStrip()}<span class="hint">Los estilos aprobados salen de la <a href="#biblioteca">Biblioteca</a>.</span></div>${common}
-          ${m === "pedir" ? `<div class="field span2"><span class="l">Material (opcional)</span>${dropzone(false)}</div>` : ""}
-          <div class="field span2"><label for="crlinks">Links (opcional)</label><textarea id="crlinks" data-draft="links" rows="2" placeholder="Pega uno o varios links, uno por línea (Instagram, TikTok, YouTube, Drive…)">${esc(d.links || "")}</textarea></div>
-          <div class="field span2"><label for="crnotes">Notas para Claude</label><textarea id="crnotes" data-draft="notes" rows="2" placeholder="Cualquier detalle: qué evitar, referencias, cómo debe sentirse">${esc(d.notes || "")}</textarea></div></div>
-        <div class="send"><button class="btn pri lg2" type="submit" id="crsend">Enviar pedido</button>${App.ai.pillHtml("draft")}<span class="status" id="crstatus" aria-live="polite"></span></div></form>`;
-      return head + `<div class="crear-grid">${form}<aside class="crear-side">${rawTiles(b)}${queue(b)}</aside></div>`;
+      const c = caminoOf(r);
+      if (!c) { if (consumeIncoming()) return `<div class="empty"><span class="orb"></span></div>`; return renderRoot(); }
+      if (c === "estilo") return App.crearEstilo.render() + queueList();
+      return App.crearVideo.render() + queueList();
     },
-    bind(root) {
-      const form = $("#crform", root); if (!form) return;
-      form.addEventListener("submit", send);
-      form.addEventListener("input", (e) => { const k = e.target.dataset && e.target.dataset.draft; if (k) D()[k] = e.target.value; });
-      const dz = $("#crdrop", root), inp = $("#crfile", root);
-      if (inp) inp.addEventListener("change", () => { addFiles(inp.files); inp.value = ""; });
-      if (dz) { ["dragenter", "dragover"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("over"); })); ["dragleave", "drop"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove("over"); })); dz.addEventListener("drop", (e) => addFiles(e.dataTransfer.files)); }
+    bind(root, r) {
+      const c = caminoOf(r);
+      if (c === "estilo" && App.crearEstilo.bind) App.crearEstilo.bind(root);
+      if (c === "video" && App.crearVideo.bind) App.crearVideo.bind(root);
     },
-    update(kinds) { if (kinds.has("requests") || kinds.has("system") || kinds.has("exp_styles")) return false; return true; },
+    update(kinds) {
+      if (kinds.has("requests") || kinds.has("exp_styles") || kinds.has("refs")) return false; // la cola y los avisos se actualizan solos
+      const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && $("#main").contains(a)) return true;
+      return false;
+    },
   };
-  App.views.crear.update = (kinds) => { const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && $("#main").contains(a)) { refreshSide(); return true; } return false; };
-  function refreshSide() { const side = $(".crear-side"); if (!side) return; side.innerHTML = rawTiles(sel.brand()) + queue(sel.brand()); }
+  App.crear = { advanceStep, advanceNav, cloud, msg, trail, chips, STATUS };
 
-  // ---------- archivos ----------
-  function thumbOf(file) {
-    return new Promise((res) => {
-      if (/^image\//.test(file.type)) { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(""); r.readAsDataURL(file); return; }
-      try { const u = URL.createObjectURL(file), v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "metadata"; v.src = u;
-        const done = (x) => { URL.revokeObjectURL(u); res(x); }; v.onloadeddata = () => { v.currentTime = Math.min(0.4, (v.duration || 1) / 2); }; v.onseeked = () => { try { const c = document.createElement("canvas"); c.width = 90; c.height = 160; const g = c.getContext("2d"), r = Math.max(90 / v.videoWidth, 160 / v.videoHeight); g.drawImage(v, (90 - v.videoWidth * r) / 2, (160 - v.videoHeight * r) / 2, v.videoWidth * r, v.videoHeight * r); done(c.toDataURL("image/jpeg", 0.7)); } catch (e) { done(""); } }; v.onerror = () => done(""); setTimeout(() => done(""), 4000);
-      } catch (e) { res(""); }
+  // ---------- aviso global cuando un estilo pedido queda listo (vive en Laboratorio) ----------
+  // No depende de estar parado en Crear: escucha los cambios de "requests" en cualquier pantalla (igual en
+  // espiritu a como Metricas/Logros avisan de un hito aunque no se este viendo esa pantalla), incluso si quedo
+  // listo mientras la app estaba cerrada: lo marca "visto" (localStorage) para no repetir el aviso.
+  App.on((kinds) => {
+    if (!kinds.has("requests")) return;
+    const seen = App.store.get("styleSeenListo", {}); let changed = false;
+    S.requests.filter((x) => x.kind === "new_style" && x.status === "listo" && !seen[x.id]).forEach((x) => {
+      seen[x.id] = true; changed = true;
+      toast(`Tu estilo nuevo ya está listo para probar en el Laboratorio.${x.reply ? " " + x.reply : ""}`);
     });
-  }
-  const paintFiles = () => { const ul = $("#crfiles"); if (ul) ul.innerHTML = filesHtml(); };
-  async function addFiles(list) {
-    const ok = [...list].filter((f) => /^(video|image)\//.test(f.type) || /\.(mp4|mov|m4v|webm|mkv|jpg|jpeg|png|webp)$/i.test(f.name)), have = new Set(UI.files.map((f) => f.name + f.size));
-    for (const file of ok.filter((f) => !have.has(f.name + f.size)).slice(0, 12 - UI.files.length)) {
-      const item = { file, name: file.name, size: file.size, purpose: App.route().args[0] === "subir" ? "crudo" : "clip", state: "wait", progress: 0 }; UI.files.push(item); paintFiles();
-      thumbOf(file).then((t) => { item.thumb = t; paintFiles(); });
-      if (file.size > App.act.MAX_FILE) { item.state = "err"; item.err = "Pasa de 19 MB. Pega el link."; paintFiles(); continue; }
-      item.state = "up"; paintFiles();
-      App.act.upload(file, (p) => { item.progress = p; paintFiles(); }).then((r) => { item.id = r.id; item.state = "done"; item.progress = 1; paintFiles(); }).catch((e) => { item.state = "err"; item.err = App.act.uploadError(e); paintFiles(); });
-    }
-    if (!ok.length && list.length) App.toast("Ese tipo de archivo no sirve. Sube videos o imágenes.");
-  }
-  async function send(e) {
-    e.preventDefault(); const st = $("#crstatus"), d = D(), b = sel.brand(), m = mode(App.route());
-    const hooks = String(d.hooks || "").split("\n").map((x) => x.trim()).filter(Boolean), links = String(d.links || "").split(/[\s,]+/).filter((x) => /^https?:\/\/\S+$/i.test(x)), ups = UI.files.filter((f) => f.state === "done");
-    if (UI.files.some((f) => f.state === "up")) { st.textContent = "Espera a que terminen de subir los archivos."; return; }
-    if (!String(d.topic || "").trim() && !hooks.length && !ups.length && !links.length) { st.textContent = m === "subir" ? "Sube al menos un video o pega un link." : "Escribe al menos el tema, un gancho o adjunta material."; return; }
-    $("#crsend").disabled = true; st.textContent = "Enviando…";
-    const res = await App.act.createRequest({ brand: b.id, source: m === "subir" ? "material" : "idea", topic: String(d.topic || "").trim(), hooks, count: Math.max(1, Math.min(10, +d.count || 1)), format: d.format || App.config.formats[0][0], teacher: d.teacher || "", intro: d.intro || App.config.intros[0][0], versions: +(d.versions || App.config.versionsOpts[0][0]), music: d.music || App.config.musicOpts[0][0], style: d.style || "", due: d.due || "", notes: String(d.notes || "").trim(), links, assets: ups.map((f) => ({ id: f.id, name: f.name, size: f.size, purpose: f.purpose })) });
-    $("#crsend").disabled = false;
-    if (!res) { st.textContent = "No se pudo enviar el pedido. Prueba de nuevo."; return; }
-    UI.draft = {}; UI.files = []; App.toast(res.told ? "Pedido enviado. Claude ya lo sabe y empieza." : "Pedido guardado. Claude lo lee en cuanto haya una sesión abierta."); App.render(true);
-  }
+    if (changed) App.store.set("styleSeenListo", seen);
+  });
+
   const A = App.acts;
-  A.crmode = (el) => App.go("crear" + (el.dataset.m === "subir" ? "/subir" : ""));
-  A.crstyle = (el) => { D().style = el.dataset.id; $$(".sty").forEach((s) => { const on = s.dataset.id === el.dataset.id; s.classList.toggle("on", on); s.setAttribute("aria-checked", on); }); };
-  A.crpurpose = (el) => { const f = UI.files[+el.dataset.i]; if (f) f.purpose = el.value; };
-  A.crfiledel = (el) => { const f = UI.files.splice(+el.dataset.i, 1)[0]; if (f && f.id) App.adapter().deleteAsset(f.id); paintFiles(); };
-  A.crcancel = async (el) => { const r = S.requests.find((x) => x.id === el.dataset.id); if (r) { await App.act.cancelRequest(r); App.toast("Pedido cancelado."); } };
+  A.crgo = (el) => App.crear.advanceNav("crear/" + el.dataset.c);
+  A.crback = () => {
+    const c = caminoOf(App.route()), mod = c === "estilo" ? App.crearEstilo : c === "video" ? App.crearVideo : null;
+    if (mod && mod.back && mod.back()) return; // el camino maneja su propio paso atrás (vuelve al paso anterior)
+    App.crear.advanceNav("crear"); // ya estaba en el primer paso: vuelve a "¿qué querés crear?"
+  };
+  A.crcancel = async (el) => { const r = S.requests.find((x) => x.id === el.dataset.id); if (!r) return; const ok = await App.data.write("requests", r.id, { status: "cancelado" }); toast(ok ? "Pedido cancelado." : "No se pudo cancelar. Prueba de nuevo."); };
+})();
+
+/* ===== views/crear-estilo ===== */
+/* Aura · Crear → "Un estilo nuevo" (camino A de DECISIONES.md #10). Junta referencias (videos, links o ideas
+   escritas), marca qué les gustó, se asegura de tener al menos un video para probar el estilo, y lo manda:
+   el estilo nuevo lo arma Claude en exp_styles (estado "prueba") y aparece solo en Laboratorio.
+   Subir archivos usa App.attach (mismo "+" y fichas con progreso que Jarvis/Estudio/Laboratorio), no un
+   dropzone propio: es el componente de adjuntos ya establecido en esta sesión. */
+(function () {
+  "use strict";
+  const App = window.App, UI = App.ui, { $, $$, esc, icon, toast } = App;
+  const Q = {
+    ask: "¿Tenés referencias, links, videos o ideas sobre este estilo nuevo?",
+    upload: "Subilo todo acá.",
+    liked: "¿Qué de estos videos o referencias te gustó?",
+  };
+  const ORDER = ["ask", "upload", "liked"];
+  const fresh = () => ({ step: "ask", trail: [], att: null, gateAtt: null, items: [], linksText: "", ideaText: "", notes: "", err: "" });
+  UI.crear.estilo = UI.crear.estilo || fresh();
+  const ST = () => UI.crear.estilo;
+  const att = () => (ST().att = ST().att || App.attach.make());
+  const gateAtt = () => (ST().gateAtt = ST().gateAtt || App.attach.make());
+
+  function stepTo(step, say) {
+    App.crear.advanceStep(() => { if (say) ST().trail.push(...say); ST().step = step; ST().err = ""; });
+    return true;
+  }
+  function back() {
+    const st = ST();
+    // cada paso hacia adelante empuja un par {ai, me} a la bitacora; volver deshace ese mismo par para no repetir la pregunta
+    const undo = () => { if (st.trail.length >= 2) st.trail.splice(-2); };
+    if (st.step === "denied") { undo(); return stepTo("ask"); }
+    const i = ORDER.indexOf(st.step);
+    if (i > 0) { undo(); return stepTo(ORDER[i - 1]); }
+    return false;
+  }
+  function restart() { App.crear.advanceStep(() => { UI.crear.estilo = fresh(); }); }
+
+  // ---------- pasos ----------
+  function askView() {
+    return App.crear.cloud({ status: "nuevo estilo", back: true,
+      trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.ask)}</p>` }]),
+      chips: [{ act: "cresAsk", data: { v: "si" }, label: "Sí, tengo", icon: "check", pri: true }, { act: "cresAsk", data: { v: "no" }, label: "Todavía no", icon: "x" }] });
+  }
+  function deniedView() {
+    return App.crear.cloud({ status: "hace falta material", back: true,
+      trail: ST().trail.concat([{ who: "ai", html: `<p>Para crear un nuevo estilo necesitás tenerlas. Guardá algún video, link o idea que te guste y volvé a intentarlo.</p>` }]) });
+  }
+  function uploadView() {
+    const st = ST();
+    const body = `
+      <p class="hint">Cuanto más específico seas, mejor la calidad.</p>
+      <div class="atbox" id="cresatt">${att().chips()}<div class="atdrop">${att().btn()}<span>Soltá tus videos acá, pegalos o tocá el más</span></div></div>
+      <div class="field"><label for="creslinks">Links (opcional)</label><textarea id="creslinks" rows="2" placeholder="Uno por línea: Instagram, TikTok, YouTube…">${esc(st.linksText)}</textarea></div>
+      <div class="field"><label for="cresidea">O escribí una idea (opcional)</label><textarea id="cresidea" rows="2" placeholder="Qué te gustaría que tenga este estilo">${esc(st.ideaText)}</textarea></div>
+      ${st.err ? `<p class="status err">${esc(st.err)}</p>` : ""}`;
+    return App.crear.cloud({ status: "subí tu material", back: true,
+      trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.upload)}</p>` }]), body,
+      chips: [{ act: "crescontinue", label: "Continuar", icon: "arrow", pri: true }] });
+  }
+  function likedRow(it, i) {
+    if (it.kind === "idea") return `<li class="crlike idea"><span class="chip">${icon("type")}Idea</span><p>${esc(it.text)}</p></li>`;
+    const label = it.kind === "file" ? it.name : it.url;
+    return `<li class="crlike"><span class="chip ${it.kind === "file" ? "apricot" : ""}">${icon(it.kind === "file" ? "film" : "link")}${it.kind === "file" ? "Video" : "Link"}</span><b>${esc(label)}</b>
+      <label class="sr" for="creslk${i}">Qué te gustó de esto</label><input id="creslk${i}" type="text" maxlength="300" placeholder="¿Qué te gustó de esto? (opcional)" value="${esc(it.liked || "")}" data-liked="${i}"></li>`;
+  }
+  function likedView() {
+    const st = ST(), hasVideo = st.items.some((i) => i.kind === "file");
+    const body = `<ul class="crlikes">${st.items.map(likedRow).join("")}</ul>
+      ${!hasVideo ? `<div class="banner">Para poder probar el estilo necesito al menos un video. Subí cualquiera que se parezca a lo que querés crear.
+        <div class="atbox" id="cresgate">${gateAtt().chips()}<div class="atdrop sm">${gateAtt().btn()}<span>Subir un video</span></div></div></div>` : ""}
+      <div class="field"><label for="cresnotes">Notas para Claude (opcional)</label><textarea id="cresnotes" rows="2" placeholder="Cualquier detalle más sobre cómo querés que se sienta">${esc(st.notes || "")}</textarea></div>
+      ${st.err ? `<p class="status err">${esc(st.err)}</p>` : ""}`;
+    return App.crear.cloud({ status: "qué te gustó", back: true,
+      trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.liked)}</p>` }]), body,
+      chips: [{ act: "cressend", label: "Enviar", icon: "send", pri: true }] });
+  }
+  function sentView() {
+    const st = ST();
+    const body = st.step === "sending" ? `<p class="hint">Enviando…</p>` : `<div class="empty small"><span class="orb fast"></span><p>En cuanto esté listo, te aviso.</p></div><button class="btn" type="button" data-act="crrestart">Crear otro estilo</button>`;
+    return App.crear.cloud({ status: st.step === "sending" ? "enviando…" : "en marcha", busy: st.step === "sending",
+      trail: ST().trail.concat([{ who: "ai", html: `<p>Este proceso puede tomar un rato. En cuanto esté listo te aviso.</p>` }]), body });
+  }
+  function render() {
+    const s = ST().step;
+    if (s === "denied") return deniedView();
+    if (s === "upload") return uploadView();
+    if (s === "liked") return likedView();
+    if (s === "sending" || s === "sent") return sentView();
+    return askView();
+  }
+
+  // ---------- enviar ----------
+  async function send() {
+    const st = ST();
+    if (att().busy() || gateAtt().busy()) { st.err = "Esperá a que terminen de subir los videos."; App.render(true); return; }
+    const gateDone = gateAtt().items.filter((x) => x.state === "done");
+    if (!st.items.some((i) => i.kind === "file") && !gateDone.length) { st.err = "Subí un video que se parezca a lo que querés crear."; App.render(true); return; }
+    gateDone.forEach((it) => st.items.push({ kind: "file", id: it.assetId, name: it.name, size: it.size, liked: "" }));
+    App.crear.advanceStep(() => { st.step = "sending"; });
+    const refIds = [];
+    for (const it of st.items) {
+      let id = null;
+      try {
+        if (it.kind === "file") id = await App.act.addRefFile({ id: it.id, name: it.name, size: it.size }, it.liked || "");
+        else if (it.kind === "link") id = await App.act.addRefLink(it.url, it.liked || "");
+        else if (it.kind === "idea") id = await App.act.addRefIdea(it.text, it.text);
+      } catch (e) { id = null; }
+      if (id) { await App.act.sendRefNow(id); refIds.push(id); }
+    }
+    if (!refIds.length) { toast("No se pudo guardar el material. Prueba de nuevo."); App.crear.advanceStep(() => { st.step = "liked"; }); return; }
+    const res = await App.act.createStyleRequest({ refIds, notes: st.notes || "" });
+    if (!res) { toast("No se pudo enviar el pedido. Prueba de nuevo."); App.crear.advanceStep(() => { st.step = "liked"; }); return; }
+    UI.crear.ai = {}; // el modelo elegido valia solo para este pedido; el proximo arranca en el de siempre
+    App.crear.advanceStep(() => { st.step = "sent"; st.sentId = res.id; });
+    toast(res.told ? "Pedido enviado. Claude ya empieza." : "Guardado. Claude lo lee en cuanto haya una sesión abierta.");
+  }
+
+  // ---------- eventos ----------
+  function bind(root) {
+    const dz = $("#cresatt", root); if (dz) att().bind(dz);
+    const gz = $("#cresgate", root); if (gz) gateAtt().bind(gz);
+    const lk = $("#creslinks", root); if (lk) lk.addEventListener("input", () => { ST().linksText = lk.value; });
+    const idEl = $("#cresidea", root); if (idEl) idEl.addEventListener("input", () => { ST().ideaText = idEl.value; });
+    const nt = $("#cresnotes", root); if (nt) nt.addEventListener("input", () => { ST().notes = nt.value; });
+    $$("[data-liked]", root).forEach((inpEl) => inpEl.addEventListener("input", () => { const it = ST().items[+inpEl.dataset.liked]; if (it) it.liked = inpEl.value; }));
+  }
+
+  App.crearEstilo = { render, bind, back };
+  const A = App.acts;
+  A.cresAsk = (el) => {
+    const yes = el.dataset.v === "si";
+    stepTo(yes ? "upload" : "denied", [{ who: "ai", html: `<p>${esc(Q.ask)}</p>` }, { who: "me", html: esc(yes ? "Sí, tengo." : "Todavía no.") }]);
+  };
+  A.crescontinue = () => {
+    const st = ST(), links = String(st.linksText || "").split(/\n+/).map((x) => x.trim()).filter((x) => /^https?:\/\/\S+$/i.test(x)), idea = String(st.ideaText || "").trim();
+    const uploaded = att().take(); // mueve lo ya subido de la ficha de adjuntos a la lista de referencias del paso siguiente
+    uploaded.forEach((f) => st.items.push({ kind: "file", id: f.id, name: f.name, size: f.size, liked: "" }));
+    links.forEach((url) => { if (!st.items.some((i) => i.kind === "link" && i.url === url)) st.items.push({ kind: "link", url, liked: "" }); });
+    if (idea && !st.items.some((i) => i.kind === "idea" && i.text === idea)) st.items.push({ kind: "idea", text: idea, liked: "" });
+    const haveAny = st.items.length;
+    if (!haveAny) { st.err = "Subí un video, pegá un link o escribí una idea."; App.render(true); return; }
+    const parts = []; const nFiles = st.items.filter((i) => i.kind === "file").length; if (nFiles) parts.push(`${nFiles} video(s)`); if (links.length) parts.push(`${links.length} link(s)`); if (idea) parts.push("una idea");
+    stepTo("liked", [{ who: "ai", html: `<p>${esc(Q.upload)}</p>` }, { who: "me", html: esc(parts.join(", ") + ".") }]);
+  };
+  A.cressend = () => send();
+  A.crrestart = () => restart();
+})();
+
+/* ===== views/crear-video ===== */
+/* Aura · Crear → "Un video nuevo" (camino B de DECISIONES.md #10). Elegís estilo(s) de la Biblioteca (combinarlos
+   o pedir una version distinta por cada uno), o un formato aparte (Long form / Long form a short form), y
+   subís solo el material que ese camino necesita. Termina en un pedido (requests/new_<ts>, kind "new_video"),
+   igual que Claude ya conocía. Subir archivos usa App.attach (mismo "+" y fichas con progreso que el resto
+   de la plataforma), una instancia por categoría de material. */
+(function () {
+  "use strict";
+  const App = window.App, sel = App.sel, UI = App.ui, { $, $$, esc, icon, toast } = App;
+  const Q = {
+    formato: "¿Qué querés armar?",
+    estilos: "Elegí tu estilo o estilos preferidos.",
+    material: "¿Qué material tenés para este estilo?",
+    materialLong: "Subí el video largo. El B-roll es opcional, si tenés algo para poner acorde a lo que se va diciendo.",
+    fuente: "Subí el video o pegá el link (puede ser de YouTube).",
+  };
+  const FORMAT_LABEL = { corto: "Reels con tu estilo", long: "Long form", long2short: "Long form a short form" };
+  const CAT_LABEL = { intro: "Intro / hook", normal: "Video normal (contenido)", broll: "B-roll", reaccion: "Reacción (alguien reaccionando o explicando)" };
+  // Qué video pide depende del estilo elegido. Esta tabla es una decisión propia (no viene de DECISIONES.md):
+  // mapea cada estilo YA existente en la Biblioteca (StudioLib) a lo que razonablemente necesita grabar. Un
+  // estilo sin entrada acá pide solo "normal" (el contenido de base). B-roll y Reacción siempre quedan
+  // ofrecidos como opcionales, para cualquier estilo (documentado en el reporte para que Daniel la ajuste).
+  const STYLE_NEEDS = { "ensayo-combo": ["intro", "normal"] };
+  const fresh = () => ({ format: null, step: "formato", trail: [], styles: [], styleMode: "combinar", att: {}, linksText: "", notes: "", sourceMode: "file", sourceLink: "", srcAtt: null, err: "" });
+  UI.crear.video = UI.crear.video || fresh();
+  const ST = () => UI.crear.video;
+  const attOf = (cat) => (ST().att[cat] = ST().att[cat] || App.attach.make());
+  const srcAtt = () => (ST().srcAtt = ST().srcAtt || App.attach.make());
+
+  function resolveStyleId(raw) {
+    if (!raw) return "";
+    const hit = App.lib.catalog().filter((i) => i.type === "estilos").find((i) => i.id === raw || i.styleId === raw);
+    return hit ? hit.id : "";
+  }
+  function arriveWith(pre) {
+    const st = fresh(), sid = resolveStyleId(pre.style);
+    if (sid) {
+      const name = (App.lib.catalog().find((i) => i.id === sid) || {}).name || "";
+      st.format = "corto"; st.styles = [sid]; st.step = "material";
+      st.trail.push({ who: "ai", html: `<p>${esc(Q.formato)}</p>` }, { who: "me", html: esc(FORMAT_LABEL.corto + ".") }, { who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(`Usar «${name}».`) });
+    } else if (pre.notes) {
+      // llego algo de la Biblioteca que no es un estilo (una transicion, un texto, un sonido...): no hay nada que
+      // preseleccionar, pero la nota no se pierde — queda cargada para cuando el pedido pida notas para Claude.
+      toast(pre.notes.slice(0, 160));
+    }
+    st.notes = pre.notes || "";
+    UI.crear.video = st;
+  }
+
+  function stepTo(step, say) { App.crear.advanceStep(() => { if (say) ST().trail.push(...say); ST().step = step; ST().err = ""; }); return true; }
+  function prevOf(st) {
+    if (st.step === "material") return st.format === "corto" ? "estilos" : "formato";
+    if (st.step === "estilos") return st.format === "long2short" ? "fuente" : "formato";
+    if (st.step === "fuente") return "formato";
+    return null;
+  }
+  function back() {
+    const st = ST(); if (st.step === "sending" || st.step === "sent") return false;
+    const p = prevOf(st); if (!p) return false;
+    if (st.trail.length >= 2) st.trail.splice(-2); // deshace el par {ai, me} que el paso actual empujo al llegar
+    return stepTo(p);
+  }
+  function restart() { App.crear.advanceStep(() => { UI.crear.video = fresh(); }); }
+
+  // ---------- paso: formato ----------
+  function formatoView() {
+    const body = `<div class="crear-paths v3">
+      <button class="crear-path" type="button" data-act="crvformat" data-f="corto">${icon("sparkles")}<b>${esc(FORMAT_LABEL.corto)}</b><span>Elegís estilo(s) de la Biblioteca y subís lo que hay que editar.</span></button>
+      <button class="crear-path" type="button" data-act="crvformat" data-f="long">${icon("play")}<b>${esc(FORMAT_LABEL.long)}</b><span>Un video largo (podcast u otro contenido), con B-roll opcional.</span></button>
+      <button class="crear-path" type="button" data-act="crvformat" data-f="long2short">${icon("scissors")}<b>${esc(FORMAT_LABEL.long2short)}</b><span>Subís un video largo y lo convertimos en varios cortos.</span></button>
+    </div>`;
+    return App.crear.cloud({ status: "nuevo video", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.formato)}</p>` }]), body });
+  }
+
+  // ---------- paso: estilos (compartido por "corto" y "long2short") ----------
+  function styleNeeds(id) { const it = App.lib.catalog().find((x) => x.id === id); return (it && STYLE_NEEDS[it.studioId]) || []; }
+  function neededCats() {
+    const st = ST();
+    if (st.format === "long") return { required: ["normal"], optional: ["broll"] };
+    const req = new Set(["normal"]); st.styles.forEach((id) => styleNeeds(id).forEach((n) => req.add(n)));
+    return { required: [...req], optional: ["broll", "reaccion"].filter((c) => !req.has(c)) };
+  }
+  function styleGallery() {
+    const items = App.lib.catalog().filter((i) => i.type === "estilos");
+    if (!items.length) return `<div class="empty small"><span class="orb"></span><p>Todavía no tenés estilos aprobados.</p><a class="btn sm" href="#crear/estilo">Crear un estilo nuevo</a></div>`;
+    const cur = ST().styles;
+    return `<div class="lib-grid crsty-grid">${items.map((it) => `<div class="lib-card crsty ${cur.includes(it.id) ? "on" : ""}" role="checkbox" tabindex="0" aria-checked="${cur.includes(it.id)}" data-act="crvsty" data-id="${esc(it.id)}"><div class="lib-demo">${App.demoHtml(it.demo)}</div><div class="lib-meta"><b>${esc(it.name)}</b><small>${esc(it.desc || "")}</small></div><span class="selmark">${icon("check")}</span></div>`).join("")}</div>`;
+  }
+  function styleModeHtml() {
+    if (ST().styles.length < 2) return "";
+    const m = ST().styleMode || "combinar";
+    return `<div class="tabs"><div class="seg" role="radiogroup" aria-label="Cómo combinar los estilos">
+      <button type="button" role="radio" aria-checked="${m === "combinar"}" class="${m === "combinar" ? "on" : ""}" data-act="crvmode" data-m="combinar">${icon("mix")}Combinar en un video</button>
+      <button type="button" role="radio" aria-checked="${m === "versiones"}" class="${m === "versiones" ? "on" : ""}" data-act="crvmode" data-m="versiones">${icon("layers")}Una versión por estilo</button></div></div>`;
+  }
+  function estilosView() {
+    const body = styleGallery() + styleModeHtml() + (ST().err ? `<p class="status err">${esc(ST().err)}</p>` : "");
+    return App.crear.cloud({ status: "elegí el estilo", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }]), body,
+      chips: [{ act: "crvcontinue", label: "Continuar", icon: "arrow", pri: true }] });
+  }
+
+  // ---------- paso: material (categorías de upload) ----------
+  function materialRow(cat, required) {
+    const label = ST().format === "long" && cat === "normal" ? "Video largo" : CAT_LABEL[cat] || cat;
+    return `<div class="field span2"><span class="l">${esc(label)}${required ? "" : " (opcional)"}</span>
+      <div class="atbox" id="crvatt-${cat}">${attOf(cat).chips()}<div class="atdrop sm">${attOf(cat).btn()}<span>Soltá los videos acá, pegalos o tocá el más</span></div></div></div>`;
+  }
+  function materialView() {
+    const { required, optional } = neededCats(), st = ST();
+    const body = `${required.map((c) => materialRow(c, true)).join("")}${optional.map((c) => materialRow(c, false)).join("")}
+      <div class="field span2"><label for="crvlinks">Links (opcional)</label><textarea id="crvlinks" rows="2" placeholder="Uno por línea">${esc(st.linksText)}</textarea></div>
+      <div class="field span2"><label for="crvnotes">Notas para Claude (opcional)</label><textarea id="crvnotes" rows="2" placeholder="Cualquier detalle: qué evitar, cómo debe sentirse">${esc(st.notes)}</textarea></div>
+      ${st.err ? `<p class="status err">${esc(st.err)}</p>` : ""}`;
+    return App.crear.cloud({ status: "subí el material", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(st.format === "long" ? Q.materialLong : Q.material)}</p>` }]), body,
+      chips: [{ act: "crvcontinue", label: "Enviar pedido", icon: "send", pri: true }] });
+  }
+
+  // ---------- paso: fuente (long2short) ----------
+  function fuenteView() {
+    const st = ST(), mode = st.sourceMode || "file";
+    const body = `<div class="tabs"><div class="seg" role="radiogroup" aria-label="Cómo lo traés">
+        <button type="button" role="radio" aria-checked="${mode === "file"}" class="${mode === "file" ? "on" : ""}" data-act="crvsrcmode" data-m="file">${icon("upload")}Subir archivo</button>
+        <button type="button" role="radio" aria-checked="${mode === "link"}" class="${mode === "link" ? "on" : ""}" data-act="crvsrcmode" data-m="link">${icon("link")}Pegar link</button></div></div>
+      ${mode === "file"
+        ? `<div class="atbox" id="crvsrcatt">${srcAtt().chips()}<div class="atdrop">${srcAtt().btn()}<span>Soltá el video acá, pegalo o tocá el más — puede ser largo</span></div></div>`
+        : `<div class="field"><label for="crvsrclink">Link del video</label><input id="crvsrclink" type="url" placeholder="Incluso de YouTube" value="${esc(st.sourceLink || "")}"></div>`}
+      ${st.err ? `<p class="status err">${esc(st.err)}</p>` : ""}`;
+    return App.crear.cloud({ status: "el video de origen", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.fuente)}</p>` }]), body,
+      chips: [{ act: "crvcontinue", label: "Continuar", icon: "arrow", pri: true }] });
+  }
+
+  // ---------- enviado ----------
+  function sentView() {
+    const st = ST();
+    const body = st.step === "sending" ? `<p class="hint">Enviando…</p>` : `<div class="empty small"><span class="orb"></span><p>Pedido enviado. Lo vas a ver en <a href="#estudio">Estudio</a> cuando esté listo para revisar.</p></div><button class="btn" type="button" data-act="crvrestart">Pedir otro video</button>`;
+    return App.crear.cloud({ status: st.step === "sending" ? "enviando…" : "en marcha", busy: st.step === "sending", trail: ST().trail, body });
+  }
+
+  function render() {
+    const s = ST().step;
+    if (s === "estilos") return estilosView();
+    if (s === "material") return materialView();
+    if (s === "fuente") return fuenteView();
+    if (s === "sending" || s === "sent") return sentView();
+    return formatoView();
+  }
+
+  // ---------- continuar / enviar ----------
+  function continueFrom(step) {
+    const st = ST();
+    if (step === "fuente") {
+      if ((st.sourceMode || "file") === "link") {
+        const url = String(st.sourceLink || "").trim();
+        if (!/^https?:\/\/\S+$/i.test(url)) { st.err = "Pegá un link válido."; App.render(true); return; }
+        stepTo("estilos", [{ who: "ai", html: `<p>${esc(Q.fuente)}</p>` }, { who: "me", html: "Pegué el link." }]);
+      } else {
+        if (!srcAtt().items.some((i) => i.state === "done")) { st.err = "Subí el video, o cambiá a pegar un link."; App.render(true); return; }
+        stepTo("estilos", [{ who: "ai", html: `<p>${esc(Q.fuente)}</p>` }, { who: "me", html: "Subí el video." }]);
+      }
+      return;
+    }
+    if (step === "estilos") {
+      if (!st.styles.length) { st.err = "Elegí al menos un estilo."; App.render(true); return; }
+      const names = st.styles.map((id) => (App.lib.catalog().find((i) => i.id === id) || {}).name).filter(Boolean);
+      if (st.format === "long2short") { send(); return; }
+      stepTo("material", [{ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(names.join(" + ") + ".") }]);
+      return;
+    }
+    if (step === "material") { send(); }
+  }
+  async function send() {
+    const st = ST();
+    const anyBusy = Object.values(st.att).some((a) => a.busy()) || srcAtt().busy();
+    if (anyBusy) { st.err = "Esperá a que terminen de subir los videos."; App.render(true); return; }
+    if (st.format === "corto" || st.format === "long") {
+      const { required } = neededCats(), missing = required.filter((c) => !attOf(c).items.some((i) => i.state === "done"));
+      if (missing.length) { st.err = `Falta subir: ${missing.map((c) => CAT_LABEL[c] || c).join(", ")}.`; App.render(true); return; }
+    }
+    if (st.format === "long2short" && (st.sourceMode || "file") === "file" && !srcAtt().items.some((i) => i.state === "done")) { st.err = "Subí el video."; App.render(true); return; }
+    const rollbackStep = st.format === "long2short" ? "estilos" : "material";
+    App.crear.advanceStep(() => { st.step = "sending"; });
+    const links = String(st.linksText || "").split(/\n+/).map((x) => x.trim()).filter((x) => /^https?:\/\/\S+$/i.test(x));
+    const assets = [];
+    Object.entries(st.att).forEach(([cat, a]) => a.take().forEach((f) => assets.push({ id: f.id, name: f.name, size: f.size, purpose: cat })));
+    if (st.format === "long2short" && (st.sourceMode || "file") === "file") srcAtt().take().forEach((f) => assets.push({ id: f.id, name: f.name, size: f.size, purpose: "fuente" }));
+    const styleNames = st.styles.map((id) => (App.lib.catalog().find((i) => i.id === id) || {}).name).filter(Boolean);
+    const body = {
+      brand: sel.brand().id, videoFormat: st.format, styles: st.styles, styleMode: st.styles.length > 1 ? (st.styleMode || "combinar") : "",
+      topic: styleNames.length ? "Video con " + styleNames.join(" + ") : (st.notes || "").slice(0, 120),
+      notes: st.notes || "", assets, links, sourceLink: st.format === "long2short" && (st.sourceMode || "file") === "link" ? st.sourceLink.trim() : "",
+    };
+    const res = await App.act.createRequest(body);
+    if (!res) { toast("No se pudo enviar el pedido. Prueba de nuevo."); App.crear.advanceStep(() => { st.step = rollbackStep; }); return; }
+    UI.crear.ai = {}; // el modelo elegido valia solo para este pedido; el proximo arranca en el de siempre
+    App.crear.advanceStep(() => { st.step = "sent"; });
+    toast(res.told ? "Pedido enviado. Claude ya lo sabe y empieza." : "Guardado. Claude lo lee en cuanto haya una sesión abierta.");
+  }
+
+  // ---------- eventos ----------
+  function bind(root) {
+    $$('[id^="crvatt-"]', root).forEach((dz) => attOf(dz.id.replace("crvatt-", "")).bind(dz));
+    const sdz = $("#crvsrcatt", root); if (sdz) srcAtt().bind(sdz);
+    const sl = $("#crvsrclink", root); if (sl) sl.addEventListener("input", () => { ST().sourceLink = sl.value; });
+    const lk = $("#crvlinks", root); if (lk) lk.addEventListener("input", () => { ST().linksText = lk.value; });
+    const nt = $("#crvnotes", root); if (nt) nt.addEventListener("input", () => { ST().notes = nt.value; });
+  }
+
+  App.crearVideo = { render, bind, back, arriveWith };
+  const A = App.acts;
+  A.crvformat = (el) => {
+    const f = el.dataset.f, st = ST(); st.format = f;
+    const next = f === "long" ? "material" : f === "long2short" ? "fuente" : "estilos";
+    stepTo(next, [{ who: "ai", html: `<p>${esc(Q.formato)}</p>` }, { who: "me", html: esc(FORMAT_LABEL[f] + ".") }]);
+  };
+  A.crvsty = (el) => { const id = el.dataset.id, st = ST(), i = st.styles.indexOf(id); if (i >= 0) st.styles.splice(i, 1); else st.styles.push(id); App.render(true); };
+  A.crvmode = (el) => { ST().styleMode = el.dataset.m; App.render(true); };
+  A.crvsrcmode = (el) => { ST().sourceMode = el.dataset.m; ST().err = ""; App.render(true); };
+  A.crvcontinue = () => continueFrom(ST().step);
+  A.crvrestart = () => restart();
 })();
 
 /* ===== views/biblioteca ===== */
@@ -4930,7 +5460,13 @@ Reglas:
           ${best.length ? `<div class="besth"><span class="eyebrow">Mejores horas para publicar</span><div>${best.map(([h, v]) => `<span class="chip">${App.pad(h)}:00 · ${fmt(v)} vistas</span>`).join("")}</div></div>` : ""}
           ${S.brands.length > 1 && UI.scope === "total" ? `<div class="cmp"><span class="eyebrow">Por cuenta · 7 días</span>${S.brands.map((b) => { const e = sel.evoOf(b); return `<div class="cmprow"><i class="dot" style="--c:${esc(b.color || "var(--accent)")}"></i><b>${esc(b.name)}</b><span class="num">${e ? fmt(e.views) : "–"}</span><span class="muted">${e ? (e.net >= 0 ? "+" : "") + e.net + " seg." : ""}</span></div>`; }).join("")}</div>` : ""}</section></div>`;
     },
-    update(kinds) { return !(kinds.has("metrics") || kinds.has("evolution") || kinds.has("schedule") || kinds.has("videos")); },
+    // "home" tambien dispara un nuevo bind (y por lo tanto una nueva revisión de hitos): ahi vive home/trophies, y el baseline
+    // se escribe de forma asincrona -- la primera llamada a bind() puede correr antes de que esa escritura se asiente.
+    update(kinds) { return !(kinds.has("metrics") || kinds.has("evolution") || kinds.has("schedule") || kinds.has("videos") || kinds.has("home")); },
+    // Hitos (reemplaza a la antigua pestaña "Logros", DECISIONES.md #1): sin pantalla propia. Al abrir Métricas (y al abrir la
+    // app en Hoy, ver celebrate.js) se revisa si se cruzo un numero nuevo desde la ultima vez y, si es asi, se celebra con la
+    // misma transicion morph que el resto de la plataforma -- nunca una pantalla ni un panel aparte para "ver los logros".
+    bind() { App.trophies.ensureBaseline(App.trophies.all(App.trophies.cards())); App.celebrate.check(); },
   };
   const A = App.acts;
   A.mscope = (el) => { UI.scope = el.dataset.k; App.store.set("scope", UI.scope); App.render(true); };
@@ -4938,44 +5474,6 @@ Reglas:
   A.mmetric = (el) => { UI.m.metric = el.dataset.k; App.store.set("m-metric", UI.m.metric); App.render(true); };
   A.mmore = () => { UI.m.rank += 10; App.render(true); };
   A.mrefresh = () => App.act.refreshAllMetrics();
-})();
-
-/* ===== views/logros ===== */
-/* Aura · Logros: trofeos y niveles por hitos de redes. Celebracion (medalla con rebote y destellos) al desbloquear. */
-(function () {
-  "use strict";
-  const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon, fmt } = App, T = App.trophies;
-  const scope = () => (UI.scope === "total" || !S.brands.some((b) => b.id === UI.scope) ? "total" : UI.scope);
-  function medal(c, big) {
-    const tier = c.tier >= 0 ? T.TIERS[c.tier] : null;
-    return `<span class="medal ${big ? "big" : ""} ${tier ? "" : "locked"}" style="--m:${tier ? tier[1] : "#9fb0ac"}">${icon(c.def.icon)}</span>`;
-  }
-  function trCard(c, fresh) {
-    const tier = c.tier >= 0 ? T.TIERS[c.tier] : null;
-    const dots = c.steps.map((s, i) => `<li class="${c.value >= s ? "on" : ""}" style="--tc:${T.TIERS[T.tierOf(i, c.steps.length)][1]}" title="${esc(fmt(s))} · ${T.TIERS[T.tierOf(i, c.steps.length)][0]}"></li>`).join("");
-    const next = c.next == null ? "Todos los escalones logrados" : `Próximo: ${T.TIERS[T.tierOf(c.got, c.steps.length)][0]} a ${fmt(c.next)} · faltan ${fmt(c.next - c.value)}`;
-    return `<article class="tr lg ${fresh ? "fresh" : ""}" data-fresh="${fresh ? 1 : 0}" style="--tc:${tier ? tier[1] : "#9fb0ac"}">${medal(c)}<div class="trb"><h3>${esc(c.def.name)}${tier ? `<em>${tier[0]}</em>` : ""}</h3>${c.def.sub ? `<small class="muted">${esc(c.def.sub)}</small>` : ""}<b class="num trv" data-count="${c.value}" data-compact="1">${fmt(c.value)}</b><div class="bar" style="--p:${Math.round(c.ratio * 100)}%"><i></i></div><small class="muted">${next}</small><ol class="steps5" aria-label="Escalones">${dots}</ol></div></article>`;
-  }
-  App.views.logros = {
-    title: "Logros",
-    render() {
-      const cs = T.cards(), all = T.all(cs), lv = T.level(T.totalXp(cs)), nw = T.newIds(all), nwSet = new Set(nw), sc = scope(), list = sc === "total" ? cs.total : cs.brands[sc] || [];
-      const fresh = (c) => c.ids.some((id) => nwSet.has(id)), near = all.filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 3);
-      const chips = [["total", "Total"], ...S.brands.map((b) => [b.id, b.name])].map(([k, n]) => `<button type="button" class="${k === sc ? "on" : ""}" aria-pressed="${k === sc}" data-act="mscope" data-k="${esc(k)}">${esc(n)}</button>`).join("");
-      return `<div class="vhead"><div class="t"><span class="eyebrow">Nivel ${lv.level}</span><h1 class="h-l">Tus <em>logros</em> en redes</h1><p class="muted">Cada hito de seguidores, vistas e interacciones suma experiencia. Solo redes sociales.</p></div></div>
-        <section class="lvlhero lg card"><div class="lvbadge"><b class="num" data-count="${lv.level}">${lv.level}</b><small>NIVEL</small></div><div class="lvi"><div class="lvt"><strong class="num">${fmt(lv.xp)} XP</strong><span class="muted">${fmt(lv.to - lv.xp)} XP para el nivel ${lv.level + 1}</span></div><div class="bar big" style="--p:${Math.round(Math.min(1, Math.max(0, lv.ratio)) * 100)}%"><i></i></div>
-          <div class="nextrow">${near.map((x) => `<span class="chip">${esc(x.def.name)}: faltan ${fmt(x.next - x.value)}</span>`).join("")}</div></div>
-          ${nw.length ? `<div class="newb"><b>¡Logros nuevos!</b><span>${nw.length} ${nw.length === 1 ? "nuevo" : "nuevos"} desde la última vez</span><button class="btn pri" type="button" data-act="celebrate">Verlos</button><button class="btn ghost" type="button" data-act="trseen">Ya los vi</button></div>` : ""}</section>
-        <div class="tabs"><div class="seg lg" role="tablist">${chips}</div></div>
-        <div class="trs rise">${list.map((c) => trCard(c, fresh(c))).join("")}</div>`;
-    },
-    bind(root) {
-      T.ensureBaseline(T.all(T.cards())); App.celebrate.check();
-      const fresh = $$(".tr[data-fresh='1']", root); fresh.forEach((el, i) => setTimeout(() => { const m = el.querySelector(".medal"); m.classList.add("drop"); App.morph.sparkles(m, 4); }, 400 + i * 350));
-    },
-    update() { return false; },
-  };
-  App.acts.trseen = () => { const ids = T.newIds(T.all(T.cards())); T.markSeen(ids); App.toast("¡Genial! Seguimos hacia el próximo nivel."); };
 })();
 
 /* ===== views/celebrate ===== */
@@ -4987,17 +5485,23 @@ Reglas:
   const done = new Set(), NOCEL = /[?&]nocel\b/.test(location.search); // ?nocel=1 apaga el aviso automatico (para pruebas)
   let cur = null, timer = 0, prevTone = "base";
 
+  // Reconocimiento por el trabajo + una frase motivacional, ademas del dato en si (DECISIONES.md #1: la celebracion tiene que
+  // felicitar, no solo informar). Una de cada una, elegida de forma estable por hito para que no cambie si se vuelve a pintar.
+  const PRAISE = ["¡Buen trabajo!", "¡Así se hace!", "¡Excelente!", "¡Vas muy bien!", "¡Se nota el esfuerzo!"];
+  const MOTIVATE = ["Cada pieza que aprobás suma para la próxima marca.", "Lo que sembraste ya está dando resultado.", "El trabajo constante es el que mueve estos números.", "Seguí así: lo que viene va a ser todavía mejor.", "Las redes crecen con constancia, y la tuya se nota."];
+  const pick = (arr, seed) => arr[Math.abs(String(seed).split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % arr.length];
+
   const slideItem = (it) => {
     const col = T.TIERS[it.tier][1];
     return `<div class="cel-slide" style="--m:${col}"><div class="cel-hero"><i class="cel-blob b1"></i><i class="cel-blob b2"></i><i class="cel-blob b3"></i><i class="cel-ring"></i><i class="cel-ring r2"></i><span class="medal cel-medal" style="--m:${col}">${icon(it.def.icon)}</span></div>
-      <span class="eyebrow">${it.brand ? esc(it.brand) + " · " : ""}Logro nuevo</span>
-      <h2 class="cel-t">${esc(it.def.name)}</h2>
+      <span class="eyebrow">${it.brand ? esc(it.brand) + " · " : ""}Hito nuevo</span>
+      <h2 class="cel-t">${pick(PRAISE, it.id)} Llegaste a ${esc(it.line)}.</h2>
       <span class="cel-tier"><i></i>${esc(T.TIERS[it.tier][0])}</span>
-      <p class="cel-p">Llegaste a ${esc(it.line)}.${it.extra ? ` Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino.` : ""}</p>
+      <p class="cel-p">${it.extra ? `Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino. ` : ""}${pick(MOTIVATE, it.id + "m")}</p>
       <span class="cel-xp" data-xp="${it.xp}">+${it.xp} XP</span></div>`;
   };
   const slideLevel = (lv) => `<div class="cel-slide level" style="--m:#ffcf6e"><div class="cel-hero"><i class="cel-blob b1"></i><i class="cel-blob b2"></i><i class="cel-blob b3"></i><i class="cel-ring"></i><i class="cel-ring r2"></i><div class="lvbadge cel-badge"><b class="num" data-from="${lv.from}" data-to="${lv.to}">${lv.from}</b><small>NIVEL</small></div></div>
-      <span class="eyebrow">Subiste de nivel</span><h2 class="cel-t">Ahora eres nivel ${lv.to}</h2>
+      <span class="eyebrow">Subiste de nivel</span><h2 class="cel-t">${pick(PRAISE, lv.to)} Ahora eres nivel ${lv.to}.</h2>
       <span class="cel-tier"><i></i>${fmt(lv.xp)} XP en total</span>
       <div class="bar big cel-bar" style="--p:${Math.round(Math.min(1, Math.max(0, lv.ratio)) * 100)}%"><i></i></div>
       <p class="cel-p">Faltan ${fmt(lv.left)} XP para el nivel ${lv.to + 1}. Cada hito de tus redes suma.</p></div>`;
@@ -5034,7 +5538,7 @@ Reglas:
     if (!slides.length) return false;
     const wrap = ensureWrap(), panel = $("#cel", wrap), from = $$(".orb[data-orb]").find((o) => o.offsetParent) || null;
     $("#celslides", wrap).innerHTML = slides.join(""); $("#celdots", wrap).innerHTML = slides.map(() => "<i></i>").join(""); $("#celdots", wrap).hidden = slides.length < 2;
-    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more && !data.level) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} logros más en Logros.`); }
+    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more && !data.level) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} hitos más en Métricas.`); }
     cur = { data, i: 0, wrap, panel, from, real }; if (real) done.add(data.ids.slice().sort().join("|"));
     const a = App.aura.el(); prevTone = (a && a.dataset.tone) || "base"; App.aura.tone("gold"); App.aura.mood("focus", { x: innerWidth / 2, y: innerHeight * 0.42 });
     await App.morph.open(from, wrap, panel); if (cur) go(0);
@@ -5046,12 +5550,13 @@ Reglas:
     App.aura.mood(null); App.aura.tone(prevTone);
     await App.morph.close(c.from, c.wrap, c.panel);
   }
-  // se mira al entrar a Hoy o a Logros y cuando llegan datos nuevos estando ahi; en otras pantallas el riel avisa con una marca
+  // se mira al abrir la app (Hoy es la pantalla de entrada) o al entrar a Metricas, donde viven los hitos sin pantalla propia
+  // (DECISIONES.md #1); y cuando llegan datos nuevos estando ahi. En otras pantallas el riel avisa con una marca, sin interrumpir.
   function check() {
     if (NOCEL || cur || App.studioOpen || (App.jarvis && App.jarvis.isOpen())) return;
-    const r = App.route().name; if (r !== "hoy" && r !== "logros") return;
+    const r = App.route().name; if (r !== "hoy" && r !== "metricas") return;
     const f = T.fresh(); if (!f || done.has(f.ids.slice().sort().join("|"))) return;
-    clearTimeout(timer); timer = setTimeout(() => { const n = App.route().name; if (!cur && !App.studioOpen && (n === "hoy" || n === "logros") && !(App.jarvis && App.jarvis.isOpen())) show(); }, 1100);
+    clearTimeout(timer); timer = setTimeout(() => { const n = App.route().name; if (!cur && !App.studioOpen && (n === "hoy" || n === "metricas") && !(App.jarvis && App.jarvis.isOpen())) show(); }, 1100);
   }
   // para probar la animacion (modo demostracion): usa tus logros mas altos y una subida de nivel de mentira, sin marcar nada como visto
   function sample() {
@@ -5120,7 +5625,7 @@ Reglas:
           ${row("Datos", claude ? "Conectado a la base de tu artefacto." : "Modo demostración: datos de ejemplo en memoria.", `<span class="chip ${claude ? "good" : "apricot"}">${claude ? "Claude" : "Demo"}</span>`)}
           ${row("Aviso a Claude", S.claudeState === "available" ? "Claude recibe tus aprobaciones y notas solo." : "Se guarda todo y Claude lo lee cuando abra una sesión.", `<span class="chip ${S.claudeState === "available" ? "good" : ""}">${S.claudeState === "available" ? "Conectado" : S.claudeState === "no_session" ? "Sin sesión" : "No disponible"}</span>`)}
           ${row("Metricool", S.mode === "demo" ? "Datos de ejemplo de redes." : metr ? "Métricas en vivo de tus cuentas." : "No conectado: se usan los últimos datos guardados.", `<span class="chip ${S.mode === "demo" ? "apricot" : metr ? "good" : ""}">${S.mode === "demo" ? "Demo" : metr ? "Conectado" : "Sin conexión"}</span>`)}
-          ${S.mode === "demo" ? row("Animación de logros", "Mira cómo se celebra un logro nuevo.", `<button class="btn sm" type="button" data-act="celebratetest">${icon("sparkles")}Probar</button>`) : ""}
+          ${S.mode === "demo" ? row("Animación de hitos", "Mira cómo se celebra un hito nuevo.", `<button class="btn sm" type="button" data-act="celebratetest">${icon("sparkles")}Probar</button>`) : ""}
           ${row("Modo demostración", "Usa datos de ejemplo en memoria en lugar de tu base real. Útil para probar sin riesgo.", sw("forcedemo", App.store.get("force-demo", false), "Modo demostración"))}
           ${claude && !S.videos.length ? row("Cargar datos de ejemplo", "Tu base está vacía. Carga piezas, métricas y un editor listo para recorrer la plataforma.", `<button class="btn sm pri" type="button" data-act="seeddemo">Cargar</button>`) : ""}
           ${row("Espacio de trabajo", "Cambia entre configuraciones de marca para probar la plataforma.", `<select class="mini-sel" data-change="setpreset" aria-label="Espacio">${Object.values(App.PRESETS).map((p) => `<option value="${p.id}" ${p.id === c.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>`)}
@@ -5175,21 +5680,38 @@ Reglas:
     return id;
   };
 
-  // ---------- inicio del Estudio: elegir un video ----------
+  // ---------- Estudio: listado (lo que antes era la pestaña "Aprobar") -> vista general -> editor completo. Ver DECISIONES.md #2. ----------
+  // Listado = App.listView (por aprobar / agendados / rechazados, de aprobar-list.js) para TODOS los videos de la cuenta.
+  // Click en una version -> vista general (App.reviewView, de aprobar-review.js): predictor, subtitulos, Jarvis opina, aprobar/rechazar/agendar.
+  // Desde ahi, "Abrir en editor" -> #estudio/editor/<id> abre el editor completo (ST.open, mas abajo). El editor nunca es la pantalla de entrada.
+  const GENERAL = new Set(["ver", "editor"]); // sub-rutas que muestran la vista general (App.reviewView) debajo (el editor se abre encima, superpuesto)
+  // "Probar en el Estudio" desde Biblioteca guardaba App.ui.libTry pero nada lo leia: el boton no hacia nada mas que mandar
+  // al listado general, perdiendo que estilo se queria probar (DECISIONES.md #7, bug real en Biblioteca). Ahora el listado
+  // avisa que se esta probando y donde encontrarlo en el editor (la herramienta que corresponde a su tipo).
+  const LIB_TOOL = { estilos: "Estilos", transiciones: "Transiciones", textos: "Texto", fondos: "Fondos", subtitulos: "Subtítulos", sonidos: "Sonido" };
+  function libTryBanner() {
+    const id = App.ui.libTry; if (!id) return "";
+    const it = App.lib.catalog().find((x) => x.id === id); if (!it) { App.ui.libTry = null; return ""; }
+    const tool = LIB_TOOL[it.type];
+    return `<div class="card lg" style="margin-bottom:18px"><div class="ch">${icon("sparkles")}Probando «${esc(it.name)}»<span class="sp"></span><button class="iconbtn sm ghost" type="button" data-act="libtrydismiss" aria-label="Cancelar">${icon("x")}</button></div><p class="muted">${App.say("Elegí una pieza, abrila con", "Elige una pieza, ábrela con")} «Abrir en editor»${tool ? ` ${App.say("y buscalo", "y búscalo")} en la herramienta ${tool}` : ""}.</p></div>`;
+  }
+  App.acts.libtrydismiss = () => { App.ui.libTry = null; App.render(true); };
   App.views.estudio = {
     title: "Estudio", wide: true,
-    render() {
-      const b = sel.brand(), groups = sel.groupByPiece(S.videos.filter((v) => v.brand === b.id && !v.published && !v.demo));
-      const head = `<div class="vhead"><div class="t"><span class="eyebrow">${esc(b.name)}</span><h1 class="h-l">${App.say("Elegí un video y <em>editalo</em>", "Elige un video y <em>edítalo</em>")}</h1><p class="muted">Lo que ves es exactamente lo que se exporta. Claude te ayuda con lo que pidas.</p></div></div>`;
-      if (!groups.length) return head + `<div class="empty card lg"><span class="orb"></span><h3>No hay videos para editar</h3><p>Cuando haya piezas en ${esc(b.name)} aparecen aquí.</p><a class="btn pri" href="#crear">Pedir un video</a></div>`;
-      return head + `<div class="st-home rise">${groups.map((g) => `<section class="card lg"><div class="ch"><b>${esc(g.name)}</b><span class="sp"></span><span class="faint">${g.vs.length} ${plural(g.vs.length, "versión", "versiones")}</span></div><div class="st-vrow">${g.vs.map((v) => {
-        const act = reqsOf(v.id).filter((q) => !isDone(q)).length, spec = hasSpec(v.id);
-        return `<a class="st-vc2" href="#estudio/${encodeURIComponent(v.id)}" data-go="estudio/${encodeURIComponent(v.id)}">${App.vidThumb(v, { cap: false, style: "width:100%;aspect-ratio:9/16" })}<span class="vn">v${v.version}</span>${act ? `<span class="chip apricot w">Claude · ${act}</span>` : spec ? `<span class="chip good w">Editable</span>` : ""}</a>`; }).join("")}</div></section>`).join("")}</div>`;
-    },
-    update() { return false; },
+    render(r) { if (GENERAL.has(r.args[0])) { App.ui.libTry = null; return App.reviewView.render(r); } App.reviewView.teardown(); return libTryBanner() + App.listView.render(r); },
+    bind(root, r) { return GENERAL.has(r.args[0]) ? App.reviewView.bind(root, r) : App.listView.bind(root, r); },
+    routeChanged(r) { return App.reviewView.routeChanged(r); },
+    update(kinds) { return GENERAL.has(App.route().args[0]) ? App.reviewView.update(kinds) : false; },
+    key(e) { if (GENERAL.has(App.route().args[0])) App.reviewView.key(e); },
   };
   App.studioRoute = function () {
-    const r = App.route(), id = r.name === "estudio" ? r.args[0] : null;
+    const r = App.route();
+    // La vista general (App.reviewView) tiene su propio video en loop con requestAnimationFrame: si la persona se va
+    // de "ver"/"editor" derecho a otra pantalla (un link directo, un tool de Jarvis, no el boton de volver) nunca pasa
+    // por el render() que la desmonta. App.studioRoute ya corre en cada cambio de ruta, asi que es el lugar parejo
+    // para desmontarla tambien -- si no, el tick() de esa vista sigue escribiendo sobre nodos que ya no existen.
+    if (!(r.name === "estudio" && GENERAL.has(r.args[0]))) App.reviewView.teardown();
+    const id = r.name === "estudio" && r.args[0] === "editor" ? r.args[1] : null;
     if (!id) { if (ST.SE) ST.close(true); return; }
     if (!sel.video(id)) return;
     if (!ST.SE || ST.SE.vid !== id) ST.open(id); else { E("st").hidden = false; ST.renderTop(); }
@@ -5228,6 +5750,9 @@ Reglas:
     const v = sel.video(vid); if (!v) return;
     if (!window.StudioModel || !window.gsap) {
       if ((_retries || 0) < 20) { setTimeout(() => ST.open(vid, (_retries || 0) + 1), 150); return; }
+      // Este aviso puede llegar tarde (hasta 3s de reintentos) y encontrar a la persona ya en otra pantalla: ir al
+      // listado (nunca a la vista general de este video) para no reabrir de golpe una pantalla con video en loop
+      // que ya no corresponde a donde esta parada.
       App.toast("El motor del Estudio no cargó. Revisa tu conexión y recarga."); App.go("estudio", { replace: true }); return;
     }
     if (ST.SE) teardown();
@@ -5249,8 +5774,10 @@ Reglas:
   };
   function teardown() { const SE = ST.SE; if (!SE) return; saveNow(); cancelAnimationFrame(SE.raf); try { if (SE.handle && SE.handle.destroy) SE.handle.destroy(); } catch (e) { /* ya cerrado */ } const s = E("st-stage"); if (s) s.innerHTML = ""; ST.SE = null; }
   ST.close = function (silent) {
-    if (!ST.SE) return; teardown(); const el = E("st"); if (el) el.hidden = true; App.studioOpen = false; document.body.style.overflow = ""; App.updateSendBar();
-    if (!silent) App.go("estudio");
+    if (!ST.SE) return; const vid = ST.SE.vid; teardown(); const el = E("st"); if (el) el.hidden = true; App.studioOpen = false; document.body.style.overflow = ""; App.updateSendBar();
+    // El editor nunca es la pantalla de entrada (DECISIONES.md #2): al cerrarlo se vuelve a la vista general de este
+    // mismo video, no al listado -- es la pantalla "de abajo" real, no un salto a otro lado.
+    if (!silent) App.go("estudio/ver/" + encodeURIComponent(vid));
   };
   ST.teardown = teardown;
 
@@ -5364,7 +5891,7 @@ Reglas:
     E("st-play").addEventListener("click", toggle);
     E("st-safe").addEventListener("click", () => { const SE = ST.SE; SE.safe = !SE.safe; if (SE.handle && SE.handle.setSafe) SE.handle.setSafe(SE.safe); E("st-safe").setAttribute("aria-pressed", String(SE.safe)); });
     E("st-mute").addEventListener("click", () => { const SE = ST.SE; SE.muted = !SE.muted; SE.handle.video.muted = SE.muted; E("st-mute").setAttribute("aria-pressed", String(SE.muted)); E("st-mute").innerHTML = icon(SE.muted ? "mute" : "volume"); });
-    E("st-vers").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.id === "st-addver") { ST.stylePicker("new"); return; } if (b.dataset.vid) App.go("estudio/" + encodeURIComponent(b.dataset.vid), { replace: true }); });
+    E("st-vers").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.id === "st-addver") { ST.stylePicker("new"); return; } if (b.dataset.vid) App.go("estudio/editor/" + encodeURIComponent(b.dataset.vid), { replace: true }); });
     E("st-dock").addEventListener("click", (e) => { const b = e.target.closest("[data-tool]"); if (!b || b.disabled) return; const k = b.dataset.tool; ST.SE.tool === k ? ST.closeTool() : ST.openTool(k); });
     E("st-iclose").addEventListener("click", () => ST.closeTool());
     E("st-hit").addEventListener("pointerdown", hitDown);
@@ -5503,6 +6030,7 @@ Reglas:
     if (kinds.has("studio_versions")) { if (SE.spec) ST.remoteChanged(); else if (hasSpec(SE.vid) && Date.now() - SE.openedAt > 4000) { const id = SE.vid; teardown(); ST.open(id); App.toast("Claude dejó listo el editor completo. Ya puedes editar a mano."); return true; } }
     if (kinds.has("studio_transcripts")) { ST.renderTimeline(); if (SE.tool === "transcripcion") ST.renderInspector(); }
     if (kinds.has("studio_requests") || kinds.has("studio_media_feedback")) ST.refreshPanes();
+    if (kinds.has("downloads") && SE.tool === "exportar") ST.refreshPanes(); // la capacidad downloads puede resolver despues de abrir el panel
     ST.renderTop(); return true;
   };
 })();
@@ -5764,11 +6292,13 @@ Reglas:
   function paneExportar(pane) {
     const s = SE(), v = ST.video(); if (!s.exp) s.exp = { fmt: "mp4-1080", q: "alta" }; const L = SLib(), f = L.EXPORT_FORMATOS.find((x) => x.id === s.exp.fmt) || L.EXPORT_FORMATOS[0], hasQ = (f.ext === "mp4" && !f.audio) || f.ext === "gif";
     const reqs = ST.reqsOf(s.vid).filter((r) => r.kind === "export"), subLines = transcriptLines().filter((l) => l.text), base = fileBase(v), q = s.spec ? (s.qa || window.StudioRules.check(s.spec, {})) : null;
+    // la capacidad `downloads` puede no estar declarada al publicar el artefacto (DECISIONES.md #8): si no esta, no mostramos los botones activos para que fallen sin aviso.
+    const A = App.adapter(), dlOk = !A || !A.hasDownloads || A.hasDownloads();
     pane.innerHTML = `${q && (q.errors || q.warns) ? `<div class="st-qahead" data-s="${q.errors ? "bad" : "warn"}">${icon("shield")}<div><b>Antes de exportar: ${q.errors + q.warns} ${q.errors + q.warns === 1 ? "detalle" : "detalles"}</b><small><a href="#" data-qa>Revisar y arreglar</a></small></div></div>` : ""}
       <div class="st-opts" role="radiogroup" aria-label="Formato">${L.EXPORT_FORMATOS.map((o) => `<div class="st-opt" role="radio" tabindex="0" aria-checked="${s.exp.fmt === o.id}" data-fmt="${o.id}"><i class="rd"></i><div><b>${esc(o.name)}${o.rec ? " · recomendado" : ""}</b><span>${esc(o.desc)}</span></div></div>`).join("")}</div>
       ${hasQ ? `<h3>Calidad</h3><div class="st-seg wide" role="radiogroup">${L.EXPORT_CALIDADES.map((o) => `<button type="button" data-q="${o.id}" aria-pressed="${s.exp.q === o.id}">${esc(o.name)}</button>`).join("")}</div>` : ""}
       <div class="st-acts"><button class="btn pri" id="st-exp-go" type="button">${icon("download")}Exportar con calidad</button></div><p class="st-hint">Claude lo arma desde los originales con todos tus cambios. Tarda uno o dos minutos y aparece aquí listo para bajar.</p>
-      <h3>Bajar ahora</h3><div class="st-acts" style="margin-top:0"><button class="btn sm ghost" id="st-dl-prev" type="button" ${v && v.src ? "" : "disabled"}>Último video (MP4)</button><button class="btn sm ghost" id="st-dl-srt" type="button" ${subLines.length ? "" : "disabled"}>Subtítulos (SRT)</button>${s.spec ? '<button class="btn sm ghost" id="st-dl-json" type="button">Proyecto (JSON)</button>' : ""}</div>
+      <h3>Bajar ahora</h3>${dlOk ? "" : `<p class="st-hint">Este artefacto no tiene habilitada la descarga directa. Pídele a Claude el video o los subtítulos desde "Exportar con calidad" arriba.</p>`}<div class="st-acts" style="margin-top:0"><button class="btn sm ghost" id="st-dl-prev" type="button" ${v && v.src && dlOk ? "" : "disabled"} title="${dlOk ? "" : "Descarga no disponible en este artefacto"}">Último video (MP4)</button><button class="btn sm ghost" id="st-dl-srt" type="button" ${subLines.length && dlOk ? "" : "disabled"} title="${dlOk ? "" : "Descarga no disponible en este artefacto"}">Subtítulos (SRT)</button>${s.spec ? `<button class="btn sm ghost" id="st-dl-json" type="button" ${dlOk ? "" : "disabled"} title="${dlOk ? "" : "Descarga no disponible en este artefacto"}">Proyecto (JSON)</button>` : ""}</div>
       ${reqs.length ? `<h3>Exportaciones · ${reqs.length}</h3>` : ""}<div id="st-expreqs">${reqs.map(reqHtml).join("")}</div>`;
     const qa = pane.querySelector("[data-qa]"); if (qa) qa.addEventListener("click", (e) => { e.preventDefault(); ST.openTool("calidad"); });
     const dp = E("st-dl-prev"); if (dp) dp.addEventListener("click", () => download(v.src, `${base}-ultimo-video.mp4`));
@@ -5925,9 +6455,11 @@ Reglas:
   D.seed = build;
   // filas de Metricool para el adaptador de demostracion (cuando se pide actualizar)
   D.metricRows = (brand, evo) => { const s = build(App.config.id); const m = evo ? s.evolution : s.metrics; return (m[brand.blogId] || { rows: [] }).rows; };
-  // demo: deja casi todos los logros como vistos para celebrar solo dos nuevos
+  // demo: deja casi todos los hitos como vistos para celebrar solo dos nuevos. Pisa el baseline aunque ya exista uno (p. ej.
+  // el que arma App.trophies.ensureBaseline la primera vez que Hoy o Metricas montan, que puede ganarle la carrera a este
+  // timer de 900ms y dejar todo como "visto" sin nada que celebrar) -- es solo demostracion, nunca corre contra datos reales.
   D.seedTrophies = function () {
-    if (!window.App || !App.trophies || App.S.trophyDoc) return;
+    if (!window.App || !App.trophies) return;
     const T = App.trophies, cs = T.cards(), ids = T.all(cs).flatMap((c) => c.ids); if (!ids.length) return;
     const keep = ids.filter((i) => /^total:(streak|weekFollowers|best):/.test(i)).slice(-2), at = App.stamp();
     App.S.trophyDoc = { baseline: at, level: Math.max(1, T.level(T.totalXp(cs)).level - 1), seen: Object.fromEntries(ids.filter((i) => !keep.includes(i)).map((i) => [i, at])) }; App.data.set("home", "trophies", App.S.trophyDoc); App.emit("home");
