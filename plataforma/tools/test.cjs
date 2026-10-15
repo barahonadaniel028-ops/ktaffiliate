@@ -239,6 +239,7 @@ async function open(browser, url, init, viewport, o) {
   await p.click("#st-qa"); await wait(p, 450); ok(await p.evaluate(() => !!document.querySelector("#st-ipane .st-qahead")), "revisar reglas abre el panel de calidad"); await p.click("#st-iclose"); await wait(p, 400);
   await p.click("#st-ask-btn"); await wait(p, 450);
   ok(await p.evaluate(() => !document.querySelector("#st-ipane .st-chips") && !document.querySelector("#st-ipane [data-ex]")), "el chat de Pedirle a Claude ya no trae sugerencias debajo");
+  ok(await p.evaluate(() => { const f = document.querySelector(".jv-fab"), r = f.getBoundingClientRect(), t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return getComputedStyle(f).display !== "none" && r.width > 30 && !!(t && t.closest(".jv-fab")); }), "dentro del editor el orbe de Jarvis sigue visible y se puede tocar");
   await p.fill("#st-ask-text", "Pon un iris en el fondo"); await p.click("#st-ask-go"); await wait(p, 800);
   ok(await p.evaluate(() => App.S.studioRequests.some((r) => /iris/.test(r.text) && r.status === "pedido")), "pedirle a Claude crea studio_requests con pasos por hacer");
   await p.click('[data-tool="exportar"]'); await wait(p, 450); await p.click("#st-dl-srt"); await wait(p, 500);
@@ -253,6 +254,15 @@ async function open(browser, url, init, viewport, o) {
 
   console.log("\n== Jarvis, tema y rutas ==");
   await nav(p, "#hoy", 300);
+  // abrir de nuevo con el cierre anterior a medias (y con un cambio de pantalla en el medio) NUNCA deja el panel invisible ("se abre pero luego desaparece")
+  for (let i = 0; i < 4; i++) {
+    await p.evaluate((i) => { if (App.jarvis.isOpen()) App.jarvis.close(); location.hash = "#" + ["crear", "biblioteca", "metricas", "hoy"][i]; }, i); await wait(p, i % 2 ? 900 : 300);
+    await p.evaluate(() => App.jarvis.open()); await wait(p, 2600);
+    const st = await p.evaluate(() => { const pn = document.querySelector("#jv"), cs = getComputedStyle(pn), r = pn.getBoundingClientRect(); return { op: cs.opacity, clip: cs.clipPath, w: Math.round(r.width), open: App.jarvis.isOpen() }; });
+    ok(st.open && st.op === "1" && st.clip === "none" && st.w > 300, "reabrir Jarvis con el cierre anterior a medias lo deja visible (vuelta " + (i + 1) + ")", JSON.stringify(st));
+    if (!(st.op === "1")) break;
+  }
+  await p.evaluate(() => { if (App.jarvis.isOpen()) App.jarvis.close(); }); await wait(p, 2200);
   await p.keyboard.press("Control+k"); await wait(p, 1100);
   ok(await p.evaluate(() => App.jarvis.isOpen() && document.querySelectorAll("#jvcmds button").length >= 4), "Ctrl+K abre Jarvis con comandos");
   await p.fill("#jvbox", "aprobar"); await p.keyboard.press("Enter"); await p.waitForFunction(() => App.route().name === "estudio" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);

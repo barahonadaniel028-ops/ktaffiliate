@@ -80,7 +80,7 @@
         const t = mk(s * f), sz = s * f;
         t.animate(sp.map((v, i) => { const u = i / (N - 1), off = lagMax * lag * Math.pow(v / vmax, 0.9), sc = 1.25 - 0.95 * u; return { transform: at(sz, off, ang, Math.max(0.3, sc) * (1 + 0.5 * (v / vmax)), Math.max(0.3, sc) * (1 - 0.25 * (v / vmax))), opacity: u > 0.82 ? 1 - (u - 0.82) / 0.18 : 1, offset: u }; }), { duration: ms * (0.96 - idx * 0.02), easing: "linear", fill: "forwards" });
       });
-      if (o.onLand) setTimeout(o.onLand, ms * 0.78);
+      if (o.onLand) setTimeout(() => { if (!(o.stale && o.stale())) o.onLand(); }, ms * 0.78);
       anim.finished.then(() => {
         if (!o.spread) { resolve(main); return; }
         // la quietud antes del climax: el golpe ya asento; el derrame es SU consecuencia, no algo a la vez
@@ -119,32 +119,50 @@
     panel.style.backdropFilter = "none"; panel.style.webkitBackdropFilter = "none";
     // el panel se recoge hasta un punto y se desvanece justo ahi, donde empieza la gota que lo lleva: si se quedara un punto de vidrio (como antes,
     // opacity .85 con fill forwards, que ademas gana a cualquier opacity inline) se veria una bolita blanca clavada mientras la gota ya viaja
-    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1, offset: 0 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.9, offset: 0.84 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0, offset: 1 }], { duration: ms, easing: IN, fill: "forwards" }).finished.catch(() => {}).then(() => { panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
+    const end = `circle(14px at ${x}px ${y}px)`;
+    const anim = panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1, offset: 0 }, { clipPath: end, opacity: 0.9, offset: 0.84 }, { clipPath: end, opacity: 0, offset: 1 }], { duration: ms, easing: IN });
+    // El estado final se deja en estilo inline y la animacion se cancela al terminar (antes quedaba con fill: forwards): una animacion terminada con fill
+    // puede dejar de aparecer en getAnimations() sin soltar su efecto, y entonces ningun cancel() la alcanzaba: el panel quedaba en opacity 0 con el
+    // recorte de 14 px para siempre y la siguiente apertura "se abria pero desaparecia".
+    return anim.finished.catch(() => {}).then(() => { if (anim.playState === "finished") { panel.style.clipPath = end; panel.style.opacity = "0"; } try { anim.cancel(); } catch (e) { /* ya cancelada */ } panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
   }
   const pop = (el) => { if (el && el.animate) el.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(.96)" }, { transform: "scale(1)" }], { duration: 560, easing: spring }); };
 
   // ---------- Jarvis: el orbe se vuelve panel (y vuelve a serlo). Un solo lenguaje para los tres casos. ----------
+  // Abrir, cerrar y navegar nunca se pisan: cada uno "reclama" el turno (claim) y, despues de cada espera, si otro lo reclamo mientras tanto
+  // (la persona toco el orbe otra vez con el cierre a medias) sale sin tocar nada. Antes un cierre que seguia corriendo terminaba limpiando
+  // el panel que ya se estaba abriendo: quedaba en opacity 0 con un recorte de 14 px, "se abre pero luego desaparece".
+  let jvTok = 0;
+  const claim = () => ++jvTok, live = (t) => t === jvTok;
+  // deja el panel y las orbes limpios, sin rastro de una animacion anterior (fill: forwards de wilt, orbes escondidas, gotas en el aire)
+  function resetJv(panel) {
+    panel.getAnimations().forEach((a) => { try { a.cancel(); } catch (e) { /* ya cancelada */ } });
+    panel.style.opacity = ""; panel.style.clipPath = ""; panel.style.backdropFilter = ""; panel.style.webkitBackdropFilter = "";
+    clean(); App.$$(".orb[data-orb], .jv-fab").forEach((o) => { o.style.visibility = ""; });
+  }
   async function open(fromEl, wrap, panel) {
-    lite("jv", true); wrap.classList.add("open");
+    const t = claim(); resetJv(panel); lite("jv", true); wrap.classList.remove("in", "shown"); wrap.classList.add("open");
     if (App.reduceMotion() || !fromEl) { wrap.classList.add("in", "shown"); panel.style.opacity = 1; return; }
     const a = rectOf(fromEl), pc = { x: 0, y: 0 };
     panel.style.opacity = 0; wrap.classList.add("in"); // el velo se aclara mientras la gota viaja
     const b = rectOf(panel); pc.x = b.x + b.w / 2; pc.y = b.y + Math.min(b.h * 0.42, 150);
     fromEl.style.visibility = "hidden";
     const land = { x: pc.x, y: pc.y };
-    await fly(center(a), land, { size: Math.min(a.w, a.h), endSize: Math.min(150, b.w * 0.24), spread: true, onLand: () => { panel.style.opacity = 1; wrap.classList.add("shown"); bloom(panel, land, 680); } });
-    setTimeout(clean, 480); // le da tiempo al derrame (fly con spread) a terminar de disolverse antes de limpiar la capa
+    await fly(center(a), land, { size: Math.min(a.w, a.h), endSize: Math.min(150, b.w * 0.24), spread: true, stale: () => !live(t), onLand: () => { panel.style.opacity = 1; wrap.classList.add("shown"); bloom(panel, land, 680); } });
+    if (!live(t)) return;
+    setTimeout(() => { if (live(t)) clean(); }, 480); // le da tiempo al derrame (fly con spread) a terminar de disolverse antes de limpiar la capa
     open._land = land;
   }
   async function close(fromEl, wrap, panel) {
+    const t = claim();
     const el = fromEl && fromEl.isConnected && fromEl.offsetParent !== null ? fromEl : App.$$(".orb[data-orb]").find((e) => e.offsetParent !== null);
-    if (App.reduceMotion() || !el) { wrap.classList.remove("in", "open", "shown"); panel.style.opacity = ""; if (el) el.style.visibility = ""; lite("jv", false); return; }
+    if (App.reduceMotion() || !el) { resetJv(panel); wrap.classList.remove("in", "open", "shown"); lite("jv", false); return; }
     const r = rectOf(panel), o = rectOf(el), oc = center(o), pc = { x: Math.max(r.x + 30, Math.min(r.x + r.w - 30, oc.x)), y: Math.max(r.y + 30, Math.min(r.y + r.h - 30, oc.y)) };
     wrap.classList.remove("shown");
-    await wilt(panel, pc, 340);
+    await wilt(panel, pc, 340); if (!live(t)) return;
     wrap.classList.remove("in"); panel.style.opacity = 0;
-    await fly(pc, oc, { size: 46, endSize: Math.min(o.w, o.h), ms: 560 });
-    el.style.visibility = ""; pop(el); wrap.classList.remove("open"); panel.style.opacity = ""; panel.getAnimations().forEach((x) => x.cancel()); clean(); lite("jv", false);
+    await fly(pc, oc, { size: 46, endSize: Math.min(o.w, o.h), ms: 560, stale: () => !live(t) }); if (!live(t)) return;
+    resetJv(panel); pop(el); wrap.classList.remove("open"); lite("jv", false);
   }
   // la gota viaja hasta un destino y ahi florece lo que sigue (Jarvis navegando, presentando algo, o abriendo el chat
   // en un lugar nuevo): SIEMPRE el mismo fly+derrame que open(), nunca un fundido de pantalla aparte corriendo en paralelo.
@@ -222,5 +240,5 @@
       ], { duration: 1900 + Math.random() * 1300, delay: Math.random() * 260, easing: "linear", fill: "both" }).finished.then(end, end);
     }
   }
-  App.morph = { open, close, travel, arrive, lite, fly, bloom, wilt, pop, view, sparkles, confetti, rectOf, center, spring, OUT, IN, clean };
+  App.morph = { open, close, travel, arrive, lite, claim, live, fly, bloom, wilt, pop, view, sparkles, confetti, rectOf, center, spring, OUT, IN, clean };
 })();

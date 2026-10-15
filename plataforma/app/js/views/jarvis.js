@@ -212,6 +212,7 @@ Reglas:
   function nav(hash) { if (open) { navigateFrom(hash); } else App.go(hash.replace(/^#/, "")); }
   async function navigateFrom(hash) {
     const w = wrap(), p = panel(); open = false; App.aura.mood(null);
+    const tok = App.morph.claim(); // si la persona vuelve a abrir Jarvis mientras viaja, este viaje se suelta sin pisar al nuevo
     let went = false;
     const go = () => {
       if (went) return; went = true;
@@ -225,8 +226,8 @@ Reglas:
     const r = App.morph.rectOf(p), main = $("#main").getBoundingClientRect(), from = { x: r.x + r.w / 2, y: r.y + r.h / 2 }, to = { x: main.left + Math.min(main.width, 900) / 2, y: Math.max(140, main.top + 120) };
     // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues),
     // y la misma gota se derrama para revelarla — el mismo lenguaje que abrir Jarvis, no uno aparte.
-    w.classList.remove("shown"); await App.morph.wilt(p, from, 240); w.classList.remove("in"); p.style.opacity = 0;
-    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, spread: true, onLand: go }); go();
+    w.classList.remove("shown"); await App.morph.wilt(p, from, 240); if (!App.morph.live(tok)) return; w.classList.remove("in"); p.style.opacity = 0;
+    await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, spread: true, stale: () => !App.morph.live(tok), onLand: go }); if (!App.morph.live(tok)) return; go();
     w.classList.remove("open"); p.style.opacity = ""; p.getAnimations().forEach((x) => x.cancel()); if (fromOrb()) fromOrb().style.visibility = "";
     setTimeout(App.morph.clean, 480); setTimeout(() => App.morph.lite("jv", false), 760); // el vidrio vuelve a desenfocar cuando termina de florecer la pantalla nueva
   }
@@ -244,7 +245,7 @@ Reglas:
   async function close() {
     if (!open) return; open = false; try { speechSynthesis.cancel(); } catch (e) { /* sin voz */ } if (ctl) ctl.abort(); if (rec) try { rec.stop(); } catch (e) { /* ya detenido */ }
     App.aura.mood(null); panel().classList.remove("listening");
-    await App.morph.close(from, wrap(), panel()); if (from) from.classList.remove("fast");
+    await App.morph.close(from, wrap(), panel()); if (!open && from) from.classList.remove("fast");
   }
   App.jarvis = { mount, open: openJv, close, toggle: () => (open ? close() : openJv(null)), isOpen: () => open, brief, tools };
 })();

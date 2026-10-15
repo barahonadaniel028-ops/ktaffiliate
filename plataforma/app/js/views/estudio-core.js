@@ -113,7 +113,7 @@
     if (ST.SE) teardown();
     const doc = ver(vid), spec = doc && doc.spec ? SM().clone(doc.spec) : null;
     ST.SE = { vid, spec, rev: doc ? doc.rev || 0 : 0, hist: SM().createHistory(100), sel: null, t: 0, zoom: 64, safe: false, muted: false, tool: null, trSide: "in", handle: null, dirty: false, qa: null, log: doc && doc.log ? doc.log.slice() : [], raf: 0, saveT: 0, ruleT: 0, openedAt: Date.now() };
-    const el = ensureShell(); el.hidden = false; el.classList.remove("insp-open"); App.studioOpen = true; document.body.style.overflow = "hidden"; App.updateSendBar();
+    const el = ensureShell(); el.hidden = false; el.classList.remove("insp-open"); App.studioOpen = true; document.body.classList.add("in-editor"); document.body.style.overflow = "hidden"; App.updateSendBar();
     if (!sameEditor) el.animate([{ opacity: 0, transform: "scale(1.015)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
     else { const ph = E("st-phone"); if (ph) ph.animate([{ opacity: 0.35, transform: "scale(.985)" }, { opacity: 1, transform: "none" }], { duration: 380, easing: "cubic-bezier(.16,1,.3,1)" }); }
     if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
@@ -130,7 +130,7 @@
   };
   function teardown() { const SE = ST.SE; if (!SE) return; saveNow(); cancelAnimationFrame(SE.raf); try { if (SE.handle && SE.handle.destroy) SE.handle.destroy(); } catch (e) { /* ya cerrado */ } const s = E("st-stage"); if (s) s.innerHTML = ""; ST.SE = null; }
   ST.close = function (silent) {
-    if (!ST.SE) return; const vid = ST.SE.vid; teardown(); const el = E("st"); if (el) el.hidden = true; App.studioOpen = false; document.body.style.overflow = ""; App.updateSendBar();
+    if (!ST.SE) return; const vid = ST.SE.vid; teardown(); const el = E("st"); if (el) el.hidden = true; App.studioOpen = false; document.body.classList.remove("in-editor"); document.body.style.overflow = ""; App.updateSendBar();
     // El editor nunca es la pantalla de entrada (DECISIONES.md #2): al cerrarlo se vuelve a la vista general de este
     // mismo video, no al listado -- es la pantalla "de abajo" real, no un salto a otro lado.
     if (!silent) App.go("estudio/ver/" + encodeURIComponent(vid));
