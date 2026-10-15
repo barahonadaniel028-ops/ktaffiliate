@@ -6,7 +6,7 @@ const args = process.argv.slice(2), has = (f) => args.includes(f), val = (f, d) 
 const root = path.resolve(__dirname, ".."), out = path.resolve(val("--out", path.join(root, "capturas"))), only = val("--only", "").split(",").filter(Boolean), preset = val("--preset", "kt");
 const page_ = "file://" + path.join(root, "dist", "index.local.html");
 fs.mkdirSync(out, { recursive: true });
-const ROUTES = [["hoy", "hoy"], ["aprobar", "aprobar"], ["revision", "aprobar/ver/__FIRST__"], ["agendados", "aprobar/agendados"], ["crear", "crear"], ["subir", "crear/subir"], ["biblioteca", "biblioteca"], ["laboratorio", "laboratorio"], ["ronda", "laboratorio/ronda"], ["referencia", "laboratorio/ref/r3"], ["semilla", "laboratorio/semilla/neon"], ["estilos", "laboratorio/estilos"], ["metricas", "metricas"], ["logros", "logros"], ["notas", "notas"], ["estudio", "estudio"], ["editor", "estudio/__EDIT__"], ["ajustes", "ajustes"]];
+const ROUTES = [["hoy", "hoy"], ["revision", "estudio/ver/__FIRST__"], ["agendados", "estudio/agendados"], ["crear", "crear"], ["subir", "crear/subir"], ["biblioteca", "biblioteca"], ["laboratorio", "laboratorio"], ["ronda", "laboratorio/ronda"], ["referencia", "laboratorio/ref/r3"], ["semilla", "laboratorio/semilla/neon"], ["estilos", "laboratorio/estilos"], ["metricas", "metricas"], ["logros", "logros"], ["notas", "notas"], ["estudio", "estudio"], ["editor", "estudio/editor/__EDIT__"], ["ajustes", "ajustes"]];
 (async () => {
   const exe = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
   const browser = await chromium.launch(fs.existsSync(exe) ? { executablePath: exe, args: ["--autoplay-policy=no-user-gesture-required"] } : {});

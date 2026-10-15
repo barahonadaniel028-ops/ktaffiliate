@@ -36,7 +36,7 @@ plataforma/
   app/js/views/                  una por pantalla + jarvis.js, ai.js (modelo e intensidad), attach.js (adjuntos), celebrate.js
   app/dev/                       datos de demostración y video de ejemplo
   app/assets/AstonScript.ttf     la fuente Aston Script del Portal (ya va embebida en el build)
-  tools/                         build.py, test.cjs (147 pruebas), shoot.cjs (capturas)
+  tools/                         build.py, test.cjs (148 pruebas), shoot.cjs (capturas)
   dist/artifact.html             el artefacto ya compilado (CDN de GSAP y Google Fonts), listo para publicar
   capturas/                      pantallas clave de la interfaz actual (escritorio día/noche y teléfono)
 respaldo/
@@ -88,15 +88,18 @@ Cuando Daniel dé el visto bueno: apunta la sesión de producción al artefacto 
 
 ### 4.6 Lo que Daniel pidió y falta (en este orden, dentro del clon)
 
-La versión del zip ya tiene hechos: selector de **modelo e intensidad** (Sonnet 5.5 por defecto) en Jarvis, Estudio, Laboratorio, Crear y Ajustes; **adjuntar videos y archivos** en esos chats; **Hoy** con logros y analíticas arriba y una **celebración** al ganar logros nuevos; **Laboratorio** artístico (ADN de referencias y recreación en vivo); morph líquido consistente; orbe flotante; Estudio que no se traba; simulador completo. Pendiente, según `DECISIONES.md` y los últimos mensajes de Daniel:
+La versión del zip ya tiene hechos: selector de **modelo e intensidad** (Sonnet 5.5 por defecto) en Jarvis, Estudio, Laboratorio, Crear y Ajustes; **adjuntar videos y archivos** en esos chats; **Hoy** con logros y analíticas arriba y una **celebración** al ganar logros nuevos; **Laboratorio** artístico (ADN de referencias y recreación en vivo); morph líquido consistente; orbe flotante; Estudio que no se traba; simulador completo. Además, la otra computadora de Daniel ya resolvió y **no hay que rehacer**:
 
-1. **Descargas** (Exportar, SRT, JSON): declarar la capacidad `downloads` en el artefacto publicado y comprobarla de verdad.
-2. **Logros**: sin pestaña propia ni niveles/XP para visitar (ver `DECISIONES.md` §1). Hoy muestra analíticas y hitos al entrar, y al cruzar un hito aparece la celebración con confeti, felicitación y frase motivacional, con el mismo morph. El código del zip todavía conserva la pantalla Logros y la celebración con medallas: adáptalo a esto.
-3. **Aprobar dentro de Estudio** (`DECISIONES.md` §2): listado → vista general (la revisión actual) → "Abrir en editor". Los antiguos `#aprobar/...` deben redirigir.
-4. **Selector de cuentas** con menú propio, no el `<select>` del navegador (§6).
-5. **Predictor**: solo el círculo del puntaje; debajo "¿Por qué este score?" con categorías simples (iluminación, claridad del mensaje, hook, subtítulos, estructura). **No tocar la fórmula**, solo cómo se muestra (§9).
-6. **Biblioteca**: revisar los bugs que Daniel reportó sin detalle (§7); si no son evidentes en el código, pídele capturas.
-7. **Crear conversacional** sobre la nube de Jarvis (§10): reemplaza el formulario de Crear completo; conserva el selector de modelo por pedido (Sonnet 5.5 por defecto).
+- **Aprobar dentro de Estudio** (`DECISIONES.md` §2): ya no hay "Aprobar" en el menú. Rutas: `#estudio` (listado: por aprobar / agendados / rechazados), `#estudio/ver/<id>` (vista general: la revisión), `#estudio/editor/<id>` (editor). Un `#aprobar...` viejo entra a `#estudio...`.
+- **Selector de cuentas** con menú propio, con el mismo vidrio que el selector de modelo (§6).
+- **Predictor** simplificado: solo el círculo del puntaje y "¿Por qué este score?" cerrado, con 1 a 3 categorías; la fórmula no se tocó (§9).
+- **Descargas** (Exportar, SRT, JSON): el código ya usa la capacidad `downloads`. Lo que falta es **declararla al publicar** (`downloads: true`) y comprobar de verdad que Exportar y SRT guardan el archivo; sin esa declaración no hacen nada.
+
+Lo que **sigue pendiente**, en este orden y dentro del clon:
+
+1. **Logros**: sin pestaña propia ni niveles/XP para visitar (`DECISIONES.md` §1; Daniel además pidió que **Hoy** muestre logros y analíticas apenas se entra). Hoy muestra analíticas y hitos al entrar, y al cruzar un hito aparece la celebración con el mismo morph (confeti, felicitación y frase motivacional). El código del zip todavía conserva la pantalla Logros en el menú y la celebración con medallas: adáptalo a esto.
+2. **Biblioteca**: revisar los bugs que Daniel reportó sin detalle (§7); si no son evidentes en el código, pídele capturas.
+3. **Crear conversacional** sobre la nube de Jarvis (§10): reemplaza el formulario de Crear completo; conserva el selector de modelo por pedido (Sonnet 5.5 por defecto).
 
 ### 4.7 Volver atrás
 
@@ -108,7 +111,7 @@ La versión del zip ya tiene hechos: selector de **modelo e intensidad** (Sonnet
 | Área | Qué debe hacer igual |
 |---|---|
 | **Hoy** | Frase del día (días de contenido, "con N aprobados hoy llegas a…"); pendientes de Daniel (`home/todo`, "Hecho" escribe `home/done`); por aprobar; pedidos en curso con pasos; redes 7 días; contenido asegurado por cuenta |
-| **Aprobar** | Por aprobar / Agendados / Rechazados; piezas con versiones v1–v4 y puntaje; elegir varias y aprobar/rechazar en lote con **Deshacer**; revisión: notas por segundo, zona segura, estilos por palabra en subtítulos (a todas las versiones), etiquetas de problema, predictor, atajos A/Q/R, siguiente/anterior |
+| **Estudio (antes Aprobar)** | `#estudio`: Por aprobar / Agendados / Rechazados; piezas con versiones v1–v4 y puntaje; elegir varias y aprobar/rechazar en lote con **Deshacer**; revisión: notas por segundo, zona segura, estilos por palabra en subtítulos (a todas las versiones), etiquetas de problema, predictor, atajos A/Q/R, siguiente/anterior; de la vista general se pasa al editor con "Abrir en editor" |
 | **Aprobar = agendar** | `videos/<id>` pasa a `approved` + `decidedAt`; se reescribe `requests/schedule_<cuenta>` completo (`schedule[]` y `remove[]`); un solo aviso; rechazar un agendado queda "por quitar" |
 | **Notas / Enviar cambios** | Bandeja de lo no enviado con Deshacer por elemento; **Enviar cambios** escribe un solo `requests/changes_<ts>`, marca todo enviado y avisa una vez |
 | **Crear** | Pedir con Claude y Subir videos; formatos, versiones, música, estilo, fecha; intros y teachers libres (`system/status`); subida con progreso (19 MB máx.) y links; cola de pedidos con pasos y cancelar |
@@ -123,7 +126,7 @@ La versión del zip ya tiene hechos: selector de **modelo e intensidad** (Sonnet
 
 ## 6. Lo que NUNCA se probó contra lo real
 
-Todo se verificó contra el **simulador** y la **demostración** (147 pruebas, `tools/test.cjs`), no contra tu base, tu Metricool ni tus sesiones de Claude. Sin comprobar contra lo real: la forma exacta de cada documento que escribe el Portal, el comportamiento de `comments.sendToClaude`, las respuestas reales de Metricool, el rendimiento fluido en un teléfono real (en el sandbox solo hay render por software), los permisos reales de `assets`/`downloads` y que `sample` acepte `model`/`effort`/imágenes en tu cuenta (si no puede usar el modelo pedido, responde el nivel equivalente y Jarvis lo avisa).
+Todo se verificó contra el **simulador** y la **demostración** (148 pruebas, `tools/test.cjs`), no contra tu base, tu Metricool ni tus sesiones de Claude. Sin comprobar contra lo real: la forma exacta de cada documento que escribe el Portal, el comportamiento de `comments.sendToClaude`, las respuestas reales de Metricool, el rendimiento fluido en un teléfono real (en el sandbox solo hay render por software), los permisos reales de `assets`/`downloads` y que `sample` acepte `model`/`effort`/imágenes en tu cuenta (si no puede usar el modelo pedido, responde el nivel equivalente y Jarvis lo avisa).
 
 ## 7. Cómo construir y probar
 
@@ -131,7 +134,7 @@ Todo se verificó contra el **simulador** y la **demostración** (147 pruebas, `
 python3 plataforma/tools/build.py                        # -> dist/artifact.html (CDN) y dist/index.html
 python3 plataforma/tools/build.py --local <vendor>       # sin internet (fuentes y GSAP locales) -> dist/index.local.html
 cd plataforma && npm install                             # playwright-core para las pruebas
-NODE_PATH=$(npm root -g) node tools/test.cjs             # 147 pruebas (necesita Chromium)
+NODE_PATH=$(npm root -g) node tools/test.cjs             # 148 pruebas (necesita Chromium)
 node tools/shoot.cjs --all --out capturas/_tmp           # capturas de todas las pantallas
 ```
 `?demo=1` abre la plataforma con datos de ejemplo; `?preset=lumen` cambia de espacio; `?nocel=1` apaga el aviso automático de logros (para pruebas).
