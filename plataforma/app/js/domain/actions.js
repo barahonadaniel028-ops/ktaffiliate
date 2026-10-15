@@ -141,6 +141,21 @@
     const told = await D.tell(`RECREAR UN ESTILO DESDE EL LABORATORIO: «${recipe.name}» (requests/${id}). La receta (letra, acento, ritmo, entrada, transición, fondo) está en requests/${id}.recipe${ref ? `; la referencia y su ADN en refs/${ref.id}` : ""}.${note ? ` Nota: "${String(note).slice(0, 400)}".` : ""}${assetsNote(as)} ${App.ai.tellNote(m)} Arma el estilo completo para el Estudio y déjalo en exp_styles con status "prueba".`);
     return { id, told };
   };
+  // una idea escrita (sin archivo ni link) como referencia: mismo kind que Laboratorio, con "idea" nuevo (ver CONTRATO-DE-DATOS.md)
+  A.addRefIdea = (text, note) => D.add("refs", { kind: "idea", url: "", assetId: "", name: String(text || "").trim().slice(0, 60), note: (note || String(text || "")).trim().slice(0, 1500), status: "nueva", sent: false, by: S.userId, created: App.stamp() });
+  // una referencia recien guardada se envia de una (Crear: "nuevo estilo" no la deja en el cajon de Notas)
+  A.sendRefNow = async (id) => D.write("refs", id, { sent: true, status: "enviada", sentAt: App.stamp() });
+
+  // ---------- Crear: estilo nuevo a partir de referencias sin analizar (distinto de askRecreate: ahi no hay
+  // todavia una receta de Laboratorio armada, solo material crudo + lo que le gusto a la persona). Termina
+  // igual en exp_styles con status "prueba", dentro de Laboratorio. ----------
+  A.createStyleRequest = async (o) => {
+    o = o || {}; const id = "style_" + Date.now(), m = App.ai.stamp("draft");
+    const body = { kind: "new_style", at: App.stamp(), by: S.userId, status: "pedido", steps: [], refs: o.refIds || [], notes: String(o.notes || "").trim(), model: m.model, effort: m.effort };
+    if (!(await D.set("requests", id, body))) return null;
+    const told = await D.tell(`PEDIDO DE ESTILO NUEVO de ${App.config.owner}: a partir de ${(o.refIds || []).length} referencias ya guardadas en refs/ (requests/${id}). Lee cada referencia (video, link o idea) y su campo "note" (qué le gustó a la persona de eso). Arma un estilo nuevo en exp_styles con status "prueba" y su demo, probándolo con algún video ya subido entre esas referencias. ${App.ai.tellNote(m)} Cuando esté listo para que la persona lo prueba en el Laboratorio, escribe status:"listo" en requests/${id} con un "reply" corto. Sin que te lo repita.`);
+    return { id, told };
+  };
   // ---------- Laboratorio ----------
   A.setVerdict = (c, verdict) => D.write("exp_cards", c.id, { verdict, dirty: true });
   A.setCardNote = (c, note) => D.write("exp_cards", c.id, { note, dirty: true });

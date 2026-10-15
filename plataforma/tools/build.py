@@ -27,7 +27,7 @@ CSS = ["tokens", "base", "shell", "v-ai", "v-hoy", "v-aprobar", "v-crear", "v-bi
 JS = ["core/util", "core/config", "core/state", "core/adapters/util", "core/adapters/claude", "core/adapters/demo", "core/theme", "core/router", "core/motion",
       "engine/studio-engine", "engine/dna", "engine/pred-data", "engine/pred",
       "domain/select", "domain/actions", "domain/library", "domain/trophies",
-      "views/shell", "views/ai", "views/attach", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/biblioteca",
+      "views/shell", "views/ai", "views/attach", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/crear-estilo", "views/crear-video", "views/biblioteca",
       "views/laboratorio", "views/metricas", "views/logros", "views/celebrate", "views/notas-ajustes", "views/estudio-core", "views/estudio-panels",
       "dev/fixtures", "dev/demo-video", "boot"]
 
