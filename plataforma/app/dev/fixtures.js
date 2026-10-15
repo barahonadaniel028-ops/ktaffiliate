@@ -125,7 +125,7 @@
   D.seedTrophies = function () {
     if (!window.App || !App.trophies) return;
     const T = App.trophies, cs = T.cards(), ids = T.all(cs).flatMap((c) => c.ids); if (!ids.length) return;
-    const keep = ids.filter((i) => /^total:(streak|weekFollowers|best):/.test(i)).slice(-2), at = App.stamp();
+    const keep = ["likes", "saved", "streak"].map((k) => ids.filter((i) => i.indexOf("total:" + k + ":") === 0).slice(-1)[0]).filter(Boolean), at = App.stamp(); // un hito nuevo por tarjeta: likes, guardados y racha
     App.S.trophyDoc = { baseline: at, level: Math.max(1, T.level(T.totalXp(cs)).level - 1), seen: Object.fromEntries(ids.filter((i) => !keep.includes(i)).map((i) => [i, at])) }; App.data.set("home", "trophies", App.S.trophyDoc); App.emit("home");
   };
 })();

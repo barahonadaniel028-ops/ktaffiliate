@@ -84,10 +84,13 @@ body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: o
 /* Jarvis: el orbe se estira y se vuelve este panel */
 #morph { position: fixed; inset: 0; z-index: 450; pointer-events: none; }
 #morph .drop { position: fixed; border-radius: 50%; will-change: transform, border-radius, width, height, left, top; }
-#morph .gooed { position: absolute; inset: 0; filter: url(#goo); }
+#morph .gooed { position: absolute; inset: 0; filter: url(#goo); will-change: transform; }
 .jv-wrap { position: fixed; inset: 0; z-index: 420; display: none; }
 .jv-wrap.open { display: block; }
-.jv-wrap .veil { position: absolute; inset: 0; background: var(--veil); backdrop-filter: blur(16px) saturate(1.25); -webkit-backdrop-filter: blur(16px) saturate(1.25); opacity: 0; transition: opacity .45s var(--ease); }
+/* el velo NO desenfoca el fondo (medido: un backdrop-filter bajo un panel con un orbe que respira vuelve a calcular el desenfoque en cada cuadro, y
+   pasa de 60 a ~12 cuadros por segundo). Se tapa con dos capas del mismo tinte: el fondo queda calmado y el panel manda. */
+.jv-wrap .veil { position: absolute; inset: 0; background: linear-gradient(var(--veil), var(--veil)), var(--veil); opacity: 0; transition: opacity .45s var(--ease); }
+#aura-root.mo *, #aura-root.mo *::before, #aura-root.mo *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } /* modo liviano, ver motion.js */
 .jv-wrap.in .veil { opacity: 1; }
 .jv { position: absolute; left: 50%; top: 11vh; width: min(720px, calc(100vw - 32px)); max-height: 78vh; border-radius: 40px; padding: 0; display: flex; flex-direction: column; overflow: hidden; opacity: 0; transform: translateX(-50%); box-shadow: inset 0 1px 0 var(--edge), 0 60px 120px -40px var(--shadow), 0 0 0 1px var(--edge2); }
 .jv .inner { display: flex; flex-direction: column; min-height: 0; flex: 1; }

@@ -3,33 +3,60 @@
   "use strict";
   const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon, plural } = App;
 
-  // ---------- Notas ----------
-  const SCOPE_ICON = { VIDEO: "film", PIEZA: "layers", CUENTA: "users", GENERAL: "note", ELEGIDOS: "check", ESTILO: "sparkles" };
-  function noteRow(n, kind) {
-    return `<li class="nrow"><span class="chip">${esc(App.act.noteScope(n))}</span><div><b>${esc(App.act.noteTitle(n))}</b><p>${esc(n.text)}</p><small class="faint">${n.created ? App.ago(n.created) : ""}${(n.tags || []).length ? " · " + esc(n.tags.join(", ")) : ""}</small></div>
-      ${kind === "unsent" ? `<button class="btn sm ghost" type="button" data-act="notedel" data-id="${esc(n.id)}">Quitar</button>` : kind === "sent" ? `<span class="chip">Enviada${n.reply ? "" : ""}</span>` : `<button class="btn sm ghost" type="button" data-act="notereopen" data-id="${esc(n.id)}">Reabrir</button>`}${n.reply ? `<p class="reply">Claude: ${esc(n.reply)}</p>` : ""}</li>`;
+  // ---------- Notas: "¿Cómo puedo mejorar tu experiencia aquí?" (DECISIONES.md #12) ----------
+  // Ya no es una lista de borradores: es una nube flotante (la misma materia que Jarvis, nunca un circulo perfecto) con una sola pregunta y un
+  // espacio para escribir. Cada mensaje se manda a Claude en el acto (App.act.sendExperience) y la nube responde "Recibido. ¿Hay algo más?"
+  // hasta que la persona dice que no hay nada mas ("Eso es todo", o escribir "no"/"nada"): ahi dice "Muchas gracias, haremos lo mejor...".
+  // Los cambios sin enviar (videos, referencias, subtitulos) se ven y se mandan desde la barra de abajo, que ahora tambien esta aqui.
+  UI.notas = UI.notas || { step: "ask", n: 0 };
+  const SAY = { ask: "¿Cómo puedo mejorar tu experiencia aquí?", more: "<b>Recibido.</b> ¿Hay algo más?", thanks: "Muchas gracias, haremos lo mejor por mejorar tu experiencia." };
+  const END = /^\s*(no|nada|nada m[aá]s|eso es todo|es todo|ya|listo|ninguno|no,? gracias|no,? nada)[\s.!¡]*$/i;
+  let ntIn = false;
+  const ntSpring = "cubic-bezier(.16,1,.3,1)";
+  function ntSay(step, instant) {
+    const el = $("#ntsay"), nt = $(".nt"); if (!el || !nt) return;
+    nt.dataset.step = step; UI.notas.step = step;
+    const apply = () => { el.innerHTML = `<span>${SAY[step]}</span>`; if (!App.reduceMotion() && el.firstElementChild.animate) el.firstElementChild.animate([{ opacity: 0, transform: "translateY(14px)", filter: "blur(10px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], { duration: 700, easing: ntSpring, fill: "backwards" }); };
+    const cur = el.firstElementChild;
+    if (instant || App.reduceMotion() || !cur || !cur.animate) { apply(); return; }
+    cur.animate([{ opacity: 1, filter: "blur(0)" }, { opacity: 0, transform: "translateY(-10px)", filter: "blur(8px)" }], { duration: 220, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).finished.then(apply, apply);
   }
+  // al recibir algo la nube se "traga" el mensaje: se aprieta y se asienta como una gota (solo transform, sobre el cuerpo; el contorno sigue su propio vaiven)
+  function ntPulse() { const c = $("#ntcloud"); if (c && !App.reduceMotion() && c.animate) c.animate([{ transform: "scale(1)" }, { transform: "scale(1.045, .965)" }, { transform: "scale(.99, 1.015)" }, { transform: "scale(1)" }], { duration: 900, easing: ntSpring }); }
+  function ntGather() { const c = $("#ntcloud"); if (!c) return; const r = c.getBoundingClientRect(); App.aura.mood("focus", { x: r.x + r.width / 2, y: r.y + r.height / 2 }); }
+  async function ntSend(text) {
+    const form = $("#ntform"), ta = $("#ntbox"), btn = form && $("button", form); if (!ta) return;
+    if (!text) { ta.focus(); if (ta.animate && !App.reduceMotion()) form.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 320, easing: "ease-out" }); return; }
+    if (END.test(text)) { ntFinish(); return; }
+    ta.disabled = true; if (btn) btn.disabled = true;
+    const ok = await App.act.sendExperience(text);
+    ta.disabled = false; if (btn) btn.disabled = false;
+    if (!ok) { App.toast("No se pudo enviar. Prueba de nuevo."); ta.focus(); return; }
+    UI.notas.n++; ta.value = ""; ntPulse(); ntSay("more"); ta.focus();
+  }
+  function ntFinish() { ntPulse(); ntSay("thanks"); const c = $("#ntcloud"); if (c) App.morph.sparkles(c, 8); const ta = $("#ntbox"); if (ta) ta.value = ""; }
   App.views.notas = {
     title: "Notas",
     render() {
-      const items = App.act.pendingItems(), n = items.length, sent = S.notes.filter((x) => x.sent === true && !sel.closedNote(x)).sort((a, b) => String(b.created || "").localeCompare(String(a.created || ""))), done = S.notes.filter(sel.closedNote).slice(0, 12);
-      const tagOpts = [["general", "Todo el espacio"], ...S.brands.map((b) => ["brand:" + b.id, b.name])];
-      return `<div class="vhead"><div class="t"><span class="eyebrow">Para Claude</span><h1 class="h-l">${n ? `<em>${n} ${plural(n, "cambio", "cambios")}</em> sin enviar` : "Todo <em>enviado</em>"}</h1><p class="muted">Lo que escribes en videos, subtítulos, Laboratorio y referencias se junta aquí. Se envía todo junto, una sola vez.</p></div><div class="r">${n ? `<button class="btn pri lg2" type="button" data-act="sendall">Enviar cambios<b>${n}</b></button>` : ""}</div></div>
-        <div class="grid cols2 notasg"><section class="card lg"><div class="ch">${icon("send")}Sin enviar<span class="sp"></span>${n ? `<button class="lnk" type="button" data-act="sundoall">Descartar todo</button>` : ""}</div>
-          ${n ? `<ul class="plist">${items.map((it, i) => `<li class="pit"><div><span class="eyebrow">${esc(it.kind)}</span><p>${esc(it.label)}</p></div><button class="btn sm ghost" type="button" data-act="sundo" data-i="${i}">Quitar</button></li>`).join("")}</ul>` : `<div class="empty small"><span class="orb"></span><p>No hay nada pendiente de enviar.</p></div>`}</section>
-          <section class="card lg"><div class="ch">${icon("note")}Nota rápida</div><form class="field" id="quicknote"><label class="sr" for="qn">Nota</label><textarea id="qn" rows="4" maxlength="2000" placeholder="${esc(App.say("Qué querés que cambie o mejore. Queda como borrador hasta Enviar cambios.", "Qué quieres que cambie o mejore. Queda como borrador hasta Enviar cambios."))}"></textarea>
-            <div class="row"><select id="qnscope" aria-label="Aplica a">${tagOpts.map(([k, t]) => `<option value="${esc(k)}">${esc(t)}</option>`).join("")}</select><button class="btn pri" type="submit">Guardar nota</button></div></form></section></div>
-        <section class="card lg" style="margin-top:16px"><div class="ch">${icon("clock")}Enviadas, esperando a Claude<span class="sp"></span><span class="faint">${sent.length}</span></div>${sent.length ? `<ul class="nrows">${sent.map((x) => noteRow(x, "sent")).join("")}</ul>` : `<p class="muted">Nada esperando respuesta.</p>`}</section>
-        ${done.length ? `<section class="card lg" style="margin-top:16px"><div class="ch">${icon("check")}Resueltas</div><ul class="nrows">${done.map((x) => noteRow(x, "done")).join("")}</ul></section>` : ""}`;
+      const st = UI.notas.step;
+      return `<div class="nt" data-step="${st}"><div class="nt-float"><div class="nt-cloud" id="ntcloud" role="group" aria-label="Cuéntame cómo mejorar tu experiencia"><span class="crliq" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div class="nt-in"><span class="orb nt-orb" aria-hidden="true"></span><p class="nt-say" id="ntsay" aria-live="polite"><span>${SAY[st]}</span></p>
+          <form class="rvcomp nt-form" id="ntform"><textarea id="ntbox" rows="2" maxlength="2000" placeholder="Escribe aquí" aria-label="Tu idea o comentario"></textarea><button class="rvsend" type="submit" aria-label="Enviar">${icon("arrow")}</button></form>
+          <button class="nt-end" type="button" data-act="ntend">Eso es todo</button><button class="nt-again" type="button" data-act="ntagain">Escribir otra idea</button></div></div></div></div>`;
     },
     bind(root) {
-      const f = $("#quicknote", root); if (!f) return;
-      f.addEventListener("submit", async (e) => { e.preventDefault(); const t = $("#qn").value.trim(); if (!t) return; const v = $("#qnscope").value, ctx = v === "general" ? { scope: "general", title: "Todo el espacio" } : { scope: "brand", brand: v.split(":")[1], title: "Toda la cuenta" }; const id = await App.act.createFeedback(ctx, t, []); App.toast(id ? "Nota guardada. Se envía con Enviar cambios." : "No se pudo guardar. Prueba de nuevo."); $("#qn").value = ""; });
+      const f = $("#ntform", root), ta = $("#ntbox", root), c = $("#ntcloud", root); if (!f || !c) return;
+      if (!ntIn) { ntIn = true; App.morph.arrive(c); }
+      ntGather();
+      f.addEventListener("submit", (e) => { e.preventDefault(); ntSend(ta.value.trim()); });
+      ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); ntSend(ta.value.trim()); } });
+      if (UI.notas.step !== "thanks" && !App._morphNav) setTimeout(() => { if (document.contains(ta)) ta.focus({ preventScroll: true }); }, 900);
     },
-    update(kinds) { const a = document.activeElement; return !!(a && a.id === "qn"); },
+    update() { return true; }, // nada de aqui depende de los datos: no se repinta (y no se pierde lo que se esta escribiendo)
   };
-  App.acts.notedel = (el) => { const n = S.notes.find((x) => x.id === el.dataset.id); if (n) App.act.removeNote(n); };
-  App.acts.notereopen = (el) => { const n = S.notes.find((x) => x.id === el.dataset.id); if (n) App.act.patchNote(n, { status: "open", sent: false }); };
+  App.acts.ntend = () => ntFinish();
+  App.acts.ntagain = () => { ntSay("ask"); const ta = $("#ntbox"); if (ta) ta.focus(); };
+  App.on((ks) => { if (!ks.has("route") || App.route().name === "notas") return; ntIn = false; UI.notas = { step: "ask", n: 0 }; if (!(App.jarvis && App.jarvis.isOpen()) && !(App.celebrate && App.celebrate.isOpen()) && App.route().name !== "crear") App.aura.mood(null); });
 
   // ---------- Ajustes ----------
   const row = (title, sub, ctl) => `<div class="srow"><div><b>${title}</b>${sub ? `<small class="muted">${sub}</small>` : ""}</div>${ctl}</div>`;
@@ -42,8 +69,7 @@
       return `<div class="vhead"><div class="t"><span class="eyebrow">${esc(c.name)}</span><h1 class="h-l">Ajustes</h1><p class="muted">Tu espacio de trabajo, el aspecto y la conexión con Claude.</p></div></div>
         <div class="grid cols2 setg"><section class="card lg"><div class="ch">${icon("sun")}Aspecto</div>
           ${row("Tema", "Auto sigue a tu dispositivo.", `<div class="seg" role="radiogroup">${[["auto", "Auto"], ["day", "Día"], ["night", "Noche"]].map(([k, n]) => `<button type="button" role="radio" aria-checked="${tm === k}" class="${tm === k ? "on" : ""}" aria-pressed="${tm === k}" data-act="settheme" data-k="${k}">${n}</button>`).join("")}</div>`)}
-          ${row("Zona segura de Instagram", "Muestra por defecto el recuadro seguro al revisar videos.", sw("setsafe", App.store.get("safe", false), "Zona segura"))}
-          ${row("Subtítulos en todas las versiones", "Un cambio de palabras se aplica a toda la pieza.", sw("setcapall", App.store.get("cap-all", true) !== false, "Aplicar a todas"))}</section>
+          ${row("Zona segura de Instagram", "Muestra por defecto el recuadro seguro al revisar videos.", sw("setsafe", App.store.get("safe", false), "Zona segura"))}</section>
         <section class="card lg"><div class="ch">${icon("sparkles")}Jarvis</div>
           ${row("Modelo e intensidad", "El de siempre para Jarvis, el Estudio, el Laboratorio y los videos nuevos.", App.ai.pillHtml("global"))}
           ${row("Respuestas en voz", "Jarvis lee en voz alta sus respuestas.", sw("setvoice", App.store.get("jv-voice", true) !== false, "Voz"))}
@@ -59,14 +85,13 @@
           ${claude && !S.videos.length ? row("Cargar datos de ejemplo", "Tu base está vacía. Carga piezas, métricas y un editor listo para recorrer la plataforma.", `<button class="btn sm pri" type="button" data-act="seeddemo">Cargar</button>`) : ""}
           ${row("Espacio de trabajo", "Cambia entre configuraciones de marca para probar la plataforma.", `<select class="mini-sel" data-change="setpreset" aria-label="Espacio">${Object.values(App.PRESETS).map((p) => `<option value="${p.id}" ${p.id === c.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>`)}
           ${row("Exportar datos", "Descarga un respaldo de lo que ves (JSON).", `<button class="btn sm" type="button" data-act="setexport">${icon("download")}Exportar</button>`)}</section>
-        <section class="card lg span2"><div class="ch">${icon("keyboard")}Atajos</div><div class="keys">${[["⌘ K", "Jarvis"], ["A", "Aprobar"], ["Q", "Quizás"], ["R", "Rechazar"], ["← →", "Cambiar de versión"], ["Espacio", "Pausa"], ["N", "Nota en el cuadro"], ["Esc", "Volver"]].map(([k, t]) => `<span><kbd class="kb">${k}</kbd>${t}</span>`).join("")}</div></section></div>`;
+        <section class="card lg span2"><div class="ch">${icon("keyboard")}Atajos</div><div class="keys">${[["⌘ K", "Jarvis"], ["A", "Aprobar"], ["Q", "Quizás"], ["R", "Rechazar"], ["← →", "Cambiar de versión"], ["Espacio", "Pausa"], ["Esc", "Volver"]].map(([k, t]) => `<span><kbd class="kb">${k}</kbd>${t}</span>`).join("")}</div></section></div>`;
     },
     bind(root) { const f = $("#addacc", root); if (f) f.addEventListener("submit", async (e) => { e.preventDefault(); const name = $("#aan").value.trim(); if (!name) return; const id = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); const ok = await App.data.set("brands", id, { name, handle: $("#aah").value.trim(), blogId: $("#aab").value.trim(), color: "#0f6b6c", order: S.brands.length + 1, lang: "es", network: "instagram" }); App.toast(ok ? "Cuenta agregada." : "No se pudo agregar."); }); },
   };
   const A = App.acts;
   A.settheme = (el, e) => App.theme.set(el.dataset.k, e).then(() => App.render(true));
   A.setsafe = (el) => { const on = el.getAttribute("aria-checked") !== "true"; App.store.set("safe", on); el.setAttribute("aria-checked", on); };
-  A.setcapall = (el) => { const on = el.getAttribute("aria-checked") !== "true"; App.store.set("cap-all", on); el.setAttribute("aria-checked", on); };
   A.setvoice = (el) => { const on = el.getAttribute("aria-checked") !== "true"; App.store.set("jv-voice", on); el.setAttribute("aria-checked", on); };
   A.setpreset = (el) => App.setPreset(el.value);
   A.setexport = async () => { const data = { exported: App.stamp(), space: App.config.id, brands: S.brands, videos: S.videos, notes: S.notes, requests: S.requests, refs: S.refs, styles: S.expStyles }; const ok = await App.adapter().download(`aura-${App.config.id}-${App.dayKey(new Date())}.json`, JSON.stringify(data, null, 2)); App.toast(ok ? "Respaldo listo." : "No se pudo descargar."); };

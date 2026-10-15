@@ -124,6 +124,14 @@
     const told = await D.tell(`PEDIDO DESDE JARVIS: ${text} (requests/${id}).${assetsNote(as)} ${App.ai.tellNote(m)}`);
     return { id, told };
   };
+  // Notas (pantalla "¿Cómo puedo mejorar tu experiencia aquí?"): cada mensaje va a Claude en el momento, sin esperar a "Enviar cambios"
+  A.sendExperience = async (text) => {
+    text = String(text || "").trim().slice(0, 2000); if (!text) return null;
+    const id = "experiencia_" + Date.now();
+    if (!(await D.set("requests", id, { kind: "experience", text, at: App.stamp(), by: S.userId, status: "pendiente" }))) return null;
+    const told = await D.tell(`COMENTARIO SOBRE LA PLATAFORMA de ${App.config.owner} (requests/${id}): "${text.slice(0, 1200)}". Es una idea o queja para mejorar su experiencia en Aura; anótala, respóndele corto si hace falta y considérala en los próximos cambios.`);
+    return { id, told };
+  };
   A.addRefLink = (url, note) => D.add("refs", { kind: "link", url, assetId: "", name: "", note: note || "", status: "nueva", sent: false, by: S.userId, created: App.stamp() });
   A.addRefFile = (file, note) => D.add("refs", { kind: "file", url: "", assetId: file.id, name: file.name, note: note || "", status: "nueva", sent: false, by: S.userId, created: App.stamp() });
   // referencia leida en el navegador: guarda su ADN (paleta, cortes, ejes, cuadros chicos) y la receta inicial

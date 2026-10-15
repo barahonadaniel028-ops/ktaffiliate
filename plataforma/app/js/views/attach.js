@@ -17,7 +17,8 @@
     return icon(it.kind === "imagen" ? "photo" : "note");
   }
   function chipHtml(it, i, live) {
-    const sub = it.state === "err" ? esc(it.err || "No se pudo subir") : it.state === "up" ? Math.round((it.progress || 0) * 100) + "%" : esc(bytes(it.size));
+    // "Subiendo… 40%" mientras sube y "Subido · 3 MB" cuando termino (DECISIONES.md #10); la ficha de lo ya enviado (live=false) solo lleva el peso
+    const sub = it.state === "err" ? esc(it.err || "No se pudo subir") : it.state === "up" ? "Subiendo… " + Math.round((it.progress || 0) * 100) + "%" : live && it.state === "done" ? "Subido · " + esc(bytes(it.size)) : esc(bytes(it.size));
     return `<span class="achip" data-s="${it.state}" data-k="${it.kind}" title="${esc(it.name)}"><span class="ath">${thumb(it)}</span><span class="atn"><b>${esc(short(it.name))}</b><small>${sub}</small></span>${live ? `<button type="button" class="atx" data-att-x="${i}" aria-label="Quitar ${esc(it.name)}">${icon("x")}</button><i class="atp" style="transform:scaleX(${Math.max(0.1, it.progress || 0).toFixed(3)})"></i>` : ""}</span>`;
   }
 

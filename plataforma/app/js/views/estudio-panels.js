@@ -210,13 +210,11 @@
     const s = SE(), reqs = ST.reqsOf(s.vid).filter((r) => r.kind !== "export"), cs = s.sel && s.sel !== "subs" && s.spec ? SM().findClip(s.spec, s.sel) : null;
     const att = (s.att = s.att || App.attach.make());
     pane.innerHTML = `<div class="st-ask"><div class="st-askbox">${att.chips()}<textarea id="st-ask-text" rows="3" placeholder="Pídelo como se lo dirías a una persona" aria-label="Qué quieres cambiar">${esc(s.askText || "")}</textarea><div class="st-askbar">${att.btn()}${App.ai.pillHtml("global")}<span class="sp"></span><button class="go" id="st-ask-go" type="button" aria-label="Pedir a Claude">${icon("arrow")}</button></div></div>
-      <div class="st-chips">${SLib().EJEMPLOS_PEDIDO.map((t, i) => `<button type="button" data-ex="${i}">${esc(t)}</button>`).join("")}</div>
       <label class="st-f"><span class="l">Dónde</span><select id="st-ask-scope"><option value="video">En todo este video</option>${cs ? `<option value="clip">Solo en lo elegido (${esc(ST.clipText(cs.track.kind, cs.clip))})</option>` : ""}<option value="piece">En todas las versiones de la pieza</option></select></label></div>
       <h3>Pedidos${reqs.length ? ` · ${reqs.length}` : ""}</h3><div id="st-reqs">${reqs.map(reqHtml).join("") || '<div class="st-empty">Todavía no le pediste nada a Claude en este video.</div>'}</div>${s.spec ? `<h3>Tus cambios</h3>${logHtml(6)}` : ""}`;
     att.bind(pane.querySelector(".st-askbox"));
     const ta = E("st-ask-text"); ta.addEventListener("input", () => { s.askText = ta.value; });
     ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); E("st-ask-go").click(); } });
-    pane.querySelectorAll("[data-ex]").forEach((b) => b.addEventListener("click", () => { ta.value = SLib().EJEMPLOS_PEDIDO[+b.dataset.ex]; s.askText = ta.value; ta.focus(); }));
     E("st-ask-go").addEventListener("click", async () => {
       if (att.busy()) { App.toast("Espera a que terminen de subir los archivos."); return; }
       const hasFiles = att.items.some((x) => x.state === "done"), text = ta.value.trim() || (hasFiles ? "Usa lo que te adjunto." : "");

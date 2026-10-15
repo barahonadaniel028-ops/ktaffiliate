@@ -1,14 +1,15 @@
-/* Aura · Crear → "Un video nuevo" (camino B de DECISIONES.md #10). Elegís estilo(s) de la Biblioteca (combinarlos
-   o pedir una version distinta por cada uno), o un formato aparte (Long form / Long form a short form), y
-   subís solo el material que ese camino necesita. Termina en un pedido (requests/new_<ts>, kind "new_video"),
+/* Aura · Crear → "Un video nuevo" (camino B de DECISIONES.md #10). Arranca directo en "Elegí tu estilo o estilos
+   preferidos": estilo(s) de la Biblioteca (combinarlos o pedir una version distinta por cada uno). Long form y
+   Long form a short form son formatos aparte, a un toque debajo de la biblioteca. Subís solo el material que ese
+   camino necesita. Termina en un pedido (requests/new_<ts>, kind "new_video"),
    igual que Claude ya conocía. Subir archivos usa App.attach (mismo "+" y fichas con progreso que el resto
    de la plataforma), una instancia por categoría de material. */
 (function () {
   "use strict";
   const App = window.App, sel = App.sel, UI = App.ui, { $, $$, esc, icon, toast } = App;
   const Q = {
-    formato: "¿Qué querés armar?",
     estilos: "Elegí tu estilo o estilos preferidos.",
+    estilosCortos: "Ahora elegí en qué estilo o estilos querés los cortos.",
     material: "¿Qué material tenés para este estilo?",
     materialLong: "Subí el video largo. El B-roll es opcional, si tenés algo para poner acorde a lo que se va diciendo.",
     fuente: "Subí el video o pegá el link (puede ser de YouTube).",
@@ -20,7 +21,7 @@
   // estilo sin entrada acá pide solo "normal" (el contenido de base). B-roll y Reacción siempre quedan
   // ofrecidos como opcionales, para cualquier estilo (documentado en el reporte para que Daniel la ajuste).
   const STYLE_NEEDS = { "ensayo-combo": ["intro", "normal"] };
-  const fresh = () => ({ format: null, step: "formato", trail: [], styles: [], styleMode: "combinar", att: {}, linksText: "", notes: "", sourceMode: "file", sourceLink: "", srcAtt: null, err: "" });
+  const fresh = () => ({ format: "corto", step: "estilos", trail: [], styles: [], styleMode: "combinar", att: {}, linksText: "", notes: "", sourceMode: "file", sourceLink: "", srcAtt: null, err: "" });
   UI.crear.video = UI.crear.video || fresh();
   const ST = () => UI.crear.video;
   const attOf = (cat) => (ST().att[cat] = ST().att[cat] || App.attach.make());
@@ -35,8 +36,8 @@
     const st = fresh(), sid = resolveStyleId(pre.style);
     if (sid) {
       const name = (App.lib.catalog().find((i) => i.id === sid) || {}).name || "";
-      st.format = "corto"; st.styles = [sid]; st.step = "material";
-      st.trail.push({ who: "ai", html: `<p>${esc(Q.formato)}</p>` }, { who: "me", html: esc(FORMAT_LABEL.corto + ".") }, { who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(`Usar «${name}».`) });
+      st.styles = [sid]; st.step = "material";
+      st.trail.push({ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(`Usar «${name}».`) });
     } else if (pre.notes) {
       // llego algo de la Biblioteca que no es un estilo (una transicion, un texto, un sonido...): no hay nada que
       // preseleccionar, pero la nota no se pierde — queda cargada para cuando el pedido pida notas para Claude.
@@ -47,29 +48,23 @@
   }
 
   function stepTo(step, say) { App.crear.advanceStep(() => { if (say) ST().trail.push(...say); ST().step = step; ST().err = ""; }); return true; }
+  // el primer paso es la biblioteca de estilos: de ahi se vuelve a "¿Qué querés crear?" (crear.js)
   function prevOf(st) {
-    if (st.step === "material") return st.format === "corto" ? "estilos" : "formato";
-    if (st.step === "estilos") return st.format === "long2short" ? "fuente" : "formato";
-    if (st.step === "fuente") return "formato";
+    if (st.step === "material" || st.step === "fuente") return "estilos";
+    if (st.step === "estilos") return st.format === "long2short" ? "fuente" : null;
     return null;
   }
   function back() {
     const st = ST(); if (st.step === "sending" || st.step === "sent") return false;
     const p = prevOf(st); if (!p) return false;
-    if (st.trail.length >= 2) st.trail.splice(-2); // deshace el par {ai, me} que el paso actual empujo al llegar
-    return stepTo(p);
+    App.crear.advanceStep(() => {
+      if (st.trail.length >= 2) st.trail.splice(-2); // deshace el par {ai, me} que el paso actual empujo al llegar
+      if (p === "estilos" && st.format !== "long2short") st.format = "corto"; // volvio a la biblioteca desde un formato aparte
+      st.step = p; st.err = "";
+    });
+    return true;
   }
   function restart() { App.crear.advanceStep(() => { UI.crear.video = fresh(); }); }
-
-  // ---------- paso: formato ----------
-  function formatoView() {
-    const body = `<div class="crear-paths v3">
-      <button class="crear-path" type="button" data-act="crvformat" data-f="corto">${icon("sparkles")}<b>${esc(FORMAT_LABEL.corto)}</b><span>Elegís estilo(s) de la Biblioteca y subís lo que hay que editar.</span></button>
-      <button class="crear-path" type="button" data-act="crvformat" data-f="long">${icon("play")}<b>${esc(FORMAT_LABEL.long)}</b><span>Un video largo (podcast u otro contenido), con B-roll opcional.</span></button>
-      <button class="crear-path" type="button" data-act="crvformat" data-f="long2short">${icon("scissors")}<b>${esc(FORMAT_LABEL.long2short)}</b><span>Subís un video largo y lo convertimos en varios cortos.</span></button>
-    </div>`;
-    return App.crear.cloud({ status: "nuevo video", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.formato)}</p>` }]), body });
-  }
 
   // ---------- paso: estilos (compartido por "corto" y "long2short") ----------
   function styleNeeds(id) { const it = App.lib.catalog().find((x) => x.id === id); return (it && STYLE_NEEDS[it.studioId]) || []; }
@@ -93,9 +88,12 @@
       <button type="button" role="radio" aria-checked="${m === "versiones"}" class="${m === "versiones" ? "on" : ""}" data-act="crvmode" data-m="versiones">${icon("layers")}Una versión por estilo</button></div></div>`;
   }
   function estilosView() {
-    const body = styleGallery() + styleModeHtml() + (ST().err ? `<p class="status err">${esc(ST().err)}</p>` : "");
-    return App.crear.cloud({ status: "elegí el estilo", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }]), body,
-      chips: [{ act: "crvcontinue", label: "Continuar", icon: "arrow", pri: true }] });
+    const st = ST(), first = st.format !== "long2short";
+    // formatos aparte (solo en la primera pantalla): no necesitan elegir estilo antes de subir el video. Van arriba de la biblioteca, a un toque, para que no haya que bajar hasta el final a buscarlos
+    const other = first ? `<div class="crfmt"><span>O un formato aparte:</span><button type="button" class="chip" data-act="crvother" data-f="long">${icon("play")}${esc(FORMAT_LABEL.long)}</button><button type="button" class="chip" data-act="crvother" data-f="long2short">${icon("scissors")}${esc(FORMAT_LABEL.long2short)}</button></div>` : "";
+    const body = other + styleGallery() + styleModeHtml() + (st.err ? `<p class="status err">${esc(st.err)}</p>` : "");
+    const chips = [{ act: "crvcontinue", label: "Continuar", icon: "arrow", pri: true }];
+    return App.crear.cloud({ status: first ? "elegí el estilo" : "estilo de los cortos", back: true, trail: st.trail.concat([{ who: "ai", html: `<p>${esc(first ? Q.estilos : Q.estilosCortos)}</p>` }]), body, chips });
   }
 
   // ---------- paso: material (categorías de upload) ----------
@@ -141,7 +139,7 @@
     if (s === "material") return materialView();
     if (s === "fuente") return fuenteView();
     if (s === "sending" || s === "sent") return sentView();
-    return formatoView();
+    return estilosView();
   }
 
   // ---------- continuar / enviar ----------
@@ -206,10 +204,11 @@
 
   App.crearVideo = { render, bind, back, arriveWith };
   const A = App.acts;
-  A.crvformat = (el) => {
+  // "Long form" / "Long form a short form": se salta la biblioteca. Long form pide solo el video largo (+ B-roll
+  // opcional); long form a short form pide el video (archivo o link) y recien despues los estilos de los cortos.
+  A.crvother = (el) => {
     const f = el.dataset.f, st = ST(); st.format = f;
-    const next = f === "long" ? "material" : f === "long2short" ? "fuente" : "estilos";
-    stepTo(next, [{ who: "ai", html: `<p>${esc(Q.formato)}</p>` }, { who: "me", html: esc(FORMAT_LABEL[f] + ".") }]);
+    stepTo(f === "long" ? "material" : "fuente", [{ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(FORMAT_LABEL[f] + ".") }]);
   };
   A.crvsty = (el) => { const id = el.dataset.id, st = ST(), i = st.styles.indexOf(id); if (i >= 0) st.styles.splice(i, 1); else st.styles.push(id); App.render(true); };
   A.crvmode = (el) => { ST().styleMode = el.dataset.m; App.render(true); };

@@ -1,13 +1,15 @@
-/* Aura · Estudio - vista general (antes "Aprobar"): el video al centro, versiones a la izquierda, Jarvis y el predictor a la derecha, y la capsula
-   de decision abajo. Notas por cuadro, zona segura, subtitulos por palabra, atajos A/Q/R, ←/→ versiones, espacio, N. Todo en una sola pantalla sin
-   recargar el video. Se entra aca desde el listado de Estudio (antes "Aprobar"); desde aca, "Abrir en editor" lleva al editor completo (ver
-   estudio-core.js, App.views.estudio). Ver DECISIONES.md #2. */
+/* Aura · Estudio - vista general (antes "Aprobar"): el video al centro, versiones a la izquierda y a la derecha solo lo que
+   hace falta para decidir: "Abrir en editor manual", el score (y "¿Por qué este score?", que solo se abre con un clic) y un chat
+   minimo "¿Qué ajustarías?" (DECISIONES.md #11). Sin notas por cuadro ni subtitulos aqui: eso vive en el editor. La capsula de
+   decision va abajo; atajos A/Q/R, ←/→ versiones y espacio. Todo en una sola pantalla sin recargar el video. Se entra aca desde el
+   listado de Estudio; "Abrir en editor" lleva al editor completo (estudio-core.js, App.views.estudio). Ver DECISIONES.md #2. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, { $, $$, esc, icon, plural, ring, mmss } = App;
   let RV = null, vEl = null, raf = 0, loadTimer = 0, objUrl = "", triedBlob = false;
-  const CAP_FONTS = [["aston", "Aston (especial)"], ["normal", "Normal"], ["cursive", "Cursiva"]];
-  const CAP_COLORS = [["#FFFFFF", "Blanco"], ["#FFD84D", "Amarillo"], ["#4FD8FF", "Cian"], ["#5DFFB8", "Verde"], ["#FF6A5E", "Rojo"], ["#FFB54A", "Naranja"]];
+  // estado de lo que se esta escribiendo en el chat (sobrevive a los repintados de datos; se limpia al cambiar de video)
+  let whyOpen = false, pick = new Set(), draft = "";
+  const ADJ = () => [(App.config.tags && App.config.tags[0]) || "Hook", "Subtítulos", "Intro", "Video", "Animaciones", "Música", "Audio", "Otro"];
   const V = () => (RV ? sel.video(RV.id) : null);
 
   // ---------- predictor: traduce los "parts" crudos de scoreVideo() a categorias simples (DECISIONES.md #9) ----------
@@ -63,15 +65,6 @@
   }
 
   // ---------- pintar paneles ----------
-  function opinion(v, sibs) {
-    const sc = sibs.map((x) => [x, App.pred.scoreVideo(x)]).filter((x) => x[1]);
-    if (!App.pred.enabled()) return `Revisa el gancho, el audio y los subtítulos. Anota en el cuadro exacto lo que quieras cambiar y se lo paso a Claude con <b>Enviar cambios</b>.`;
-    if (!sc.length) return "Este gancho todavía no tiene puntaje.";
-    const mine = sc.find((x) => x[0].id === v.id), best = sc.slice().sort((a, b) => b[1].score - a[1].score)[0], worst = sc.slice().sort((a, b) => a[1].score - b[1].score)[0];
-    if (!mine) return "Este gancho todavía no tiene puntaje.";
-    if (best[0].id === v.id) return `<b>v${v.version} puede ser la mejor de la pieza</b>${sc.length > 1 ? ` (${mine[1].score}, contra ${worst[1].score} de v${worst[0].version})` : ""}. ${mine[1].tier === "green" ? "Se parece a lo que sí funcionó." : "Aun así tiene margen: mira los factores."}`;
-    return `<b>v${v.version} sale en ${mine[1].score}</b>; v${best[0].version} lidera con ${best[1].score}. ${mine[1].fb.length ? "Lo que más ayudaría: " + esc(mine[1].fb[0]) : mine[1].fbClaude.length ? "Claude puede ajustarlo solo." : ""}`;
-  }
   function paintLeft() {
     const v = V(); if (!v) return; const sibs = sel.siblings(v);
     const g = sel.groupByPiece(sel.pending(v.brand).concat([v]).filter((x, i, a) => a.indexOf(x) === i));
@@ -81,42 +74,27 @@
       <p class="muted vhook">${esc(v.hook || "")}</p>`;
   }
   function paintRight() {
-    const v = V(); if (!v) return; const sibs = sel.siblings(v), r = App.pred.scoreVideo(v), notes = sel.notesOf(v);
-    // circulo del score: unico visible por default. Los factores van agrupados en espanol llano detras de "¿Por qué este score?" (DECISIONES.md #9)
+    const v = V(); if (!v) return; const r = App.pred.scoreVideo(v);
+    // lo unico que se ve por default: el boton del editor, el score y el chat. Las razones detras de "¿Por qué este score?" (DECISIONES.md #9/#11)
     const groups = r ? friendlyGroups(r.parts) : [];
-    const groupsHtml = groups.map((g) => { const dn = Math.round(g.net), sign = dn > 0 ? "+" : dn < 0 ? "−" : "±"; return `<li data-k="${g.net >= 0 ? "pos" : "neg"}"><i>${g.net >= 0 ? "✓" : "!"}</i><div><b>${esc(g.title)}</b><small>${g.items.map((x) => esc(x.text)).join(" ")}</small></div><span>${sign}${Math.abs(dn)}</span></li>`; }).join("");
-    const fix = r && (r.fb.length || r.fbClaude.length) ? `<div class="fixes"><b>${r.fb.length ? "Lo que puedes hacer" : "Lo ajusta Claude solo"}</b><ul>${(r.fb.length ? r.fb : r.fbClaude).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
-    const tags = App.config.tags.map((t) => `<button type="button" class="chip tg" data-act="rvtag" data-t="${esc(t)}" aria-pressed="${(v.tags || []).includes(t)}">${esc(t)}</button>`).join("");
-    const noteRows = notes.map((n) => `<li class="${sel.closedNote(n) ? "done" : ""}"><button class="chip tcb" type="button" data-act="rvseek" data-t="${n.t || 0}">${esc(n.tc || mmss(n.t))}</button><span>${esc(n.text)}</span>${n.sent === false ? `<button class="x" type="button" data-act="rvnotedel" data-id="${esc(n.id)}" aria-label="Borrar nota">${icon("x")}</button>` : `<em class="chip ${sel.closedNote(n) ? "good" : ""}">${sel.closedNote(n) ? "Resuelta" : "Enviada"}</em>`}</li>`).join("");
-    $("#rvright").innerHTML = `<div class="say"><div class="who"><span class="orb"></span><b>Jarvis</b></div><div class="msg lg">${opinion(v, sibs)}</div></div>
-      ${r ? `<section class="factors"><div class="fh">${ring(r.score / 100, 64, { r: 40, sw: 8, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num" style="font:500 20px/1">${r.score}</b>` })}<div><b>${esc(App.pred.TIER_TXT[r.tier])}</b><small class="muted">Aprox. ${r.prob}% de chance de pasar ${App.config.viralThreshold} vistas</small></div></div>${groupsHtml || fix ? `<details class="why-toggle"><summary>¿Por qué este score?</summary><ul class="why">${groupsHtml}</ul>${fix}</details>` : ""}</section>` : ""}
-      <section class="fb"><h4>Qué falla</h4><div class="tags">${tags}</div>
-        <div class="field"><label for="rvfb">Cambio para esta versión</label><textarea id="rvfb" rows="2" maxlength="2000" placeholder="${esc(App.say("Qué querés que cambie. Queda guardado y se envía con Enviar cambios.", "Qué quieres que cambie. Queda guardado y se envía con Enviar cambios."))}">${esc(v.feedback || "")}</textarea><span class="hint" id="rvfbstat">${v.feedbackDirty ? "Guardado. Se envía con Enviar cambios." : ""}</span></div></section>
-      <section class="notes"><h4>Notas por cuadro <small id="rvnotet">en <b class="num">${mmss(vEl ? vEl.currentTime : 0)}</b></small></h4>
-        <form class="noteform" id="rvnoteform"><input id="rvnote" type="text" maxlength="600" placeholder="Anota en este cuadro (N)" autocomplete="off"><button class="btn sm pri" type="submit">Anotar</button></form>
-        ${noteRows ? `<ul class="nl">${noteRows}</ul>` : '<p class="hint">Pausa en el momento exacto y escribe qué cambiar.</p>'}</section>
-      <div id="rvcaps"></div>`;
-    paintCaps(); paintMarks();
+    const why = groups.map((g) => { const dn = Math.round(g.net), sign = dn > 0 ? "+" : dn < 0 ? "−" : "±"; return `<li data-k="${g.net >= 0 ? "pos" : "neg"}"><i>${g.net >= 0 ? "✓" : "!"}</i><div><b>${esc(g.title)}</b><small>${g.items.map((x) => esc(x.text)).join(" ")}</small></div><span>${sign}${Math.abs(dn)}</span></li>`; }).join("");
+    const fixes = r && (r.fb.length || r.fbClaude.length) ? `<div class="fixes"><b>${r.fb.length ? "Cómo mejorarlo" : "Esto lo ajusta Claude solo"}</b><ul>${(r.fb.length ? r.fb : r.fbClaude).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+    const lines = (v.feedback || "").split(/\n+/).filter(Boolean), tg = v.tags || [];
+    const thread = lines.length ? `<div class="rvthread">${lines.map((t, i) => `<div class="rvme">${i === 0 && tg.length ? `<small>${tg.map(esc).join(" · ")}</small>` : ""}<p>${esc(t)}</p></div>`).join("")}<p class="rvack">${v.feedbackDirty ? App.say("Anotado. Se lo paso a Claude con «Enviar cambios».", "Anotado. Se lo paso a Claude con «Enviar cambios».") : "Enviado a Claude."}</p></div>` : "";
+    $("#rvright").innerHTML = `<a class="btn rvmanual" id="rvmanual" href="#estudio/editor/${encodeURIComponent(v.id)}">${icon("film")}Abrir en editor manual</a>
+      ${r ? `<section class="rvscore"><div class="rvring" aria-label="Score ${r.score} de 100">${ring(r.score / 100, 132, { r: 44, sw: 7, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num rvn">${r.score}</b>` })}</div>
+        ${why || fixes ? `<button class="rvwhy" type="button" data-act="rvwhy" aria-expanded="${whyOpen}" aria-controls="rvwhybox">¿Por qué este score?${icon("chevdown")}</button>
+        <div class="rvwhybox${whyOpen ? " open" : ""}" id="rvwhybox"><div class="rvwhyin"><ul class="why">${why}</ul>${fixes}</div></div>` : ""}</section>` : ""}
+      <section class="rvchat" aria-label="Pedir ajustes"><h4 class="rvq">¿Qué ajustarías?</h4>
+        <div class="tags" role="group" aria-label="Qué ajustarías">${ADJ().map((t) => `<button type="button" class="chip tg" data-act="rvadj" data-t="${esc(t)}" aria-pressed="${pick.has(t)}">${esc(t)}</button>`).join("")}</div>
+        ${thread}
+        <form class="rvcomp" id="rvchat"><textarea id="rvfb" rows="2" maxlength="2000" aria-label="Detalles del ajuste" placeholder="${esc(App.say("Contame los detalles", "Cuéntame los detalles"))}">${esc(draft)}</textarea><button class="rvsend" type="submit" aria-label="Enviar ajuste">${icon("arrow")}</button></form></section>`;
+    paintMarks();
   }
   // ---------- subtitulos por palabra (misma logica que el portal) ----------
-  const capSel = new Set();
-  const capAllOn = () => App.store.get("cap-all", true) !== false;
+  // el texto del video (gancho y palabras de subtitulos) se pinta sobre el video; el estilo por palabra se edita en el editor
   const capStyle = (v, i) => { const s = v.wordStyles && v.wordStyles[i]; return s && (s.font || s.color) ? s : null; };
   function capEff(v, i) { const st = capStyle(v, i), c = v.caps[i]; return { font: (st && st.font) || (c[3] ? "aston" : c[4] ? "cursive" : "normal"), color: (st && st.color) || "" }; }
-  function paintCaps() {
-    const host = $("#rvcaps"), v = V(); if (!host || !v) return;
-    if (!v.caps || !v.caps.length) { host.innerHTML = `<section class="caps"><h4>Subtítulos</h4><p class="hint">La transcripción se carga cuando Claude rehace el video.</p></section>`; return; }
-    const changed = v.wordStyles ? Object.values(v.wordStyles).filter((s) => s && (s.font || s.color)).length : 0;
-    const words = v.caps.map((c, i) => { const e = capEff(v, i); return `<button type="button" class="cw ${e.font}${capSel.has(i) ? " sel" : ""}" data-act="rvcw" data-i="${i}"${e.color ? ` style="color:${esc(e.color)}"` : ""}>${esc(c[0])}</button>`; }).join(" ");
-    const bar = capSel.size ? `<div class="capbar"><b>${capSel.size} ${plural(capSel.size, "palabra elegida", "palabras elegidas")}</b><div class="capg">${CAP_FONTS.map(([k, t]) => `<button class="chip" type="button" data-act="rvcapfont" data-k="${k}">${t}</button>`).join("")}</div><div class="capg">${CAP_COLORS.map(([h, t]) => `<button class="cwatch" type="button" data-act="rvcapcolor" data-h="${h}" style="background:${h}" aria-label="${t}"></button>`).join("")}<button class="chip" type="button" data-act="rvcapcolor" data-h="">Sin color</button></div><div class="capg"><button class="chip" type="button" data-act="rvcapreset">Quitar estilo</button><button class="chip" type="button" data-act="rvcapclear">Soltar</button></div></div>` : `<p class="hint">Toca palabras para elegirlas y darles fuente o color. Las Aston son las especiales.</p>`;
-    host.innerHTML = `<section class="caps"><h4>Subtítulos <small>${changed ? changed + " " + plural(changed, "cambio", "cambios") + (v.wordStylesDirty ? ", sin enviar" : "") : ""}</small></h4>${bar}<div class="cws">${words}</div><label class="capall"><input type="checkbox" id="capall" ${capAllOn() ? "checked" : ""}> Aplicar a todas las versiones de esta pieza</label></section>`;
-  }
-  async function capApply(patch, reset) {
-    const v = V(); if (!v || !v.caps || !capSel.size) return; const next = { ...(v.wordStyles || {}) };
-    capSel.forEach((i) => { const cur = reset ? {} : { ...(next[i] || {}), ...patch }; Object.keys(cur).forEach((k) => { if (!cur[k]) delete cur[k]; }); next[i] = cur; });
-    const targets = capAllOn() ? sel.siblings(v).filter((x) => !x.published && x.caps && x.caps.length === v.caps.length) : [v];
-    await Promise.all(targets.map((x) => App.data.patchVideo(x, { wordStyles: next, wordStylesDirty: true }, true))); paintCaps(); App.updateSendBar(); paintOverlay();
-  }
   function paintMarks() {
     const m = $("#rvmarks"), v = V(); if (!m || !v) return; const d = (vEl && vEl.duration) || v.duration || 0;
     m.innerHTML = d ? sel.notesOf(v).map((n) => `<i class="mk" style="left:${Math.min(100, ((n.t || 0) / d) * 100)}%" title="${esc(n.text)}"></i>`).join("") : "";
@@ -156,7 +134,7 @@
   function tick() {
     if (!vEl || !RV) return; const d = vEl.duration || 0, t = vEl.currentTime || 0;
     if (d) { const p = (t / d) * 100; $("#rvfill").style.width = p + "%"; $("#rvknob").style.left = p + "%"; }
-    $("#rvtc").textContent = mmss(t) + (d ? " / " + mmss(d) : ""); const nt = $("#rvnotet b"); if (nt) nt.textContent = mmss(t);
+    $("#rvtc").textContent = mmss(t) + (d ? " / " + mmss(d) : ""); 
     paintOverlay(); raf = requestAnimationFrame(tick);
   }
   function setPlaying(on) { const b = $("#rvplaybtn"); if (b) b.innerHTML = icon(on ? "pause" : "play"); const s = $("#rvscreen"); if (s) s.classList.toggle("playing", on); }
@@ -178,9 +156,13 @@
     el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#estudio/agendados">Ver agendados</a></div></div>`;
     App.float(""); App.morph.sparkles(el.querySelector(".orb"), 6); RV.finished = true; cancelAnimationFrame(raf);
   }
-  function switchTo(id) {
-    RV.id = id; history.replaceState(null, "", "#estudio/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
-    const el = $("#rv"); if (el) el.dataset.id = id; if (vEl) vEl.pause(); loadVideo(); paintAll(); if (vEl) vEl.play().catch(() => {});
+  // inEditor: el editor esta abierto encima y la persona cambio de version desde sus pestanas v1/v2/v3. La ruta sigue siendo
+  // #estudio/editor/<id> (el editor se queda abierto y solo cambia de version): no se reescribe a "ver" ni se pone a sonar el
+  // video de abajo. Solo se mantiene al dia la vista general, que es la pantalla a la que se vuelve al cerrar el editor.
+  function switchTo(id, inEditor) {
+    RV.id = id; whyOpen = false; pick = new Set(); draft = "";
+    if (!inEditor) { history.replaceState(null, "", "#estudio/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; }
+    const el = $("#rv"); if (el) el.dataset.id = id; if (vEl) vEl.pause(); loadVideo(); paintAll(); if (vEl && !inEditor) vEl.play().catch(() => {});
   }
 
   // ---------- acciones ----------
@@ -191,17 +173,18 @@
   A.rvmute = (el) => { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); vEl.muted = on; };
   A.rvver = (el) => { if (el.dataset.id !== RV.id) switchTo(el.dataset.id); };
   A.rvdecide = (el) => decide(el.dataset.st);
-  A.rvseek = (el) => { if (vEl) { vEl.currentTime = +el.dataset.t || 0; vEl.pause(); } };
   A.rvpiece = (el) => { const v = V(); const groups = sel.groupByPiece(sel.pending(v.brand).concat(sel.siblings(v).filter((x) => !sel.isPending(x)))); const i = groups.findIndex((g) => g.piece === v.piece), n = groups[(i + +el.dataset.d + groups.length) % groups.length]; if (n) switchTo(n.vs[0].id); };
-  A.rvtag = (el) => { const v = V(); const cur = new Set(v.tags || []); cur.has(el.dataset.t) ? cur.delete(el.dataset.t) : cur.add(el.dataset.t); el.setAttribute("aria-pressed", cur.has(el.dataset.t)); App.act.setFeedback(v, v.feedback || "", [...cur]); if (!(v.feedback || "").trim()) App.toast("Escribe también qué cambiar para que se envíe."); };
-  A.rvnotedel = async (el) => { const n = S.notes.find((x) => x.id === el.dataset.id); if (n) { await App.act.removeNote(n); } };
-  A.rvcw = (el) => { const i = +el.dataset.i; capSel.has(i) ? capSel.delete(i) : capSel.add(i); paintCaps(); };
-  A.rvcapfont = (el) => capApply({ font: el.dataset.k });
-  A.rvcapcolor = (el) => capApply({ color: el.dataset.h });
-  A.rvcapreset = () => capApply({}, true);
-  A.rvcapclear = () => { capSel.clear(); paintCaps(); };
-
-  const fbSave = App.debounce(async () => { const v = V(); if (!v) return; const ta = $("#rvfb"); if (!ta) return; await App.act.setFeedback(v, ta.value, v.tags); const s = $("#rvfbstat"); if (s) s.textContent = ta.value.trim() ? "Guardado. Se envía con Enviar cambios." : ""; App.updateSendBar(); }, 600);
+  A.rvwhy = (el) => { whyOpen = !whyOpen; el.setAttribute("aria-expanded", String(whyOpen)); const b = $("#rvwhybox"); if (b) b.classList.toggle("open", whyOpen); };
+  A.rvadj = (el) => { const t = el.dataset.t; pick.has(t) ? pick.delete(t) : pick.add(t); el.setAttribute("aria-pressed", String(pick.has(t))); };
+  // el chat: lo que se manda queda como el cambio de esta version (feedback) y viaja con "Enviar cambios", igual que antes; cada mensaje nuevo se suma
+  async function sendAdjust() {
+    const v = V(), ta = $("#rvfb"); if (!v || !ta) return; const text = ta.value.trim(), tags = [...pick];
+    if (!text && !tags.length) { ta.focus(); return; }
+    const line = text || "Ajustar: " + tags.join(", ") + ".", prev = (v.feedback || "").trim();
+    pick = new Set(); draft = "";
+    await App.act.setFeedback(v, prev ? prev + "\n" + line : line, Array.from(new Set((v.tags || []).concat(tags))));
+    App.updateSendBar(); paintRight(); const nt = $("#rvfb"); if (nt) nt.focus();
+  }
 
   // ---------- montaje ----------
   App.reviewView = {
@@ -211,29 +194,28 @@
       if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#estudio">Volver a la lista</a></div>`; return; }
       if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
       App.float('<div class="capsule lg" id="rvdecide" role="group" aria-label="Decisión"></div>');
-      cancelAnimationFrame(raf); RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
+      cancelAnimationFrame(raf); whyOpen = false; pick = new Set(); draft = ""; RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
       vEl.muted = false; vEl.addEventListener("play", () => setPlaying(true)); vEl.addEventListener("pause", () => setPlaying(false));
       vEl.addEventListener("loadeddata", () => { clearTimeout(loadTimer); vmsg(""); vEl.style.opacity = 1; paintMarks(); });
       vEl.addEventListener("error", () => { if (vEl.getAttribute("src")) blobFallback(V(), "error " + (vEl.error ? vEl.error.code : "?")); });
       const sc = $("#rvscrub", root); let drag = false; const at = (e) => { const b = sc.getBoundingClientRect(); seek(Math.max(0, Math.min(1, (e.clientX - b.left) / b.width))); };
       sc.addEventListener("pointerdown", (e) => { drag = true; sc.setPointerCapture(e.pointerId); at(e); }); sc.addEventListener("pointermove", (e) => { if (drag) at(e); }); sc.addEventListener("pointerup", () => { drag = false; });
       sc.addEventListener("keydown", (e) => { if (e.key === "ArrowRight" && e.shiftKey) vEl.currentTime += 1; });
-      root.addEventListener("input", (e) => { if (e.target.id === "rvfb") fbSave(); });
-      root.addEventListener("change", (e) => { if (e.target.id === "capall") { App.store.set("cap-all", e.target.checked); paintCaps(); } });
-      root.addEventListener("submit", async (e) => { if (e.target.id !== "rvnoteform") return; e.preventDefault(); const inp = $("#rvnote"), t = inp.value.trim(); if (!t) return; vEl.pause(); inp.value = ""; await App.act.addNote(V(), vEl.currentTime || 0, t, V().tags); });
+      root.addEventListener("input", (e) => { if (e.target.id === "rvfb") draft = e.target.value; });
+      root.addEventListener("keydown", (e) => { if (e.target.id === "rvfb" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendAdjust(); } });
+      root.addEventListener("submit", (e) => { if (e.target.id !== "rvchat") return; e.preventDefault(); sendAdjust(); });
       if (App.store.get("safe", false)) { $("#rvsafebtn").setAttribute("aria-pressed", "true"); $("#rvsafe").hidden = false; }
       loadVideo(); paintAll(); raf = requestAnimationFrame(tick); vEl.play().catch(() => {});
     },
     // un cambio de ruta dentro de la revision (otra version) no reconstruye la pantalla
     routeChanged(r) {
       if (r.name !== "estudio" || (r.args[0] !== "ver" && r.args[0] !== "editor") || !RV || RV.finished || !$("#rv")) return false;
-      const id = r.args[1] || ""; if (id === RV.id) return true; if (sel.video(id)) { switchTo(id); return true; } return false;
+      const id = r.args[1] || ""; if (id === RV.id) return true; if (sel.video(id)) { switchTo(id, r.args[0] === "editor"); return true; } return false;
     },
     update(kinds) {
       if (!RV || !$("#rv") || RV.finished) return false;
       if (!sel.video(RV.id)) return false;
-      const ae = document.activeElement; if (ae && ae.id === "rvfb") { paintLeft(); paintDecide(); paintProgress(); return true; }
-      if (ae && ae.id === "rvnote") { paintLeft(); paintDecide(); paintProgress(); return true; }
+      const ae = document.activeElement; if (ae && ae.id === "rvfb") { paintLeft(); paintDecide(); paintProgress(); return true; } // escribiendo en el chat: no se le repinta el campo debajo
       paintAll(); return true;
     },
     key(e) {
@@ -242,7 +224,6 @@
       if (k === "a") decide("approved"); else if (k === "q") decide("maybe"); else if (k === "r") decide("rejected");
       else if (k === " ") { e.preventDefault(); A.rvplay(); }
       else if (k === "arrowright" || k === "arrowleft") { const v = V(), sibs = sel.siblings(v), i = sibs.findIndex((x) => x.id === v.id), n = sibs[(i + (k === "arrowright" ? 1 : -1) + sibs.length) % sibs.length]; if (n && n.id !== v.id) switchTo(n.id); }
-      else if (k === "n") { e.preventDefault(); const i = $("#rvnote"); if (i) { vEl.pause(); i.focus(); } }
       else if (k === "," || k === ".") { vEl.pause(); vEl.currentTime += (k === "." ? 1 : -1) / 30; }
       else if (k === "escape") App.go("estudio");
     },

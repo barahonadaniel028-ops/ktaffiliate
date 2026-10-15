@@ -8,6 +8,8 @@
   const DEFS = {
     followers: { name: "Seguidores", icon: "users", steps: [1000, 2500, 5000, 10000, 25000, 50000, 100000] },
     views: { name: "Vistas de reels", sub: "últimos 150 días", icon: "eye", steps: [10000, 25000, 50000, 100000, 250000, 500000, 1000000] },
+    likes: { name: "Likes", icon: "heart", steps: [250, 500, 1000, 2500, 5000, 10000, 25000] },
+    saved: { name: "Guardados", icon: "bookmark", steps: [50, 100, 250, 500, 1000, 2500, 5000] },
     inter: { name: "Interacciones", sub: "likes, comentarios, guardados y compartidos", icon: "heart", steps: [500, 1000, 2500, 5000, 10000, 25000, 50000] },
     best: { name: "Reel más visto", sub: "vistas de un solo reel", icon: "zap", steps: [1000, 5000, 10000, 50000, 100000, 250000, 1000000] },
     reels: { name: "Reels publicados", sub: "incluye Trial Reels", icon: "film", steps: [25, 50, 100, 250, 500, 1000] },
@@ -25,11 +27,11 @@
   }
   function socialOf(b) {
     const rows = sel.rowsOf(b), e = sel.evoOf(b);
-    return { followers: e ? e.followers : 0, views: sel.sumBy(rows, "views"), inter: sel.sumBy(rows, "inter"), best: rows.reduce((m, r) => Math.max(m, r.views), 0), reels: rows.length, weekViews: e ? e.views : 0, weekFollowers: e ? Math.max(0, e.net) : 0, streak: streakOf(b) };
+    return { followers: e ? e.followers : 0, views: sel.sumBy(rows, "views"), likes: sel.sumBy(rows, "likes"), saved: sel.sumBy(rows, "saved"), inter: sel.sumBy(rows, "inter"), best: rows.reduce((m, r) => Math.max(m, r.views), 0), reels: rows.length, weekViews: e ? e.views : 0, weekFollowers: e ? Math.max(0, e.net) : 0, streak: streakOf(b) };
   }
   function totalSocial() {
     const parts = S.brands.map(socialOf), add = (k) => parts.reduce((a, p) => a + p[k], 0);
-    return { followers: add("followers"), views: add("views"), inter: add("inter"), best: parts.reduce((m, p) => Math.max(m, p.best), 0), reels: add("reels"), weekViews: add("weekViews"), weekFollowers: add("weekFollowers"), streak: parts.reduce((m, p) => Math.max(m, p.streak), 0) };
+    return { followers: add("followers"), views: add("views"), likes: add("likes"), saved: add("saved"), inter: add("inter"), best: parts.reduce((m, p) => Math.max(m, p.best), 0), reels: add("reels"), weekViews: add("weekViews"), weekFollowers: add("weekFollowers"), streak: parts.reduce((m, p) => Math.max(m, p.streak), 0) };
   }
   function card(group, key, value) {
     const def = DEFS[key], steps = def.steps, got = steps.filter((s) => value >= s).length, next = steps[got] != null ? steps[got] : null, prev = got ? steps[got - 1] : 0, tier = got ? tierOf(got - 1, steps.length) : -1;
@@ -61,7 +63,7 @@
     if (!(await App.data.set("home", "trophies", S.trophyDoc))) App.toast("No se pudo guardar. Prueba de nuevo.");
   }
   // lo nuevo, listo para celebrar: un logro por tarjeta (el escalon mas alto que alcanzo), los de "todas las cuentas" primero, y la subida de nivel si la hubo
-  const UNIT = { followers: (n) => `${fmt(n)} seguidores`, views: (n) => `${fmt(n)} vistas`, inter: (n) => `${fmt(n)} interacciones`, best: (n) => `un reel con ${fmt(n)} vistas`, reels: (n) => `${fmt(n)} reels publicados`, weekViews: (n) => `${fmt(n)} vistas en 7 días`, weekFollowers: (n) => `${fmt(n)} seguidores nuevos en 7 días`, streak: (n) => `${n} días de contenido seguidos` };
+  const UNIT = { followers: (n) => `${fmt(n)} seguidores`, views: (n) => `${fmt(n)} vistas`, likes: (n) => `${fmt(n)} likes`, saved: (n) => `${fmt(n)} guardados`, inter: (n) => `${fmt(n)} interacciones`, best: (n) => `un reel con ${fmt(n)} vistas`, reels: (n) => `${fmt(n)} reels publicados`, weekViews: (n) => `${fmt(n)} vistas en 7 días`, weekFollowers: (n) => `${fmt(n)} seguidores nuevos en 7 días`, streak: (n) => `${n} días de contenido seguidos` };
   function fresh() {
     const cs = cards(), a = all(cs), nw = new Set(newIds(a)); if (!nw.size) return null;
     const items = [];

@@ -54,7 +54,7 @@
   }
   function cloud(o) {
     o = o || {};
-    return `<div class="crear-wrap"><div class="crear-cloud jv solid-glass" role="group" aria-label="Crear"><div class="inner">
+    return `<div class="crear-wrap"><div class="crear-cloud jv solid-glass${o.hero ? " hero" : ""}" role="group" aria-label="Crear"><span class="crliq" aria-hidden="true"><i></i><i></i><i></i></span><div class="inner">
       <div class="jh"><span class="orb${o.busy ? " fast" : ""}"></span><div class="nm">Crear<small>${esc(o.status || "")}</small></div><span class="sp"></span>${App.ai.pillHtml("draft")}${o.back ? `<button class="iconbtn" type="button" data-act="crback" aria-label="Volver atrás">${icon("chevleft")}</button>` : ""}</div>
       <div class="log">${trail(o.trail)}</div>
       <div class="cbody">${o.body || ""}</div>
@@ -88,7 +88,7 @@
     </div>`;
   }
   function renderRoot() {
-    return cloud({ status: "¿qué armamos?", trail: [{ who: "ai", html: `<p>${esc(App.say("¿Qué querés crear?", "¿Qué quieres crear?"))}</p>` }], body: rootBody() }) + queueList();
+    return cloud({ hero: true, status: "¿qué armamos?", trail: [{ who: "ai", html: `<p>${esc(App.say("¿Qué querés crear?", "¿Qué quieres crear?"))}</p>` }], body: rootBody() }) + queueList();
   }
 
   // ---------- entrada desde afuera: Biblioteca y Laboratorio ("Usar en un video nuevo") dejan UI.draft.style/.notes;
@@ -103,6 +103,24 @@
     return true;
   }
 
+  // ---------- la nube de Crear: nace en el orbe de Jarvis, vuela hasta su sitio, florece y queda flotando ----------
+  // Es la misma gota y el mismo florecido que Jarvis (App.morph.fly + bloom): una sola transicion para "aparecer".
+  // Se hace UNA vez al entrar a Crear (los pasos y los caminos ya se mueven con advanceStep/advanceNav). Si Jarvis
+  // te trajo hasta aca, el florecido de la pantalla ya lo hizo el, asi que no se repite. Mientras Crear esta abierto
+  // las manchas del fondo se juntan detras de la nube (App.aura.mood, igual que Jarvis) y piensan cuando se envia.
+  let entered = false;
+  function gather(el) {
+    if ((App.jarvis && App.jarvis.isOpen()) || (App.celebrate && App.celebrate.isOpen())) return; // ellos ya juntaron el fondo detras de su propio panel
+    const r = el.getBoundingClientRect(), busy = $(".jh .orb.fast", el);
+    App.aura.mood(busy ? "think" : "focus", { x: r.x + r.width / 2, y: r.y + Math.min(r.height * 0.4, 260) });
+  }
+  const enter = (el) => App.morph.arrive(el);
+  App.on((ks) => {
+    if (!ks.has("route") || App.route().name === "crear") return;
+    entered = false;
+    if (!(App.jarvis && App.jarvis.isOpen()) && !(App.celebrate && App.celebrate.isOpen())) App.aura.mood(null);
+  });
+
   App.views.crear = {
     title: "Crear",
     render(r) {
@@ -112,7 +130,8 @@
       return App.crearVideo.render() + queueList();
     },
     bind(root, r) {
-      const c = caminoOf(r);
+      const c = caminoOf(r), el = $(".crear-cloud", root);
+      if (el) { if (!entered) { entered = true; enter(el); } gather(el); }
       if (c === "estilo" && App.crearEstilo.bind) App.crearEstilo.bind(root);
       if (c === "video" && App.crearVideo.bind) App.crearVideo.bind(root);
     },

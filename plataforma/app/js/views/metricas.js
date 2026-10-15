@@ -24,6 +24,22 @@
   }
   const stat = (label, val, delta, series, sub, color) => `<div class="card lg stat"><div class="ch">${label}<span class="sp"></span>${delta != null ? `<span class="chip ${delta >= 0 ? "good" : "bad"}">${pctTxt(delta)}</span>` : ""}</div><div class="big-num" data-count="${val}" data-compact="1">${fmt(val)}</div>${sub ? `<p class="muted">${sub}</p>` : ""}${series ? `<div class="spk">${spark(series, 220, 48, { color })}</div>` : ""}</div>`;
 
+  // Logros: viven AQUI, dentro de Métricas, no en una pestaña (DECISIONES.md #1 y #13). Los hitos de seguidores, vistas, likes y guardados
+  // (y los demás) con su progreso; cuando se cruza uno nuevo se celebra al abrir la app o esta pantalla (celebrate.js).
+  const LG_FIRST = ["followers", "views", "likes", "saved"];
+  function logros() {
+    const T = App.trophies, cs = T.cards(), all = T.all(cs), list = (UI.scope === "total" || !cs.brands[UI.scope] ? cs.total : cs.brands[UI.scope]).slice();
+    list.sort((a, b) => { const ia = LG_FIRST.indexOf(a.key), ib = LG_FIRST.indexOf(b.key); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    const nw = new Set(T.newIds(all)), got = list.filter((c) => c.got > 0).length;
+    const card = (c) => {
+      const tier = c.tier >= 0 ? T.TIERS[c.tier] : null, fresh = c.ids.some((id) => nw.has(id));
+      const next = c.next == null ? "Todos los escalones logrados" : `Próximo: ${T.TIERS[T.tierOf(c.got, c.steps.length)][0]} a ${fmt(c.next)} · faltan ${fmt(c.next - c.value)}`;
+      return `<article class="mlg-c ${fresh ? "fresh" : ""}" style="--tc:${tier ? tier[1] : "#9fb0ac"}"><span class="medal ${tier ? "" : "locked"}" style="--m:${tier ? tier[1] : "#9fb0ac"}">${icon(c.def.icon)}</span>
+        <div class="mlg-b"><h3>${esc(c.def.name)}${tier ? `<em>${tier[0]}</em>` : ""}${fresh ? `<i class="mlg-new">Nuevo</i>` : ""}</h3><b class="num">${fmt(c.value)}</b><div class="bar" style="--p:${Math.round(c.ratio * 100)}%"><i></i></div><small class="muted">${next}</small></div></article>`;
+    };
+    return `<section class="card lg mlg" id="mlogros"><div class="ch">${icon("trophy")}Logros<span class="sp"></span>${nw.size ? `<button class="btn sm pri" type="button" data-act="celebrate">Ver lo nuevo</button>` : `<span class="faint">${got} de ${list.length}</span>`}</div><div class="mlgs">${list.map(card).join("")}</div></section>`;
+  }
+
   App.views.metricas = {
     title: "Métricas",
     render() {
@@ -50,7 +66,7 @@
         <div class="grid cols2"><section class="card lg"><div class="ch">${icon("star")}Mejores reels · ${mname.toLowerCase()}</div>${top.length ? `<ol class="top">${top3}</ol>${rows.length > UI.m.rank ? `<button class="btn sm ghost" type="button" data-act="mmore">Ver más</button>` : ""}` : `<p class="muted">Sin reels en este rango.</p>`}</section>
           <section class="card lg"><div class="ch">${icon("calendar")}Ritmo de publicación<span class="sp"></span><span class="faint">próximos 14 días</span></div><div class="pace">${barsSvg(future, 280, 96, { color: "var(--accent)", gap: 5 })}</div><p class="muted">${gaps ? `<b>${gaps} ${plural(gaps, "día", "días")}</b> sin nada agendado en las próximas dos semanas.` : "Hay algo agendado todos los días."}</p>
           ${best.length ? `<div class="besth"><span class="eyebrow">Mejores horas para publicar</span><div>${best.map(([h, v]) => `<span class="chip">${App.pad(h)}:00 · ${fmt(v)} vistas</span>`).join("")}</div></div>` : ""}
-          ${S.brands.length > 1 && UI.scope === "total" ? `<div class="cmp"><span class="eyebrow">Por cuenta · 7 días</span>${S.brands.map((b) => { const e = sel.evoOf(b); return `<div class="cmprow"><i class="dot" style="--c:${esc(b.color || "var(--accent)")}"></i><b>${esc(b.name)}</b><span class="num">${e ? fmt(e.views) : "–"}</span><span class="muted">${e ? (e.net >= 0 ? "+" : "") + e.net + " seg." : ""}</span></div>`; }).join("")}</div>` : ""}</section></div>`;
+          ${S.brands.length > 1 && UI.scope === "total" ? `<div class="cmp"><span class="eyebrow">Por cuenta · 7 días</span>${S.brands.map((b) => { const e = sel.evoOf(b); return `<div class="cmprow"><i class="dot" style="--c:${esc(b.color || "var(--accent)")}"></i><b>${esc(b.name)}</b><span class="num">${e ? fmt(e.views) : "–"}</span><span class="muted">${e ? (e.net >= 0 ? "+" : "") + e.net + " seg." : ""}</span></div>`; }).join("")}</div>` : ""}</section></div>${logros()}`;
     },
     // "home" tambien dispara un nuevo bind (y por lo tanto una nueva revisión de hitos): ahi vive home/trophies, y el baseline
     // se escribe de forma asincrona -- la primera llamada a bind() puede correr antes de que esa escritura se asiente.

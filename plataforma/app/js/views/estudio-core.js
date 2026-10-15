@@ -109,11 +109,13 @@
       // que ya no corresponde a donde esta parada.
       App.toast("El motor del Estudio no cargó. Revisa tu conexión y recarga."); App.go("estudio", { replace: true }); return;
     }
+    const sameEditor = !!ST.SE && !!E("st") && !E("st").hidden; // cambio de version (v1/v2/v3) con el editor ya abierto: se queda en el editor, sin reabrirlo
     if (ST.SE) teardown();
     const doc = ver(vid), spec = doc && doc.spec ? SM().clone(doc.spec) : null;
     ST.SE = { vid, spec, rev: doc ? doc.rev || 0 : 0, hist: SM().createHistory(100), sel: null, t: 0, zoom: 64, safe: false, muted: false, tool: null, trSide: "in", handle: null, dirty: false, qa: null, log: doc && doc.log ? doc.log.slice() : [], raf: 0, saveT: 0, ruleT: 0, openedAt: Date.now() };
     const el = ensureShell(); el.hidden = false; el.classList.remove("insp-open"); App.studioOpen = true; document.body.style.overflow = "hidden"; App.updateSendBar();
-    el.animate([{ opacity: 0, transform: "scale(1.015)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
+    if (!sameEditor) el.animate([{ opacity: 0, transform: "scale(1.015)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
+    else { const ph = E("st-phone"); if (ph) ph.animate([{ opacity: 0.35, transform: "scale(.985)" }, { opacity: 1, transform: "none" }], { duration: 380, easing: "cubic-bezier(.16,1,.3,1)" }); }
     if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
     ST.renderTop(); ST.renderDock(); ST.renderInspector(); ST.renderBanner();
     // Nunca dejar la vista previa en blanco para siempre y sin ningun aviso: si tarda demasiado

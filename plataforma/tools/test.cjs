@@ -18,6 +18,8 @@ async function nav(p, hash, ms) {
 async function open(browser, url, init, viewport, o) {
   if (!(o && o.cel)) url = url.replace("?", "?nocel=1&"); // el aviso automatico de hitos solo se prueba en su seccion
   const ctx = await browser.newContext({ viewport: viewport || { width: 1440, height: 900 } }); if (init) await ctx.addInitScript(init);
+  // la nube de Crear flota sin parar y Playwright espera que lo que va a tocar este quieto: en todas las pruebas se congela, menos en la que mide que flota
+  await ctx.addInitScript(() => { document.addEventListener("DOMContentLoaded", () => { const st = document.createElement("style"); st.id = "__nofloat"; st.textContent = ".crear-cloud.jv, .nt-float, .nt-cloud { animation: none !important; }"; document.head.appendChild(st); }); });
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(e.message)); page.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
   page.errs = errs; await page.goto(file + url, { waitUntil: "load" });
   await page.waitForFunction(() => window.App && App.S.ready && App.S.ready.videos, null, { timeout: 8000 }).catch(() => {}); await wait(page, 900); return page;
@@ -33,7 +35,7 @@ async function open(browser, url, init, viewport, o) {
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad|\$\d/i.test(document.body.innerText))), "Hoy no menciona ventas ni dinero");
   for (const r of ["crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"]) {
     await p.evaluate((h) => { location.hash = "#" + h; }, r); await p.waitForFunction((n) => !!document.querySelector(`.view[data-view="${n}"]`), r, { timeout: 5000 }).catch(() => {}); await wait(p, 250);
-    ok(await p.evaluate((n) => !!document.querySelector(`.view[data-view="${n}"]`) && document.querySelector(".view").innerText.length > 40, r), "vista " + r + " dibuja contenido");
+    ok(await p.evaluate((n) => !!document.querySelector(`.view[data-view="${n}"]`) && document.querySelector(".view").innerText.length > (n === "notas" ? 30 : 40), r), "vista " + r + " dibuja contenido");
   }
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad/i.test(document.body.innerText))), "ninguna vista menciona ventas");
   await p.evaluate(() => { location.hash = "#aprobar"; }); await wait(p, 400);
@@ -47,7 +49,12 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => !!document.querySelector("#rvdecide .btn.pri")), "la vista general muestra la capsula de decision");
   ok(await p.evaluate(() => document.querySelectorAll("#rvleft .vb").length >= 3), "muestra las versiones de la pieza");
   ok(await p.evaluate(() => { const n = document.querySelectorAll("#rvright .why li").length; return n >= 1 && n <= 3; }), "los factores del predictor quedan agrupados en categorias simples (no la lista cruda de hasta 6)");
-  ok(await p.evaluate(() => { const d = document.querySelector("#rvright .why-toggle"); return !!d && !d.open; }), "el detalle de \"¿Por qué este score?\" esta cerrado por default");
+  ok(await p.evaluate(() => { const b = document.querySelector("#rvwhybox"); return !!b && !b.classList.contains("open") && document.querySelector(".rvwhy").getAttribute("aria-expanded") === "false"; }), "el detalle de \"¿Por qué este score?\" esta cerrado por default");
+  ok(await p.evaluate(() => !!document.querySelector("#rvright .rvring .num") && !!document.querySelector("#rvright .rvmanual") && /editor\/.+/.test(document.querySelector("#rvright .rvmanual").getAttribute("href")) && !!document.querySelector("#rvstudio")), "a la derecha: Abrir en editor manual arriba del score, y Abrir en editor bajo el video");
+  ok(await p.evaluate(() => !document.querySelector("#rvnote") && !document.querySelector(".caps") && !document.querySelector(".say") && !document.querySelector("#rvright .fb")), "ya no estan las notas por cuadro, los subtitulos, la opinion de Jarvis ni Que falla");
+  await p.click(".rvwhy"); await wait(p, 700);
+  ok(await p.evaluate(() => document.querySelector("#rvwhybox").classList.contains("open") && document.querySelector(".rvwhy").getAttribute("aria-expanded") === "true" && document.querySelector("#rvwhybox").getBoundingClientRect().height > 40), "al hacer clic en \"¿Por qué este score?\" se abren las razones");
+  await p.click(".rvwhy"); await wait(p, 500);
   await p.keyboard.press("a"); await wait(p, 700);
   const after = await p.evaluate((id) => ({ st: App.sel.video(id).status, nxt: location.hash, log: (window.__auraLog || []).filter((x) => x[1] === "requests").map((x) => x[2]) }), firstId);
   ok(after.st === "approved", "A aprueba la version", after.st);
@@ -58,10 +65,14 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "tell" && /APROB/.test(x[1]))), "avisa a Claude de la aprobacion");
   await p.keyboard.press("r"); await wait(p, 500);
   ok((await p.evaluate(() => App.sel.allPending().length)) <= pend0 - 2, "R rechaza y baja los pendientes");
-  // notas por cuadro
-  await p.fill("#rvnote", "Nota de prueba en el cuadro"); await p.keyboard.press("Enter"); await wait(p, 600);
-  ok(await p.evaluate(() => App.S.notes.some((n) => n.text === "Nota de prueba en el cuadro" && n.sent === false)), "guarda una nota por cuadro como borrador");
-  ok(await p.evaluate(() => App.sel.unsentCount() >= 4), "la barra cuenta los cambios sin enviar");
+  // chat "¿Qué ajustarías?": chips de seleccion multiple + detalle; queda como el cambio de esa version
+  ok(await p.evaluate(() => /¿Qué ajustarías\?/.test(document.querySelector(".rvq").textContent) && document.querySelectorAll(".rvchat .tg").length >= 6), "el chat dice ¿Qué ajustarías? y ofrece hook, subtitulos, intro, video, animaciones...");
+  const unsent0 = await p.evaluate(() => App.sel.unsentCount());
+  await p.click('.rvchat .tg[data-t="Subtítulos"]'); await p.click('.rvchat .tg[data-t="Animaciones"]');
+  ok(await p.evaluate(() => document.querySelectorAll(".rvchat .tg[aria-pressed='true']").length === 2), "se pueden elegir varias opciones a la vez");
+  await p.fill("#rvfb", "Subtítulos más grandes y la animación más lenta"); await p.keyboard.press("Enter"); await wait(p, 700);
+  ok(await p.evaluate(() => { const v = App.sel.video(document.querySelector("#rv").dataset.id); return /Subtítulos más grandes/.test(v.feedback || "") && (v.tags || []).includes("Animaciones") && v.feedbackDirty === true; }), "enviar el chat guarda el ajuste de esta version como borrador");
+  ok(await p.evaluate((n) => App.sel.unsentCount() > n && !!document.querySelector(".rvthread .rvme"), unsent0), "la barra cuenta el cambio sin enviar y el chat lo muestra como mensaje");
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.press("Escape"); await wait(p, 500);
   ok(await p.evaluate(() => App.route().name === "estudio" && !App.route().args[0]), "Escape desde la vista general vuelve al listado de Estudio");
@@ -79,6 +90,19 @@ async function open(browser, url, init, viewport, o) {
   ok(before > 0 && (await p.evaluate(() => App.sel.unsentCount())) === 0, "Enviar cambios deja todo enviado", before + " -> " + (await p.evaluate(() => App.sel.unsentCount())));
   ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "set" && /^changes_/.test(x[2]))), "escribe requests/changes_*");
 
+  console.log("\n== Crear: la nube que flota ==");
+  await nav(p, "#hoy", 500); await p.evaluate(() => { const f = document.getElementById("__nofloat"); if (f) f.remove(); window.__sawPre = false; window.__preOpacity = null; new MutationObserver(() => { const c = document.querySelector(".crear-cloud"); if (c && c.classList.contains("arr-pre")) { window.__sawPre = true; if (window.__preOpacity === null) window.__preOpacity = getComputedStyle(c).opacity; } }).observe(document.body, { subtree: true, attributes: true, childList: true }); location.hash = "#crear"; });
+  await p.waitForSelector(".crear-cloud", { timeout: 4000 }); await wait(p, 100);
+  ok(await p.evaluate(() => !!document.querySelector(".crear-cloud.hero .crliq i") && /¿Qué quer[eé]s crear\?|¿Qué quieres crear\?/.test(document.querySelector(".crear-cloud .msg.ai").textContent)), "Crear es la nube de Jarvis con la pregunta ¿Qué querés crear?");
+  ok(await p.evaluate(() => window.__sawPre === true && window.__preOpacity === "0"), "la nube espera invisible mientras la gota vuela desde el orbe");
+  await wait(p, 1900);
+  ok(await p.evaluate(() => { const c = document.querySelector(".crear-cloud"); return !c.classList.contains("arr-pre") && c.classList.contains("arr-in") && getComputedStyle(c).opacity === "1"; }), "la nube florece al aterrizar la gota");
+  ok(await p.evaluate(() => /crFloat/.test(getComputedStyle(document.querySelector(".crear-cloud")).animationName) && /crShape/.test(getComputedStyle(document.querySelector(".crear-cloud")).animationName)), "queda flotando y su contorno se deforma como un liquido");
+  ok(await p.evaluate(() => document.querySelector(".aura").dataset.mood === "focus"), "el fondo se junta detras de la nube");
+  await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 700);
+  ok(await p.evaluate(() => !document.querySelector(".aura").dataset.mood), "al salir de Crear el fondo vuelve a su lugar");
+  await p.addStyleTag({ id: "__nofloat", content: ".crear-cloud.jv, .nt-float, .nt-cloud { animation: none !important; }" });
+
   console.log("\n== Crear: un estilo nuevo (camino A) ==");
   const tmp = path.join(root, "capturas", "_tmp", "clip-prueba.mp4"); fs.mkdirSync(path.dirname(tmp), { recursive: true }); fs.copyFileSync(path.join(root, "app", "dev", "demo.mp4"), tmp);
   await nav(p, "#crear/estilo", 500);
@@ -87,6 +111,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => !!document.querySelector("#cresatt")), "pantalla minimalista para subir el material (App.attach)");
   await p.setInputFiles("#cresatt input[type=file]", tmp); await wait(p, 1200);
   ok(await p.evaluate(() => document.querySelectorAll("#cresatt .achip[data-s='done']").length === 1), "sube un video con la misma ficha de adjuntos que el resto de la app");
+  ok(await p.evaluate(() => /^Subido ·/.test(document.querySelector("#cresatt .achip[data-s='done'] small").textContent)), "la ficha dice Subido cuando termina (y Subiendo… mientras sube)");
   await p.fill("#cresidea", "Como el de ejemplo pero con mas energia");
   await p.click('[data-act="crescontinue"]'); await wait(p, 900);
   ok(await p.evaluate(() => document.querySelectorAll(".crlike").length === 2), "pasa a marcar que te gusto de cada referencia (video + idea)");
@@ -98,9 +123,8 @@ async function open(browser, url, init, viewport, o) {
 
   console.log("\n== Crear: un video nuevo (camino B, reels con estilo) ==");
   await nav(p, "#crear/video", 500);
-  ok(await p.evaluate(() => document.querySelectorAll('[data-act="crvformat"]').length === 3), "ofrece los tres formatos (reels, long form, long form a short form)");
-  await p.click('[data-act="crvformat"][data-f="corto"]'); await wait(p, 900);
-  ok(await p.evaluate(() => document.querySelectorAll(".crsty-grid .crsty").length > 0), "elegis tu estilo o estilos preferidos (biblioteca completa)");
+  ok(await p.evaluate(() => document.querySelectorAll(".crsty-grid .crsty").length > 0), "arranca directo en elegi tu estilo o estilos preferidos (biblioteca completa)");
+  ok(await p.evaluate(() => document.querySelectorAll('[data-act="crvother"]').length === 2), "long form y long form a short form son formatos aparte, a un toque");
   await p.click(".crsty-grid .crsty >> nth=0"); await wait(p, 300);
   ok(await p.evaluate(() => App.ui.crear.video.styles.length === 1), "elegir un estilo lo marca");
   await p.click('[data-act="crvcontinue"]'); await wait(p, 900);
@@ -114,8 +138,8 @@ async function open(browser, url, init, viewport, o) {
 
   console.log("\n== Crear: long form a short form ==");
   await nav(p, "#crear/video", 500);
-  await p.click('[data-act="crvformat"][data-f="long2short"]'); await wait(p, 900);
-  ok(await p.evaluate(() => !!document.querySelector("#crvsrcatt")), "pide solo el video de origen primero (subida o link)");
+  await p.click('[data-act="crvother"][data-f="long2short"]'); await wait(p, 900);
+  ok(await p.evaluate(() => !!document.querySelector("#crvsrcatt") && !document.querySelector(".crsty-grid")), "pide solo el video de origen primero (subida o link), sin la biblioteca");
   await p.click('[data-act="crvsrcmode"][data-m="link"]'); await wait(p, 300);
   await p.fill("#crvsrclink", "https://youtu.be/ejemplo");
   await p.click('[data-act="crvcontinue"]'); await wait(p, 900);
@@ -123,6 +147,22 @@ async function open(browser, url, init, viewport, o) {
   await p.click(".crsty-grid .crsty >> nth=0"); await wait(p, 300);
   await p.click('[data-act="crvcontinue"]'); await wait(p, 1200);
   ok(await p.evaluate(() => App.S.requests.some((r) => r.kind === "new_video" && r.videoFormat === "long2short" && /youtu\.be/.test(r.sourceLink || ""))), "pedido long form a short form con el link (incluso de YouTube)");
+
+  console.log("\n== Notas: la nube que pregunta como mejorar ==");
+  await nav(p, "#hoy", 400); await p.evaluate(() => { location.hash = "#notas"; }); await p.waitForSelector("#ntcloud", { timeout: 4000 }); await wait(p, 2100);
+  ok(await p.evaluate(() => /¿Cómo puedo mejorar tu experiencia aquí\?/.test(document.querySelector("#ntsay").textContent) && !!document.querySelector("#ntbox") && !document.querySelector(".card") && !document.querySelector(".plist")), "Notas es solo la nube con la pregunta y un espacio para escribir");
+  ok(await p.evaluate(() => { const c = getComputedStyle(document.querySelector("#ntcloud")); return /\//.test(c.borderRadius) || c.borderTopLeftRadius !== c.borderTopRightRadius; }), "el contorno de la nube no es un circulo perfecto");
+  await p.fill("#ntbox", "Me gustaría ver los números de la semana más grandes"); await p.keyboard.press("Enter"); await wait(p, 900);
+  ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "set" && /^experiencia_/.test(x[2]) && /números de la semana/.test(x[3].text)) && window.__auraLog.some((x) => x[0] === "tell" && /COMENTARIO SOBRE LA PLATAFORMA/.test(x[1]))), "enviar manda el comentario a Claude en el acto");
+  ok(await p.evaluate(() => /Recibido\. ¿Hay algo más\?/.test(document.querySelector("#ntsay").textContent) && document.querySelector("#ntbox").value === ""), "responde Recibido. ¿Hay algo más? y deja escribir otra");
+  await p.fill("#ntbox", "Y que el modo noche sea más oscuro"); await p.click("#ntform .rvsend"); await wait(p, 900);
+  ok(await p.evaluate(() => window.__auraLog.filter((x) => x[0] === "set" && /^experiencia_/.test(x[2])).length === 2 && /Recibido/.test(document.querySelector("#ntsay").textContent)), "se pueden mandar varios mensajes seguidos");
+  await p.click(".nt-end"); await wait(p, 900);
+  ok(await p.evaluate(() => /Muchas gracias, haremos lo mejor por mejorar tu experiencia\./.test(document.querySelector("#ntsay").textContent) && getComputedStyle(document.querySelector("#ntform")).display === "none"), "al terminar dice Muchas gracias, haremos lo mejor por mejorar tu experiencia");
+  await p.click(".nt-again"); await wait(p, 800);
+  ok(await p.evaluate(() => /¿Cómo puedo mejorar/.test(document.querySelector("#ntsay").textContent) && getComputedStyle(document.querySelector("#ntform")).display !== "none"), "se puede volver a escribir otra idea");
+  await p.fill("#ntbox", "no"); await p.keyboard.press("Enter"); await wait(p, 900);
+  ok(await p.evaluate(() => /Muchas gracias/.test(document.querySelector("#ntsay").textContent) && window.__auraLog.filter((x) => x[0] === "set" && /^experiencia_/.test(x[2])).length === 2), "escribir \"no\" tambien cierra sin mandar nada");
 
   console.log("\n== Biblioteca y Laboratorio ==");
   await p.evaluate(() => { location.hash = "#biblioteca"; }); await p.waitForFunction(() => document.querySelectorAll(".lib-card").length > 0, null, { timeout: 5000 }).catch(() => {}); await wait(p, 300);
@@ -179,6 +219,13 @@ async function open(browser, url, init, viewport, o) {
   const ed = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
   await p.evaluate((id) => { location.hash = "#estudio/editor/" + encodeURIComponent(id); }, ed); await wait(p, 2200);
   ok(await p.evaluate(() => !!(App.st.SE && App.st.SE.handle && App.st.SE.spec)), "abre el editor con el motor original");
+  // v1/v2/v3: se cambia de version SIN salir del editor
+  const otherV = await p.evaluate((id) => { const v = App.sel.video(id); const o = App.sel.siblings(v).find((x) => x.id !== id); return o ? o.id : null; }, ed);
+  ok(!!otherV, "la pieza tiene mas de una version para cambiar");
+  await p.click(`.st-vc[data-vid="${otherV}"]`); await wait(p, 1800);
+  ok(await p.evaluate((id) => App.route().args[0] === "editor" && App.route().args[1] === id && !!App.st.SE && App.st.SE.vid === id && !document.getElementById("st").hidden && App.studioOpen === true, otherV), "cambiar de version sigue en el editor (no vuelve a la vista general)");
+  await p.click(`.st-vc[data-vid="${ed}"]`); await wait(p, 2000);
+  ok(await p.evaluate((id) => App.route().args[0] === "editor" && !!App.st.SE && App.st.SE.vid === id && !!App.st.SE.spec && !document.getElementById("st").hidden, ed), "y se puede volver a la primera sin salir del editor");
   await p.click('.st-clip[data-k="text"] >> nth=0'); await wait(p, 400);
   ok(await p.evaluate(() => !!document.querySelector("#st-ft")), "seleccionar un clip abre sus ajustes");
   await p.fill("#st-ft", "NUEVO TITULO"); await wait(p, 500);
@@ -190,7 +237,9 @@ async function open(browser, url, init, viewport, o) {
   await p.click('[data-tool="texto"]'); await wait(p, 450); await p.click('.st-tile[data-add="texto"] >> nth=0'); await wait(p, 500);
   ok(await p.evaluate(() => App.st.SE.spec.tracks.filter((t) => t.kind === "text").reduce((a, t) => a + t.clips.length, 0) >= 3), "la biblioteca del Estudio agrega un texto en el cursor");
   await p.click("#st-qa"); await wait(p, 450); ok(await p.evaluate(() => !!document.querySelector("#st-ipane .st-qahead")), "revisar reglas abre el panel de calidad"); await p.click("#st-iclose"); await wait(p, 400);
-  await p.click("#st-ask-btn"); await wait(p, 450); await p.fill("#st-ask-text", "Pon un iris en el fondo"); await p.click("#st-ask-go"); await wait(p, 800);
+  await p.click("#st-ask-btn"); await wait(p, 450);
+  ok(await p.evaluate(() => !document.querySelector("#st-ipane .st-chips") && !document.querySelector("#st-ipane [data-ex]")), "el chat de Pedirle a Claude ya no trae sugerencias debajo");
+  await p.fill("#st-ask-text", "Pon un iris en el fondo"); await p.click("#st-ask-go"); await wait(p, 800);
   ok(await p.evaluate(() => App.S.studioRequests.some((r) => /iris/.test(r.text) && r.status === "pedido")), "pedirle a Claude crea studio_requests con pasos por hacer");
   await p.click('[data-tool="exportar"]'); await wait(p, 450); await p.click("#st-dl-srt"); await wait(p, 500);
   ok(await p.evaluate(() => window.__auraLog.some((x) => x[0] === "download" && /\.srt$/.test(x[1]))), "exporta subtitulos SRT");
@@ -281,7 +330,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => /Opus 5\.5/.test(document.querySelector('.crear-cloud .aipill[data-ai="draft"]').textContent)), "Crear arranca con el modelo de siempre");
   await p.click('.crear-cloud .aipill[data-ai="draft"]'); await wait(p, 300); await p.click('.aimenu [data-m="claude-haiku-5-5"]'); await p.keyboard.press("Escape"); await wait(p, 300);
   ok(await p.evaluate(() => App.ai.get("global").model === "claude-opus-5-5" && App.ai.get("draft").model === "claude-haiku-5-5"), "en Crear el modelo cambia solo para ese pedido");
-  await p.click('[data-act="crvformat"][data-f="long"]'); await wait(p, 900);
+  await p.click('[data-act="crvother"][data-f="long"]'); await wait(p, 900);
   await p.setInputFiles("#crvatt-normal input[type=file]", tmp); await wait(p, 1200);
   await p.click('[data-act="crvcontinue"]'); await wait(p, 1200);
   ok(await p.evaluate(() => { const r = window.__auraLog.filter((x) => x[0] === "set" && /^new_/.test(x[2])).pop(); return !!r && r[3].model === "claude-haiku-5-5" && r[3].effort === "high"; }), "el pedido de video lleva el modelo elegido");
@@ -346,7 +395,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && +getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity > 0.9), "al entrar a Hoy se celebra el hito nuevo con la tarjeta de la gota");
   ok(await p.evaluate(() => /¡|Buen trabajo|hace|Excelente|vas muy bien|esfuerzo/i.test(document.querySelector(".cel-slide[data-on] .cel-t").textContent)), "el titulo felicita, no solo informa el numero");
   ok(await p.evaluate(() => document.querySelector(".cel-slide[data-on] .cel-p").textContent.length > 10), "hay una frase motivacional ademas del dato");
-  ok(await p.evaluate(() => document.querySelectorAll(".cel-slide.level").length === 1 && /Nivel|nivel/.test(document.querySelector(".cel-slide.level").textContent)), "tambien celebra la subida de nivel");
+  ok(await p.evaluate(() => !document.querySelector(".cel-slide.level") && !document.querySelector(".cel-xp") && !/XP|nivel/i.test(document.querySelector("#celwrap").textContent)), "la celebracion no habla de niveles ni de XP: solo reconoce el hito");
   for (let i = 0; i < 6 && (await p.evaluate(() => App.celebrate.isOpen())); i++) { await p.click("#celnext"); await wait(p, 1500); }
   await wait(p, 1200);
   ok(await p.evaluate(() => App.route().name === "hoy"), "al cerrar vuelve a la pantalla desde la que se abrio");

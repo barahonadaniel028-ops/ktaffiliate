@@ -8,7 +8,7 @@
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
   // el conteo de hitos nuevos (antes el badge de "Logros") marca ahora el item de nav de Métricas, donde viven los hitos -- DECISIONES.md #1
-  function counts() { return { estudio: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
+  function counts() { return { estudio: App.sel.allPending().length, crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
     const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
@@ -116,7 +116,7 @@
   let listOpen = false, armTime = 0;
   function updateSendBar() {
     const bar = $("#sendbar"), n = sel.unsentCount(); if (!bar) return;
-    bar.hidden = n === 0 || App.route().name === "notas" || App.studioOpen; document.body.classList.toggle("has-send", n > 0);
+    bar.hidden = n === 0 || App.studioOpen; document.body.classList.toggle("has-send", n > 0);
     bar.querySelector("#sendn").textContent = n; bar.querySelector("#sendtxt").textContent = App.plural(n, "cambio sin enviar", "cambios sin enviar");
     const list = $("#sendlist"), open = listOpen && n > 0 && !bar.hidden; list.hidden = !open; bar.querySelector("[data-act=sendview]").setAttribute("aria-expanded", String(open));
     if (open) { const items = App.act.pendingItems(); list.innerHTML = `<ul>${items.map((it, i) => `<li><div><b>${esc(it.kind)}</b><span>${esc(it.label)}</span></div><button class="btn sm ghost" type="button" data-act="sundo" data-i="${i}">Quitar</button></li>`).join("")}</ul><button class="btn sm ghost bad" type="button" data-act="sundoall">Descartar todo</button>`; } else armTime = 0;

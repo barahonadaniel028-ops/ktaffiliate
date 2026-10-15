@@ -208,7 +208,7 @@ button.card:hover, a.card:hover { transform: translateY(-2px); }
 .ringw { position: relative; display: inline-grid; place-items: center; flex: none; }
 .ringw svg { width: 100%; height: 100%; display: block; }
 .ring-trk { stroke: var(--hair); } .ring-val { stroke: var(--rc, url(#auraGrad)); transition: stroke-dasharray 1s var(--ease); }
-.ringw .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ringw .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; width: auto; min-height: 0; padding: 0; border-radius: 50%; background: none; box-shadow: none; } /* ".in" tambien es el estilo de los campos de texto: dentro de un anillo no debe verse como una caja */
 .bar { height: 10px; border-radius: 5px; background: var(--hair2); overflow: hidden; box-shadow: inset 0 0 0 1px var(--hair2); }
 .bar > i { display: block; height: 100%; width: var(--p, 0%); border-radius: 5px; background: linear-gradient(90deg, var(--teal), #6fd1c0, var(--apricot)); transition: width 1s var(--ease); }
 
@@ -368,10 +368,13 @@ body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: o
 /* Jarvis: el orbe se estira y se vuelve este panel */
 #morph { position: fixed; inset: 0; z-index: 450; pointer-events: none; }
 #morph .drop { position: fixed; border-radius: 50%; will-change: transform, border-radius, width, height, left, top; }
-#morph .gooed { position: absolute; inset: 0; filter: url(#goo); }
+#morph .gooed { position: absolute; inset: 0; filter: url(#goo); will-change: transform; }
 .jv-wrap { position: fixed; inset: 0; z-index: 420; display: none; }
 .jv-wrap.open { display: block; }
-.jv-wrap .veil { position: absolute; inset: 0; background: var(--veil); backdrop-filter: blur(16px) saturate(1.25); -webkit-backdrop-filter: blur(16px) saturate(1.25); opacity: 0; transition: opacity .45s var(--ease); }
+/* el velo NO desenfoca el fondo (medido: un backdrop-filter bajo un panel con un orbe que respira vuelve a calcular el desenfoque en cada cuadro, y
+   pasa de 60 a ~12 cuadros por segundo). Se tapa con dos capas del mismo tinte: el fondo queda calmado y el panel manda. */
+.jv-wrap .veil { position: absolute; inset: 0; background: linear-gradient(var(--veil), var(--veil)), var(--veil); opacity: 0; transition: opacity .45s var(--ease); }
+#aura-root.mo *, #aura-root.mo *::before, #aura-root.mo *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; } /* modo liviano, ver motion.js */
 .jv-wrap.in .veil { opacity: 1; }
 .jv { position: absolute; left: 50%; top: 11vh; width: min(720px, calc(100vw - 32px)); max-height: 78vh; border-radius: 40px; padding: 0; display: flex; flex-direction: column; overflow: hidden; opacity: 0; transform: translateX(-50%); box-shadow: inset 0 1px 0 var(--edge), 0 60px 120px -40px var(--shadow), 0 0 0 1px var(--edge2); }
 .jv .inner { display: flex; flex-direction: column; min-height: 0; flex: 1; }
@@ -590,23 +593,10 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .tc { font-size: 12.5px; color: var(--ink2); min-width: 78px; text-align: right; }
 .rv-tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; } .rv-tools .chip { height: 34px; cursor: pointer; } .rv-tools .chip[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); } .rv-tools .chip .ic { width: 15px; height: 15px; }
 .rv-right { display: grid; gap: 18px; width: min(100%, 420px); align-content: start; }
-.say { display: grid; gap: 12px; } .say .who { display: flex; align-items: center; gap: 12px; font-weight: 600; } .say .who .orb { width: 40px; height: 40px; }
-.say .msg { border-radius: 28px 28px 28px 8px; padding: 20px 22px; font: 300 20px/1.4 var(--font); letter-spacing: -.012em; } .say .msg b { font-weight: 600; }
-.factors { display: grid; gap: 14px; padding: 4px 4px 0; } .fh { display: flex; align-items: center; gap: 14px; } .fh b { display: block; font-weight: 600; }
 .why { display: grid; } .why li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 2px; border-top: 1px solid var(--hair2); font-size: 14px; }
 .why li i { width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; font: 700 12px/1 var(--font); font-style: normal; color: #fff; background: var(--up); margin-top: 1px; } .why li[data-k="neg"] i { background: var(--down); }
 .why li small { display: block; color: var(--ink3); font-size: 12.5px; line-height: 1.4; margin-top: 2px; } .why li > span { font: 600 13px/1.4 var(--font); color: var(--ink2); }
 .fixes { padding: 14px 16px; border-radius: 20px; background: var(--accent-soft); font-size: 14px; } .fixes ul { margin-top: 6px; display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
-.why-toggle { margin-top: 2px; } .why-toggle > summary { cursor: pointer; list-style: none; font: 600 13.5px/1 var(--font); color: var(--accent); padding: 6px 2px; } .why-toggle > summary::-webkit-details-marker { display: none; } .why-toggle > summary::before { content: "▸"; display: inline-block; margin-right: 6px; transition: transform .2s var(--ease); } .why-toggle[open] > summary::before { transform: rotate(90deg); } .why-toggle[open] > summary { margin-bottom: 4px; } .why-toggle .why, .why-toggle .fixes { animation: rise .35s var(--ease) both; } .why-toggle .why + .fixes { margin-top: 10px; }
-.fb, .notes, .caps { display: grid; gap: 12px; } .fb h4, .notes h4, .caps h4 { font: 600 13px/1 var(--font); text-transform: uppercase; letter-spacing: .08em; color: var(--ink3); } .notes h4 small, .caps h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 6px; }
-.tags { display: flex; flex-wrap: wrap; gap: 8px; } .tg { cursor: pointer; height: 34px; } .tg[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); }
-.noteform { display: flex; gap: 8px; } .noteform input { flex: 1; min-width: 0; height: 44px; padding: 0 16px; border-radius: 22px; border: 0; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair); outline: none; } .noteform input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
-.nl { display: grid; gap: 8px; } .nl li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; font-size: 14px; } .nl li.done span { opacity: .55; text-decoration: line-through; } .nl .tcb { cursor: pointer; } .nl .x { width: 28px; height: 28px; border-radius: 14px; display: grid; place-items: center; color: var(--ink3); } .nl .x:hover { color: var(--down); } .nl .x .ic { width: 15px; height: 15px; }
-.cws { display: flex; flex-wrap: wrap; gap: 6px; max-height: 190px; overflow: auto; padding: 4px 2px; }
-.cw { padding: 5px 10px; border-radius: 14px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); font-size: 14px; cursor: pointer; transition: transform .15s; } .cw:hover { transform: translateY(-1px); } .cw.sel { background: var(--solid); color: var(--on-solid) !important; } .cw.aston { font-family: "AstonScript", "Caveat", cursive; font-size: 17px; } .cw.cursive { font-family: "Caveat", cursive; font-size: 16px; }
-.capbar { display: grid; gap: 10px; padding: 12px; border-radius: 18px; background: var(--accent-soft); } .capg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .capbar .chip { cursor: pointer; height: 30px; background: var(--glass-b); }
-.cwatch { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px var(--glass-solid), 0 0 0 3px var(--hair); cursor: pointer; }
-.capall { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink2); } .capall input { accent-color: var(--accent); width: 16px; height: 16px; }
 .capsule { position: fixed; z-index: 66; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; gap: 8px; padding: 8px; border-radius: 40px; }
 .capsule .btn { min-height: 58px; border-radius: 29px; padding: 0 26px; } .capsule .btn.pri { padding: 0 32px; } .capsule kbd { font: 600 11px/1 var(--font); padding: 4px 6px; border-radius: 7px; background: rgba(127,127,127,.18); margin-left: 4px; }
 .rv-done { display: grid; justify-items: center; text-align: center; gap: 20px; padding: 80px 20px; } .rv-done .acts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -620,14 +610,76 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
   .rv-top { margin-bottom: 14px; } .rv-prog span { font-size: 12px; }
 }
 
+/* ---- panel derecho de la vista general (DECISIONES.md #11): boton del editor, score, "¿Por qué este score?" y el chat "¿Qué ajustarías?" ---- */
+.rvmanual { justify-self: stretch; min-height: 50px; border-radius: 25px; gap: 10px; }
+.rvmanual .ic { width: 18px; height: 18px; }
+.rvscore { display: grid; justify-items: center; gap: 6px; padding: 4px 0 0; }
+.rvring { width: 132px; height: 132px; display: grid; place-items: center; animation: rvRise .9s var(--ease) both; }
+.rvring .ringw { width: 100%; height: 100%; }
+.rvn { font: 300 42px/1 var(--font); letter-spacing: -.04em; }
+@keyframes rvRise { from { opacity: 0; transform: scale(.86); } }
+.rvwhy { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 18px; font: 500 14px/1 var(--font); color: var(--ink2); transition: color .2s, background .2s; }
+.rvwhy:hover { color: var(--ink); background: var(--accent-soft); } .rvwhy .ic { width: 16px; height: 16px; transition: transform .45s var(--ease); } .rvwhy[aria-expanded="true"] .ic { transform: rotate(180deg); }
+.rvwhybox { width: 100%; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .55s var(--ease), opacity .4s var(--ease); }
+.rvwhybox.open { grid-template-rows: 1fr; opacity: 1; }
+.rvwhyin { min-height: 0; overflow: hidden; display: grid; gap: 12px; align-content: start; }
+.rvwhybox .why { margin-top: 4px; }
+.rvchat { display: grid; gap: 14px; padding: 18px 16px 16px; border-radius: 30px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
+.rvq { font: 300 22px/1.2 var(--font); letter-spacing: -.02em; color: var(--ink); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; } .tg { cursor: pointer; height: 34px; transition: transform .25s var(--ease), background .2s, color .2s; } .tg:active { transform: scale(.94); } .tg[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); }
+.rvthread { display: grid; gap: 8px; justify-items: end; }
+.rvme { max-width: 92%; padding: 10px 14px; border-radius: 20px 20px 6px 20px; background: var(--solid); color: var(--on-solid); font-size: 14.5px; line-height: 1.4; animation: rise .5s var(--ease) both; } .rvme small { display: block; opacity: .7; font-size: 12px; margin-bottom: 2px; } .rvme p { white-space: pre-wrap; }
+.rvack { justify-self: start; font-size: 13px; color: var(--ink3); animation: rise .6s .12s var(--ease) both; }
+.rvcomp { display: flex; align-items: flex-end; gap: 8px; padding: 6px 6px 6px 16px; border-radius: 26px; background: var(--glass-a); box-shadow: inset 0 0 0 1px var(--hair); transition: box-shadow .25s; }
+.rvcomp:focus-within { box-shadow: inset 0 0 0 2px var(--accent); }
+.aura-app .rvcomp textarea, .aura-app .rvcomp textarea:focus-visible { outline: none; }
+.rvcomp textarea { flex: 1; min-width: 0; resize: none; border: 0; outline: none; background: transparent; padding: 9px 0; font-size: 15px; line-height: 1.4; }
+.rvsend { width: 42px; height: 42px; border-radius: 21px; flex: none; display: grid; place-items: center; background: var(--solid); color: var(--on-solid); transition: transform .2s var(--ease); } .rvsend:hover { transform: scale(1.06); } .rvsend:active { transform: scale(.94); } .rvsend .ic { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) { .rvring, .rvme, .rvack { animation: none !important; } .rvwhybox { transition: none; } }
+
 /* ===== v-crear ===== */
 /* Crear: la pantalla entera es la nube de Jarvis. Reusa las clases .jv/.msg/.chips/.confirm/.jh de shell.css
    (mismo vidrio, mismo orbe, misma tipografia de conversacion) y solo cancela su posicionamiento de panel
    flotante/modal (.jv ahi es position:absolute dentro de #jvwrap) para que viva normal dentro de la columna
    de contenido. Todo lo nuevo (caminos, categorias de material, galeria de estilos) vive acá. */
 .crear-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
-.crear-cloud.jv { position: static; left: auto; top: auto; transform: none; opacity: 1; width: 100%; max-width: 760px; max-height: none; overflow: visible; box-shadow: inset 0 1px 0 var(--edge), 0 40px 90px -36px var(--shadow), 0 0 0 1px var(--edge2); }
-.crear-cloud .inner { padding-bottom: 6px; }
+.crear-cloud.jv { position: relative; left: auto; top: auto; transform: none; opacity: 1; width: 100%; max-width: 760px; max-height: none; overflow: visible; isolation: isolate; border-radius: 52px 60px 48px 56px / 56px 48px 60px 52px;
+  box-shadow: inset 0 1px 0 var(--edge), 0 40px 90px -36px var(--shadow), 0 0 0 1px var(--edge2); animation: crFloat 11s ease-in-out infinite, crShape 17s ease-in-out infinite; }
+.crear-cloud .inner { position: relative; z-index: 1; padding-bottom: 6px; }
+.crear-cloud.jv:hover, .crear-cloud.jv:focus-within { animation-play-state: paused, running; } /* el cuerpo se queda quieto cuando vas a tocar algo; el contorno sigue vivo */
+/* la nube es un liquido que flota: el contorno se deforma despacio, el cuerpo sube y baja un poco, y por dentro
+   tres manchas con los colores del fondo van y vienen (la misma materia que el orbe de Jarvis y el aura de la app) */
+@keyframes crFloat { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); } 35% { transform: translate3d(0, -6px, 0) rotate(-.2deg); } 70% { transform: translate3d(0, 3px, 0) rotate(.18deg); } }
+@keyframes crShape { 0%, 100% { border-radius: 52px 60px 48px 56px / 56px 48px 60px 52px; } 33% { border-radius: 60px 48px 58px 46px / 48px 58px 50px 60px; } 66% { border-radius: 46px 56px 60px 50px / 58px 50px 46px 58px; } }
+.crliq { position: absolute; inset: 0; z-index: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.crliq i { position: absolute; border-radius: 50%; will-change: transform; }
+.crliq i:nth-child(1) { width: 62%; aspect-ratio: 1; left: -14%; top: -30%; background: radial-gradient(closest-side, var(--b1), transparent); opacity: .7; animation: crDrift1 19s ease-in-out infinite; }
+.crliq i:nth-child(2) { width: 54%; aspect-ratio: 1; right: -12%; top: 6%; background: radial-gradient(closest-side, var(--b2), transparent); opacity: .6; animation: crDrift2 23s ease-in-out infinite; }
+.crliq i:nth-child(3) { width: 58%; aspect-ratio: 1; left: 22%; bottom: -36%; background: radial-gradient(closest-side, var(--b3), transparent); opacity: .6; animation: crDrift3 21s ease-in-out infinite; }
+@keyframes crDrift1 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1, 1); } 50% { transform: translate3d(14%, 18%, 0) scale(1.2, .86); } }
+@keyframes crDrift2 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1, 1); } 50% { transform: translate3d(-18%, 14%, 0) scale(.88, 1.18); } }
+@keyframes crDrift3 { 0%, 100% { transform: translate3d(0, 0, 0) scale(1, 1); } 50% { transform: translate3d(16%, -16%, 0) scale(1.16, .9); } }
+/* entrada: la nube espera invisible mientras la gota vuela desde el orbe; al aterrizar florece y su contenido sube escalonado */
+.arr-pre { opacity: 0 !important; } /* gana a la opacidad propia de cada nube (.crear-cloud.jv): hasta que la gota aterriza no se ve */
+.crear-cloud.arr-in .inner > * { animation: enterUp .75s cubic-bezier(.16, 1, .3, 1) both; }
+.crear-cloud.arr-in .inner > *:nth-child(2) { animation-delay: .07s; } .crear-cloud.arr-in .inner > *:nth-child(3) { animation-delay: .13s; } .crear-cloud.arr-in .inner > *:nth-child(n+4) { animation-delay: .19s; }
+.view[data-view="crear"][data-enter] > .crear-wrap { animation: none; } /* esa entrada la hace la gota, no el fundido de pantalla */
+/* la raiz es una gota de verdad: contorno de nube (nunca rectangulo ni circulo), la pregunta al centro y las dos opciones como pastillas */
+.crear-cloud.jv.hero { max-width: 820px; border-radius: 52% 48% 56% 44% / 50% 56% 44% 50%; animation: crFloat 11s ease-in-out infinite, crShapeHero 21s ease-in-out infinite; }
+@keyframes crShapeHero { 0%, 100% { border-radius: 52% 48% 56% 44% / 50% 56% 44% 50%; } 33% { border-radius: 44% 56% 46% 54% / 58% 44% 56% 42%; } 66% { border-radius: 56% 44% 52% 48% / 44% 54% 46% 56%; } }
+.crear-cloud.hero .jh .aipill { display: none; }
+.crear-cloud.hero .cbody { padding: 6px clamp(40px, 9vw, 96px) 56px; }
+.crear-cloud.hero .crear-paths { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+.crear-cloud.hero .crear-path { flex: 1 1 220px; max-width: 290px; padding: 16px 18px; border-radius: 28px; gap: 4px; background: var(--glass-a); text-align: left; }
+.crear-cloud.hero .crear-path .ic { width: 22px; height: 22px; } .crear-cloud.hero .crear-path b { font-size: 15px; } .crear-cloud.hero .crear-path span { font-size: 12.5px; }
+/* la pregunta de la raiz: grande, al centro, con el orbe encima */
+.crear-cloud.hero .jh { flex-direction: column; align-items: center; text-align: center; gap: 10px; padding-top: 34px; }
+.crear-cloud.hero .jh .orb { width: 92px; height: 92px; box-shadow: inset 0 -12px 24px rgba(13,60,62,.32), inset 0 6px 16px rgba(255,255,255,.5), 0 22px 40px -14px rgba(15,107,108,.55); }
+.crear-cloud.hero .jh .sp { display: none; } .crear-cloud.hero .jh .nm small { display: none; }
+.crear-cloud.hero .log { justify-items: center; padding-bottom: 6px; }
+.crear-cloud.hero .log .msg.ai { max-width: 100%; background: none; box-shadow: none; padding: 0 8px; text-align: center; font-size: clamp(28px, 4.6vw, 40px); font-weight: 300; line-height: 1.15; letter-spacing: -.025em; }
+.crear-cloud.hero .cbody { padding-top: 10px; }
+@media (prefers-reduced-motion: reduce) { .crear-cloud.jv, .crear-cloud.jv.hero, .crliq i, .crear-cloud.arr-in .inner > * { animation: none !important; } }
 .crear-cloud .log { max-height: 42vh; overflow: auto; flex: none; }
 .crear-cloud .log:empty { display: none; }
 .crear-cloud .cbody { padding: 0 22px 10px; display: grid; gap: 16px; }
@@ -645,6 +697,11 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .crear-path .ic { width: 26px; height: 26px; color: var(--accent); }
 .crear-path b { font-weight: 600; font-size: 15.5px; } .crear-path span { font-size: 13px; color: var(--ink2); line-height: 1.35; }
 @media (max-width: 640px) { .crear-paths, .crear-paths.v3 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- formatos aparte (Long form / Long form a short form), arriba de la biblioteca de estilos ---- */
+.crfmt { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink2); }
+.crfmt .chip { height: 34px; cursor: pointer; gap: 6px; } .crfmt .chip .ic { width: 15px; height: 15px; }
+.crfmt .chip:hover { background: var(--solid); color: var(--on-solid); }
 
 /* ---- subir material: App.attach (mismas fichas que Jarvis/Estudio/Laboratorio) dentro de un espacio grande y minimalista.
    .atbox es el elemento al que se liga App.attach (chips + zona de soltar juntos, asi las fichas con progreso
@@ -977,11 +1034,17 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 @media (max-width: 1100px) { .stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 @media (max-width: 820px) { .stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; } .stat { min-height: 0; padding: 16px; } .stat .big-num { font-size: 34px; } .chartbox { height: 190px; } .top li { grid-template-columns: 18px 36px minmax(0, 1fr) auto; } .top li .x { display: none; } .grid.cols2 { grid-template-columns: minmax(0, 1fr); } }
 
-/* hitos: solo lo que todavia usa la celebracion puntual (App.views.celebrate) -- ya no hay una pantalla "Logros" con su propio
-   encabezado de nivel, tarjetas y escalones (DECISIONES.md #1). .lvbadge y .bar.big los reusa la tarjeta de nivel de la celebracion. */
-.lvbadge { width: 104px; height: 104px; border-radius: 34px; display: grid; place-content: center; text-align: center; background: var(--solid); color: var(--on-solid); box-shadow: 0 24px 40px -18px var(--shadow); } .lvbadge b { font: 300 52px/1 var(--font); letter-spacing: -.05em; } .lvbadge small { font: 600 10.5px/1 var(--font); letter-spacing: .14em; opacity: .7; margin-top: 4px; }
+/* Logros: una seccion dentro de Metricas (no una pestaña, DECISIONES.md #1 y #13) con la medalla, el avance y lo que falta para el siguiente escalon */
 .bar.big { height: 14px; border-radius: 7px; } .bar.big > i { border-radius: 7px; }
-@media (max-width: 820px) { .lvbadge { width: 84px; height: 84px; border-radius: 28px; } .lvbadge b { font-size: 40px; } }
+.mlg { margin-top: 16px; }
+.mlgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.mlg-c { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 16px; border-radius: 24px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.mlg-c:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--hair2), 0 18px 34px -22px var(--shadow); }
+.mlg-c.fresh { box-shadow: inset 0 0 0 1.5px var(--tc), 0 0 0 4px color-mix(in srgb, var(--tc) 18%, transparent); }
+.mlg-c .medal { width: 54px; height: 54px; } .mlg-c .medal.locked { opacity: .45; filter: grayscale(.6); }
+.mlg-b { display: grid; gap: 4px; min-width: 0; } .mlg-b h3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 600 14px/1.2 var(--font); } .mlg-b h3 em { font: 500 11.5px/1 var(--font); font-style: normal; padding: 3px 8px; border-radius: 10px; background: color-mix(in srgb, var(--tc) 22%, transparent); color: var(--ink); }
+.mlg-new { font: 600 10.5px/1 var(--font); font-style: normal; text-transform: uppercase; letter-spacing: .06em; padding: 3px 7px; border-radius: 9px; background: var(--apricot); color: #3b1606; }
+.mlg-b .num { font: 300 28px/1 var(--font); letter-spacing: -.03em; } .mlg-b small { font-size: 12px; line-height: 1.35; }
 
 /* ===== v-cel ===== */
 /* Celebracion de logros: la misma gota y la misma tarjeta de vidrio que Jarvis */
@@ -1001,14 +1064,11 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 @keyframes celRing { 0% { opacity: .85; transform: scale(1); } 100% { opacity: 0; transform: scale(3.2); } }
 .cel .medal.cel-medal { position: relative; z-index: 2; width: 116px; height: 116px; box-shadow: 0 26px 50px -18px var(--m), inset 0 0 0 1.5px rgba(255,255,255,.6), inset 0 -10px 22px rgba(0,0,0,.14); } .cel .medal.cel-medal .ic { width: 50px; height: 50px; color: rgba(0,0,0,.5); }
 .cel-slide[data-on] .cel-medal { animation: medalDrop 1.05s var(--spring) .18s both; }
-.cel-badge { position: relative; z-index: 2; width: 126px; height: 126px; border-radius: 42px; } .cel-badge b { font-size: 64px; font-weight: 500; } .cel-slide[data-on] .cel-badge { animation: medalDrop 1.05s var(--spring) .18s both; }
 .cel-slide[data-on] > .eyebrow, .cel-slide[data-on] > .cel-t, .cel-slide[data-on] > .cel-tier, .cel-slide[data-on] > .cel-p, .cel-slide[data-on] > .cel-xp, .cel-slide[data-on] > .cel-bar { animation: enterUp .75s cubic-bezier(.16,1,.3,1) both; }
 .cel-slide[data-on] > .cel-t { animation-delay: .5s; } .cel-slide[data-on] > .cel-tier { animation-delay: .58s; } .cel-slide[data-on] > .cel-bar { animation-delay: .58s; } .cel-slide[data-on] > .cel-p { animation-delay: .66s; } .cel-slide[data-on] > .cel-xp { animation-delay: .74s; } .cel-slide[data-on] > .eyebrow { animation-delay: .42s; }
 .cel-t { margin: 0; font: 600 29px/1.12 var(--font-d); letter-spacing: -.03em; text-wrap: balance; }
 .cel-tier { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px 0 11px; border-radius: 15px; background: color-mix(in srgb, var(--m) 24%, transparent); color: var(--ink); font: 600 13px/1 var(--font); } .cel-tier i { width: 10px; height: 10px; border-radius: 50%; background: var(--m); box-shadow: 0 0 0 2px color-mix(in srgb, var(--m) 35%, transparent), 0 0 12px var(--m); }
 .cel-p { margin: 4px 0 0; max-width: 32ch; font-size: 15.5px; line-height: 1.5; color: var(--ink2); text-wrap: balance; }
-.cel-xp { margin-top: 6px; height: 34px; padding: 0 16px; border-radius: 17px; display: inline-grid; place-items: center; background: color-mix(in srgb, var(--apricot) 38%, transparent); color: color-mix(in srgb, var(--warn) 70%, var(--ink)); font: 600 15px/1 var(--font); font-variant-numeric: tabular-nums; }
-.cel-bar { width: min(280px, 80%); margin: 8px 0 2px; } .cel-bar > i { transform: scaleX(0); transform-origin: 0 50%; } .cel-bar.go > i { animation: celBar 1.2s cubic-bezier(.16,1,.3,1) .5s both; } @keyframes celBar { to { transform: scaleX(1); } }
 .cel-foot { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 10px; } .cel-foot .btn { min-width: 180px; height: 50px; border-radius: 25px; font-size: 16px; }
 .cel-dots { display: flex; gap: 7px; } .cel-dots[hidden] { display: none; } .cel-dots i { width: 7px; height: 7px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 18%, transparent); transition: width .4s var(--spring), background .3s; } .cel-dots i.on { width: 22px; background: var(--ink); }
 .cel-wrap .veil { background: radial-gradient(60% 50% at 50% 42%, color-mix(in srgb, var(--apricot) 26%, transparent), transparent 70%), var(--veil); }
@@ -1016,19 +1076,34 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 @media (prefers-reduced-motion: reduce) { .cel-blob, .cel-ring { animation: none !important; } .cel-slide { transition: opacity .2s; transform: none; filter: none; } }
 
 /* ===== v-notas ===== */
-/* Notas y Ajustes */
-.notasg, .setg { align-items: start; }
-.plist { display: grid; } .pit { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--hair2); } .pit:first-child { border-top: 0; } .pit div { flex: 1; min-width: 0; } .pit p { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.lnk { color: var(--accent); font-weight: 600; font-size: 13px; }
-#quicknote .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; } #quicknote select { flex: 1; min-width: 160px; height: 46px; border: 0; border-radius: 23px; padding: 0 16px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair); }
-.nrows { display: grid; } .nrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 12px 0; border-top: 1px solid var(--hair2); } .nrow:first-child { border-top: 0; } .nrow b { font-weight: 600; display: block; } .nrow p { font-size: 14.5px; } .nrow .reply { grid-column: 2 / -1; font-size: 13.5px; padding: 8px 12px; border-radius: 14px; background: var(--accent-soft); }
+/* Notas (la nube que pregunta como mejorar la experiencia) y Ajustes */
+.setg { align-items: start; }
 .srow { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-top: 1px solid var(--hair2); } .srow:first-of-type { border-top: 0; } .srow div:first-child { flex: 1; min-width: 0; } .srow b { font-weight: 500; display: block; } .srow small { font-size: 13px; display: block; margin-top: 2px; }
 .mini-sel { height: 40px; border: 0; border-radius: 20px; padding: 0 14px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair); max-width: 190px; }
 .accs { display: grid; margin-bottom: 14px; } .acc { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--hair2); } .acc:first-child { border-top: 0; } .acc b { display: block; font-weight: 600; } .acc small { font-size: 13px; }
 .addacc { display: grid; gap: 12px; } .fgrid2 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .kb { font: 600 12px/1 var(--font); padding: 6px 9px; border-radius: 8px; background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--hair); margin-right: 8px; }
 .keys { display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 14px; color: var(--ink2); } .keys span { display: inline-flex; align-items: center; }
-@media (max-width: 820px) { .fgrid2 { grid-template-columns: minmax(0, 1fr); } .nrow { grid-template-columns: minmax(0, 1fr); } .srow { flex-wrap: wrap; } }
+@media (max-width: 820px) { .fgrid2 { grid-template-columns: minmax(0, 1fr); } .srow { flex-wrap: wrap; } }
+
+/* ---- Notas: una nube que flota, un contorno que nunca es un circulo perfecto, una pregunta y un espacio para escribir ---- */
+.nt { min-height: calc(100dvh - 230px); display: grid; place-items: center; padding: 8px 0 48px; }
+.nt-float { width: min(700px, 100%); animation: ntFloat 13s ease-in-out infinite; will-change: transform; }
+@keyframes ntFloat { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); } 30% { transform: translate3d(0, -9px, 0) rotate(-.3deg); } 68% { transform: translate3d(0, 4px, 0) rotate(.25deg); } }
+.nt-cloud { position: relative; isolation: isolate; padding: clamp(42px, 8vw, 72px) clamp(22px, 7vw, 74px) clamp(34px, 6vw, 52px); text-align: center;
+  background: radial-gradient(110% 90% at 28% 12%, var(--glass-a), transparent 72%), var(--glass-b); border-radius: 52% 48% 56% 44% / 50% 56% 44% 50%;
+  box-shadow: inset 0 1px 0 var(--edge), inset 0 0 0 1px var(--hair2), 0 60px 110px -56px var(--shadow); animation: ntShape 21s ease-in-out infinite; }
+@keyframes ntShape { 0%, 100% { border-radius: 52% 48% 56% 44% / 50% 56% 44% 50%; } 33% { border-radius: 44% 56% 46% 54% / 58% 44% 56% 42%; } 66% { border-radius: 56% 44% 52% 48% / 44% 54% 46% 56%; } }
+.nt-in { position: relative; z-index: 1; display: grid; justify-items: center; gap: 20px; }
+.nt-orb { width: 56px; height: 56px; box-shadow: inset 0 -8px 16px rgba(13,60,62,.3), inset 0 4px 10px rgba(255,255,255,.5), 0 16px 30px -12px rgba(15,107,108,.55); }
+.nt-say { min-height: 2.4em; display: grid; align-items: center; font: 300 clamp(26px, 4.6vw, 40px)/1.18 var(--font); letter-spacing: -.028em; text-wrap: balance; max-width: 18em; }
+.nt-say b { font-weight: 600; } .nt-say span { display: block; }
+.nt-form { width: min(500px, 100%); margin-top: 4px; }
+.nt-end, .nt-again { height: 38px; padding: 0 16px; border-radius: 19px; font: 500 14px/1 var(--font); color: var(--ink2); transition: color .2s, background .2s, transform .2s var(--ease); } .nt-end:hover, .nt-again:hover { color: var(--ink); background: var(--accent-soft); } .nt-end:active, .nt-again:active { transform: scale(.96); }
+.nt-end, .nt-again { display: none; }
+.nt[data-step="more"] .nt-end, .nt[data-step="thanks"] .nt-again { display: inline-flex; align-items: center; }
+.nt[data-step="thanks"] .nt-form { display: none; }
+@media (prefers-reduced-motion: reduce) { .nt-float, .nt-cloud { animation: none !important; } }
 
 /* ===== studio ===== */
 /* Estudio minimalista: el video manda. Un dock de herramientas, un inspector que aparece solo cuando hace falta,
@@ -1213,7 +1288,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     sparkles: '<path d="M12 3l1.8 4.6 4.7 1.9-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.9z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
     play: '<path d="M7 4v16l13-8z"/>', pause: '<path d="M8 5v14M16 5v14"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     chevron: '<path d="m9 6 6 6-6 6"/>', chevdown: '<path d="m6 9 6 6 6-6"/>', chevleft: '<path d="m15 6-6 6 6 6"/>', chevup: '<path d="m18 15-6-6-6 6"/>',
-    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', out: '<path d="M7 17 17 7M8 7h9v9"/>', send: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', bookmark: '<path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/>', out: '<path d="M7 17 17 7M8 7h9v9"/>', send: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     heart: '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>',
@@ -1707,47 +1782,75 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
   const layer = () => document.getElementById("morph");
   const ORB_BG = "radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 22%), radial-gradient(circle at 70% 75%, rgba(255,173,133,.95), rgba(255,173,133,0) 45%), radial-gradient(circle at 25% 70%, rgba(169,230,211,.95), rgba(169,230,211,0) 50%), conic-gradient(from 200deg at 50% 50%, #0f6b6c, #6fd1c0, #ffd0a8, #ff9a76, #f7a6bd, #0f6b6c)";
   const clean = () => { const L = layer(); if (L) L.innerHTML = ""; };
+  // Modo liviano: mientras algo grande se mueve encima de la pantalla (Jarvis abriendo, abierto, cerrando o llevando a otro lugar) el vidrio de
+  // abajo deja de desenfocar el fondo (backdrop-filter). Es lo MAS caro de repintar en cada cuadro --medido: sin eso, abrir Jarvis pasa de ~150 ms
+  // por cuadro a ~50 ms en un navegador sin GPU-- y el velo ya tapa lo que hay debajo, asi que no se nota. Se activa con una clase en #aura-root
+  // (ver shell.css). Cada dueño (key) lo pide y lo suelta; las transiciones cortas traen un ttl por si algo se interrumpe y no lo suelta.
+  const liteKeys = new Set(), liteT = {};
+  function lite(key, on, ttl) {
+    const r = document.getElementById("aura-root"); if (!r) return;
+    clearTimeout(liteT[key]);
+    if (on) { liteKeys.add(key); if (ttl) liteT[key] = setTimeout(() => lite(key, false), ttl); } else liteKeys.delete(key);
+    r.classList.toggle("mo", liteKeys.size > 0);
+  }
+
+  // curva cubic-bezier(x1,y1,x2,y2) evaluada igual que WAAPI: sirve para muestrear la trayectoria de la gota y calcular donde queda su estela
+  function bez(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const X = (t) => ((ax * t + bx) * t + cx) * t, Y = (t) => ((ay * t + by) * t + cy) * t;
+    return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let lo = 0, hi = 1, t = x; for (let i = 0; i < 24; i++) { const v = X(t); if (Math.abs(v - x) < 1e-5) break; if (v < x) lo = t; else hi = t; t = (lo + hi) / 2; } return Y(t); };
+  }
+  const FLY_EASE = bez(0.45, 0, 0.2, 1), FLY_KEYS = [[0, 0], [0.12, -0.03], [0.52, 0.55], [0.8, 1], [1, 1]]; // [offset, avance a lo largo de la linea]
+  function flyPath(u) { // avance 0..1 de la gota en el instante u (0..1 de la duracion): primero la curva de tiempo, despues los puntos clave
+    const q = FLY_EASE(u);
+    for (let i = 1; i < FLY_KEYS.length; i++) { const [b, pb] = FLY_KEYS[i], [a, pa] = FLY_KEYS[i - 1]; if (q <= b) return pa + (pb - pa) * ((q - a) / (b - a || 1)); }
+    return 1;
+  }
 
   // una gota de diametro "s" vuela de a (centro) a b (centro), se estira en la direccion del viaje y aplasta al llegar.
   // con o.spread: despues del aplaste hace una pausa breve y se derrama (crece y se disuelve) en vez de solo
   // desvanecerse — es lo que bloom() necesita para que el panel no "aparezca": la misma gota es la que lo trae.
+  // El filtro "goo" (lo que une la gota y su estela como un liquido) es lo MAS caro del vuelo, y recalcula toda su caja en cada cuadro. Antes la caja
+  // cubria todo el recorrido (miles de px cuadrados); ahora es una caja chica centrada en la gota que VIAJA con ella (solo transform, que se compone en
+  // la GPU): el filtro vive sobre ~500x500 px en vez de sobre el rectangulo entero del vuelo. La estela son tres gotas menores que se quedan atras segun la
+  // velocidad de la principal (mas atras cuanto mas rapido va) y se reabsorben al frenar: se calculan muestreando la misma curva del viaje.
   function fly(from, to, o) {
     o = o || {};
     return new Promise((resolve) => {
       const L = layer(); if (!L || App.reduceMotion()) { resolve(); return; }
       L.innerHTML = ""; const goo = document.createElement("div"); goo.className = "gooed"; L.appendChild(goo);
-      const s = o.size || 64, end = o.endSize || s, K = end / s, dx = to.x - from.x, dy = to.y - from.y, dist = Math.hypot(dx, dy), ang = (Math.atan2(dy, dx) * 180) / Math.PI;
+      const s = o.size || 64, end = o.endSize || s, K = end / s, dx = to.x - from.x, dy = to.y - from.y, dist = Math.hypot(dx, dy), ang = (Math.atan2(dy, dx) * 180) / Math.PI, ux = dist ? dx / dist : 1, uy = dist ? dy / dist : 0;
       const ms = o.ms || Math.max(520, Math.min(820, 420 + dist * 0.45));
-      const spreadK = o.spread ? Math.max(K, 1) * 3.4 : K;
-      // El filtro SVG "goo" recalcula TODO su rectangulo en cada cuadro: sobre el viewport entero es carisimo
-      // para una gota de unos 100px. Lo acotamos al area real que el vuelo (y el derrame) van a ocupar.
-      const peak = s * 1.9 * spreadK + end + 40;
-      const bx = Math.min(from.x, to.x) - peak, by = Math.min(from.y, to.y) - peak;
-      const bw = Math.abs(dx) + peak * 2, bh = Math.abs(dy) + peak * 2;
-      Object.assign(goo.style, { left: bx + "px", top: by + "px", width: bw + "px", height: bh + "px" });
-      const ox = from.x - bx, oy = from.y - by; // "from" expresado dentro de la caja acotada, no del viewport
+      const spreadK = o.spread ? Math.max(K, 1) * 3.4 : K, lagMax = Math.min(dist * 0.3, 110);
+      const HB = Math.ceil(Math.max((s * spreadK) / 2 + 24, (s * 1.9 * Math.max(K, 1)) / 2 + lagMax + 36)); // mitad de la caja: aguanta el derrame final y la estela
+      Object.assign(goo.style, { left: from.x - HB + "px", top: from.y - HB + "px", width: HB * 2 + "px", height: HB * 2 + "px" });
       const mk = (size, bg) => { const d = document.createElement("div"); d.className = "drop"; Object.assign(d.style, { width: size + "px", height: size + "px", left: "0px", top: "0px", background: bg || ORB_BG }); goo.appendChild(d); return d; };
-      const at = (p, size, rot, sx, sy) => `translate(${(ox + dx * p - size / 2).toFixed(1)}px, ${(oy + dy * p - size / 2).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+      const at = (size, off, rot, sx, sy) => `translate(${(HB - size / 2 - ux * off).toFixed(1)}px, ${(HB - size / 2 - uy * off).toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
       const k = (p) => 1 + (K - 1) * p; // el tamano crece/decrece en el camino
+      // el viaje lo hace la caja entera (compositor); la cabeza solo se deforma adentro
+      goo.animate(FLY_KEYS.map(([off, p]) => ({ transform: `translate(${(dx * p).toFixed(1)}px, ${(dy * p).toFixed(1)}px)`, offset: off })), { duration: ms, easing: "cubic-bezier(.45,0,.2,1)", fill: "forwards" });
       const main = mk(s);
       const anim = main.animate([
-        { transform: at(0, s, ang, 1, 1), offset: 0 },
-        { transform: at(-0.03, s, ang, 0.82, 1.14), offset: 0.12 },               // se encoge un poco antes de saltar (anticipacion)
-        { transform: at(0.55, s, ang, 1.85 * k(0.5), 0.66 * k(0.5)), offset: 0.52 }, // se estira en vuelo
-        { transform: at(1, s, ang, 0.8 * K, 1.22 * K), offset: 0.8 },              // aplaste al aterrizar
-        { transform: at(1, s, ang, K, K), offset: 1 },
+        { transform: at(s, 0, ang, 1, 1), offset: 0 },
+        { transform: at(s, 0, ang, 0.82, 1.14), offset: 0.12 },                  // se encoge un poco antes de saltar (anticipacion)
+        { transform: at(s, 0, ang, 1.85 * k(0.5), 0.66 * k(0.5)), offset: 0.52 }, // se estira en vuelo
+        { transform: at(s, 0, ang, 0.8 * K, 1.22 * K), offset: 0.8 },             // aplaste al aterrizar
+        { transform: at(s, 0, ang, K, K), offset: 1 },
       ], { duration: ms, easing: "cubic-bezier(.45,0,.2,1)", fill: "forwards" });
-      // tres gotas menores siguen la estela y se funden con la principal (efecto liquido)
-      [0.62, 0.44, 0.3].forEach((f, i) => {
-        const t = mk(s * f), sz = s * f, delay = 45 + i * 45;
-        t.animate([{ transform: at(0, sz, ang, 1, 1), opacity: 1 }, { transform: at(0.5, sz, ang, 1.3, 0.8), opacity: 1, offset: 0.55 }, { transform: at(0.96, sz, ang, 0.3, 0.3), opacity: 0 }], { duration: ms * 0.92, delay, easing: "cubic-bezier(.45,0,.2,1)", fill: "both" });
+      // estela: velocidad de la cabeza en cada instante -> cuanto se queda atras cada gota (en reposo se funde con la principal)
+      const N = 16, sp = [];
+      for (let i = 0; i < N; i++) { const u = i / (N - 1), h = 0.02; sp.push(Math.max(0, (flyPath(Math.min(1, u + h)) - flyPath(Math.max(0, u - h))) / (2 * h))); }
+      const vmax = Math.max(...sp, 1e-6);
+      [[0.62, 1], [0.44, 0.68], [0.3, 0.42]].forEach(([f, lag], idx) => {
+        const t = mk(s * f), sz = s * f;
+        t.animate(sp.map((v, i) => { const u = i / (N - 1), off = lagMax * lag * Math.pow(v / vmax, 0.9), sc = 1.25 - 0.95 * u; return { transform: at(sz, off, ang, Math.max(0.3, sc) * (1 + 0.5 * (v / vmax)), Math.max(0.3, sc) * (1 - 0.25 * (v / vmax))), opacity: u > 0.82 ? 1 - (u - 0.82) / 0.18 : 1, offset: u }; }), { duration: ms * (0.96 - idx * 0.02), easing: "linear", fill: "forwards" });
       });
       if (o.onLand) setTimeout(o.onLand, ms * 0.78);
       anim.finished.then(() => {
         if (!o.spread) { resolve(main); return; }
         // la quietud antes del climax: el golpe ya asento; el derrame es SU consecuencia, no algo a la vez
         setTimeout(() => {
-          main.animate([{ transform: at(1, s, ang, K, K), offset: 0 }, { transform: at(1, s, ang, spreadK, spreadK), opacity: 0, offset: 1 }], { duration: o.spreadMs || 440, easing: OUT, fill: "forwards" });
+          main.animate([{ transform: at(s, 0, ang, K, K), offset: 0 }, { transform: at(s, 0, ang, spreadK, spreadK), opacity: 0, offset: 1 }], { duration: o.spreadMs || 440, easing: OUT, fill: "forwards" });
           resolve(main);
         }, 90);
       }, () => resolve(main));
@@ -1779,13 +1882,15 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     const r = rectOf(panel), x = at.x - r.x, y = at.y - r.y, R = Math.hypot(Math.max(x, r.w - x), Math.max(y, r.h - y)) + 4;
     const had = panel.style.backdropFilter, hadWk = panel.style.webkitBackdropFilter;
     panel.style.backdropFilter = "none"; panel.style.webkitBackdropFilter = "none";
-    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.85 }], { duration: ms, easing: IN, fill: "forwards" }).finished.catch(() => {}).then(() => { panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
+    // el panel se recoge hasta un punto y se desvanece justo ahi, donde empieza la gota que lo lleva: si se quedara un punto de vidrio (como antes,
+    // opacity .85 con fill forwards, que ademas gana a cualquier opacity inline) se veria una bolita blanca clavada mientras la gota ya viaja
+    return panel.animate([{ clipPath: `circle(${R}px at ${x}px ${y}px)`, opacity: 1, offset: 0 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0.9, offset: 0.84 }, { clipPath: `circle(14px at ${x}px ${y}px)`, opacity: 0, offset: 1 }], { duration: ms, easing: IN, fill: "forwards" }).finished.catch(() => {}).then(() => { panel.style.backdropFilter = had; panel.style.webkitBackdropFilter = hadWk; });
   }
   const pop = (el) => { if (el && el.animate) el.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(.96)" }, { transform: "scale(1)" }], { duration: 560, easing: spring }); };
 
   // ---------- Jarvis: el orbe se vuelve panel (y vuelve a serlo). Un solo lenguaje para los tres casos. ----------
   async function open(fromEl, wrap, panel) {
-    wrap.classList.add("open");
+    lite("jv", true); wrap.classList.add("open");
     if (App.reduceMotion() || !fromEl) { wrap.classList.add("in", "shown"); panel.style.opacity = 1; return; }
     const a = rectOf(fromEl), pc = { x: 0, y: 0 };
     panel.style.opacity = 0; wrap.classList.add("in"); // el velo se aclara mientras la gota viaja
@@ -1798,13 +1903,13 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
   }
   async function close(fromEl, wrap, panel) {
     const el = fromEl && fromEl.isConnected && fromEl.offsetParent !== null ? fromEl : App.$$(".orb[data-orb]").find((e) => e.offsetParent !== null);
-    if (App.reduceMotion() || !el) { wrap.classList.remove("in", "open", "shown"); panel.style.opacity = ""; if (el) el.style.visibility = ""; return; }
+    if (App.reduceMotion() || !el) { wrap.classList.remove("in", "open", "shown"); panel.style.opacity = ""; if (el) el.style.visibility = ""; lite("jv", false); return; }
     const r = rectOf(panel), o = rectOf(el), oc = center(o), pc = { x: Math.max(r.x + 30, Math.min(r.x + r.w - 30, oc.x)), y: Math.max(r.y + 30, Math.min(r.y + r.h - 30, oc.y)) };
     wrap.classList.remove("shown");
     await wilt(panel, pc, 340);
     wrap.classList.remove("in"); panel.style.opacity = 0;
     await fly(pc, oc, { size: 46, endSize: Math.min(o.w, o.h), ms: 560 });
-    el.style.visibility = ""; pop(el); wrap.classList.remove("open"); panel.style.opacity = ""; panel.getAnimations().forEach((x) => x.cancel()); clean();
+    el.style.visibility = ""; pop(el); wrap.classList.remove("open"); panel.style.opacity = ""; panel.getAnimations().forEach((x) => x.cancel()); clean(); lite("jv", false);
   }
   // la gota viaja hasta un destino y ahi florece lo que sigue (Jarvis navegando, presentando algo, o abriendo el chat
   // en un lugar nuevo): SIEMPRE el mismo fly+derrame que open(), nunca un fundido de pantalla aparte corriendo en paralelo.
@@ -1819,6 +1924,22 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     }));
     fromEl.style.visibility = keep;
     setTimeout(clean, target ? 480 : 160);
+  }
+
+  // una nube/pantalla que "nace" en el orbe de Jarvis: la gota vuela desde el orbe hasta donde va a quedar y ahi florece (mismo fly + bloom
+  // que abrir Jarvis, DECISIONES.md #10 y #12). Mientras vuela el elemento espera invisible (.arr-pre); al aterrizar queda .arr-in.
+  // No hace nada con "reducir movimiento" ni si Jarvis ya esta llevando a la persona hasta aca (App._morphNav): ese florecido ya lo hizo el.
+  function arrive(el, o) {
+    o = o || {};
+    if (!el || App.reduceMotion() || App._morphNav) return false;
+    const orb = App.$$(".orb[data-orb]").find((e) => e.offsetParent), b = rectOf(el), ob = orb && rectOf(orb);
+    const land = { x: b.x + b.w / 2, y: b.y + Math.min(b.h * 0.42, 150) }, from = orb ? center(ob) : { x: innerWidth - 56, y: innerHeight - 56 };
+    el.classList.add("arr-pre"); lite("arr", true, 2600);
+    let done = false;
+    const reveal = () => { if (done || !el.isConnected) return; done = true; el.classList.remove("arr-pre"); el.classList.add("arr-in"); bloom(el, land, o.ms || 760); };
+    fly(from, land, { size: ob ? Math.min(ob.w, ob.h, 64) : 56, endSize: o.endSize || 130, spread: true, onLand: reveal }).then(() => { reveal(); setTimeout(clean, 520); });
+    setTimeout(reveal, 1700); // por si el vuelo no llega a avisar: nunca queda invisible
+    return true;
   }
 
   // View Transition con elemento compartido (tarjeta -> pantalla)
@@ -1866,7 +1987,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
       ], { duration: 1900 + Math.random() * 1300, delay: Math.random() * 260, easing: "linear", fill: "both" }).finished.then(end, end);
     }
   }
-  App.morph = { open, close, travel, fly, bloom, wilt, pop, view, sparkles, confetti, rectOf, center, spring, OUT, IN, clean };
+  App.morph = { open, close, travel, arrive, lite, fly, bloom, wilt, pop, view, sparkles, confetti, rectOf, center, spring, OUT, IN, clean };
 })();
 
 /* ===== engine/studio-engine ===== */
@@ -3321,6 +3442,14 @@ return PRED; })();
     const told = await D.tell(`PEDIDO DESDE JARVIS: ${text} (requests/${id}).${assetsNote(as)} ${App.ai.tellNote(m)}`);
     return { id, told };
   };
+  // Notas (pantalla "¿Cómo puedo mejorar tu experiencia aquí?"): cada mensaje va a Claude en el momento, sin esperar a "Enviar cambios"
+  A.sendExperience = async (text) => {
+    text = String(text || "").trim().slice(0, 2000); if (!text) return null;
+    const id = "experiencia_" + Date.now();
+    if (!(await D.set("requests", id, { kind: "experience", text, at: App.stamp(), by: S.userId, status: "pendiente" }))) return null;
+    const told = await D.tell(`COMENTARIO SOBRE LA PLATAFORMA de ${App.config.owner} (requests/${id}): "${text.slice(0, 1200)}". Es una idea o queja para mejorar su experiencia en Aura; anótala, respóndele corto si hace falta y considérala en los próximos cambios.`);
+    return { id, told };
+  };
   A.addRefLink = (url, note) => D.add("refs", { kind: "link", url, assetId: "", name: "", note: note || "", status: "nueva", sent: false, by: S.userId, created: App.stamp() });
   A.addRefFile = (file, note) => D.add("refs", { kind: "file", url: "", assetId: file.id, name: file.name, note: note || "", status: "nueva", sent: false, by: S.userId, created: App.stamp() });
   // referencia leida en el navegador: guarda su ADN (paleta, cortes, ejes, cuadros chicos) y la receta inicial
@@ -3440,6 +3569,8 @@ return PRED; })();
   const DEFS = {
     followers: { name: "Seguidores", icon: "users", steps: [1000, 2500, 5000, 10000, 25000, 50000, 100000] },
     views: { name: "Vistas de reels", sub: "últimos 150 días", icon: "eye", steps: [10000, 25000, 50000, 100000, 250000, 500000, 1000000] },
+    likes: { name: "Likes", icon: "heart", steps: [250, 500, 1000, 2500, 5000, 10000, 25000] },
+    saved: { name: "Guardados", icon: "bookmark", steps: [50, 100, 250, 500, 1000, 2500, 5000] },
     inter: { name: "Interacciones", sub: "likes, comentarios, guardados y compartidos", icon: "heart", steps: [500, 1000, 2500, 5000, 10000, 25000, 50000] },
     best: { name: "Reel más visto", sub: "vistas de un solo reel", icon: "zap", steps: [1000, 5000, 10000, 50000, 100000, 250000, 1000000] },
     reels: { name: "Reels publicados", sub: "incluye Trial Reels", icon: "film", steps: [25, 50, 100, 250, 500, 1000] },
@@ -3457,11 +3588,11 @@ return PRED; })();
   }
   function socialOf(b) {
     const rows = sel.rowsOf(b), e = sel.evoOf(b);
-    return { followers: e ? e.followers : 0, views: sel.sumBy(rows, "views"), inter: sel.sumBy(rows, "inter"), best: rows.reduce((m, r) => Math.max(m, r.views), 0), reels: rows.length, weekViews: e ? e.views : 0, weekFollowers: e ? Math.max(0, e.net) : 0, streak: streakOf(b) };
+    return { followers: e ? e.followers : 0, views: sel.sumBy(rows, "views"), likes: sel.sumBy(rows, "likes"), saved: sel.sumBy(rows, "saved"), inter: sel.sumBy(rows, "inter"), best: rows.reduce((m, r) => Math.max(m, r.views), 0), reels: rows.length, weekViews: e ? e.views : 0, weekFollowers: e ? Math.max(0, e.net) : 0, streak: streakOf(b) };
   }
   function totalSocial() {
     const parts = S.brands.map(socialOf), add = (k) => parts.reduce((a, p) => a + p[k], 0);
-    return { followers: add("followers"), views: add("views"), inter: add("inter"), best: parts.reduce((m, p) => Math.max(m, p.best), 0), reels: add("reels"), weekViews: add("weekViews"), weekFollowers: add("weekFollowers"), streak: parts.reduce((m, p) => Math.max(m, p.streak), 0) };
+    return { followers: add("followers"), views: add("views"), likes: add("likes"), saved: add("saved"), inter: add("inter"), best: parts.reduce((m, p) => Math.max(m, p.best), 0), reels: add("reels"), weekViews: add("weekViews"), weekFollowers: add("weekFollowers"), streak: parts.reduce((m, p) => Math.max(m, p.streak), 0) };
   }
   function card(group, key, value) {
     const def = DEFS[key], steps = def.steps, got = steps.filter((s) => value >= s).length, next = steps[got] != null ? steps[got] : null, prev = got ? steps[got - 1] : 0, tier = got ? tierOf(got - 1, steps.length) : -1;
@@ -3493,7 +3624,7 @@ return PRED; })();
     if (!(await App.data.set("home", "trophies", S.trophyDoc))) App.toast("No se pudo guardar. Prueba de nuevo.");
   }
   // lo nuevo, listo para celebrar: un logro por tarjeta (el escalon mas alto que alcanzo), los de "todas las cuentas" primero, y la subida de nivel si la hubo
-  const UNIT = { followers: (n) => `${fmt(n)} seguidores`, views: (n) => `${fmt(n)} vistas`, inter: (n) => `${fmt(n)} interacciones`, best: (n) => `un reel con ${fmt(n)} vistas`, reels: (n) => `${fmt(n)} reels publicados`, weekViews: (n) => `${fmt(n)} vistas en 7 días`, weekFollowers: (n) => `${fmt(n)} seguidores nuevos en 7 días`, streak: (n) => `${n} días de contenido seguidos` };
+  const UNIT = { followers: (n) => `${fmt(n)} seguidores`, views: (n) => `${fmt(n)} vistas`, likes: (n) => `${fmt(n)} likes`, saved: (n) => `${fmt(n)} guardados`, inter: (n) => `${fmt(n)} interacciones`, best: (n) => `un reel con ${fmt(n)} vistas`, reels: (n) => `${fmt(n)} reels publicados`, weekViews: (n) => `${fmt(n)} vistas en 7 días`, weekFollowers: (n) => `${fmt(n)} seguidores nuevos en 7 días`, streak: (n) => `${n} días de contenido seguidos` };
   function fresh() {
     const cs = cards(), a = all(cs), nw = new Set(newIds(a)); if (!nw.size) return null;
     const items = [];
@@ -3520,7 +3651,7 @@ return PRED; })();
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
   // el conteo de hitos nuevos (antes el badge de "Logros") marca ahora el item de nav de Métricas, donde viven los hitos -- DECISIONES.md #1
-  function counts() { return { estudio: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
+  function counts() { return { estudio: App.sel.allPending().length, crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
     const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
@@ -3628,7 +3759,7 @@ return PRED; })();
   let listOpen = false, armTime = 0;
   function updateSendBar() {
     const bar = $("#sendbar"), n = sel.unsentCount(); if (!bar) return;
-    bar.hidden = n === 0 || App.route().name === "notas" || App.studioOpen; document.body.classList.toggle("has-send", n > 0);
+    bar.hidden = n === 0 || App.studioOpen; document.body.classList.toggle("has-send", n > 0);
     bar.querySelector("#sendn").textContent = n; bar.querySelector("#sendtxt").textContent = App.plural(n, "cambio sin enviar", "cambios sin enviar");
     const list = $("#sendlist"), open = listOpen && n > 0 && !bar.hidden; list.hidden = !open; bar.querySelector("[data-act=sendview]").setAttribute("aria-expanded", String(open));
     if (open) { const items = App.act.pendingItems(); list.innerHTML = `<ul>${items.map((it, i) => `<li><div><b>${esc(it.kind)}</b><span>${esc(it.label)}</span></div><button class="btn sm ghost" type="button" data-act="sundo" data-i="${i}">Quitar</button></li>`).join("")}</ul><button class="btn sm ghost bad" type="button" data-act="sundoall">Descartar todo</button>`; } else armTime = 0;
@@ -3801,7 +3932,8 @@ return PRED; })();
     return icon(it.kind === "imagen" ? "photo" : "note");
   }
   function chipHtml(it, i, live) {
-    const sub = it.state === "err" ? esc(it.err || "No se pudo subir") : it.state === "up" ? Math.round((it.progress || 0) * 100) + "%" : esc(bytes(it.size));
+    // "Subiendo… 40%" mientras sube y "Subido · 3 MB" cuando termino (DECISIONES.md #10); la ficha de lo ya enviado (live=false) solo lleva el peso
+    const sub = it.state === "err" ? esc(it.err || "No se pudo subir") : it.state === "up" ? "Subiendo… " + Math.round((it.progress || 0) * 100) + "%" : live && it.state === "done" ? "Subido · " + esc(bytes(it.size)) : esc(bytes(it.size));
     return `<span class="achip" data-s="${it.state}" data-k="${it.kind}" title="${esc(it.name)}"><span class="ath">${thumb(it)}</span><span class="atn"><b>${esc(short(it.name))}</b><small>${sub}</small></span>${live ? `<button type="button" class="atx" data-att-x="${i}" aria-label="Quitar ${esc(it.name)}">${icon("x")}</button><i class="atp" style="transform:scaleX(${Math.max(0.1, it.progress || 0).toFixed(3)})"></i>` : ""}</span>`;
   }
 
@@ -4141,14 +4273,14 @@ Reglas:
       const unsub = App.on((ks) => { if (ks.has("route")) { unsub(); const m = $("#main"); if (m) App.morph.bloom(m, to, 620); } });
       App.go(hash.replace(/^#/, ""));
     };
-    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); App.go(hash.replace(/^#/, "")); return; }
+    if (App.reduceMotion()) { w.classList.remove("in", "open", "shown"); App.morph.lite("jv", false); App.go(hash.replace(/^#/, "")); return; }
     const r = App.morph.rectOf(p), main = $("#main").getBoundingClientRect(), from = { x: r.x + r.w / 2, y: r.y + r.h / 2 }, to = { x: main.left + Math.min(main.width, 900) / 2, y: Math.max(140, main.top + 120) };
     // el panel se recoge en una gota; la pantalla nueva entra justo cuando la gota aterriza (no despues),
     // y la misma gota se derrama para revelarla — el mismo lenguaje que abrir Jarvis, no uno aparte.
     w.classList.remove("shown"); await App.morph.wilt(p, from, 240); w.classList.remove("in"); p.style.opacity = 0;
     await App.morph.fly(from, to, { size: 54, endSize: 120, ms: 480, spread: true, onLand: go }); go();
     w.classList.remove("open"); p.style.opacity = ""; p.getAnimations().forEach((x) => x.cancel()); if (fromOrb()) fromOrb().style.visibility = "";
-    setTimeout(App.morph.clean, 480);
+    setTimeout(App.morph.clean, 480); setTimeout(() => App.morph.lite("jv", false), 760); // el vidrio vuelve a desenfocar cuando termina de florecer la pantalla nueva
   }
   const fromOrb = () => (from && from.isConnected ? from : null);
   async function openJv(fromEl) {
@@ -4231,16 +4363,18 @@ Reglas:
 })();
 
 /* ===== views/aprobar-review ===== */
-/* Aura · Estudio - vista general (antes "Aprobar"): el video al centro, versiones a la izquierda, Jarvis y el predictor a la derecha, y la capsula
-   de decision abajo. Notas por cuadro, zona segura, subtitulos por palabra, atajos A/Q/R, ←/→ versiones, espacio, N. Todo en una sola pantalla sin
-   recargar el video. Se entra aca desde el listado de Estudio (antes "Aprobar"); desde aca, "Abrir en editor" lleva al editor completo (ver
-   estudio-core.js, App.views.estudio). Ver DECISIONES.md #2. */
+/* Aura · Estudio - vista general (antes "Aprobar"): el video al centro, versiones a la izquierda y a la derecha solo lo que
+   hace falta para decidir: "Abrir en editor manual", el score (y "¿Por qué este score?", que solo se abre con un clic) y un chat
+   minimo "¿Qué ajustarías?" (DECISIONES.md #11). Sin notas por cuadro ni subtitulos aqui: eso vive en el editor. La capsula de
+   decision va abajo; atajos A/Q/R, ←/→ versiones y espacio. Todo en una sola pantalla sin recargar el video. Se entra aca desde el
+   listado de Estudio; "Abrir en editor" lleva al editor completo (estudio-core.js, App.views.estudio). Ver DECISIONES.md #2. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, { $, $$, esc, icon, plural, ring, mmss } = App;
   let RV = null, vEl = null, raf = 0, loadTimer = 0, objUrl = "", triedBlob = false;
-  const CAP_FONTS = [["aston", "Aston (especial)"], ["normal", "Normal"], ["cursive", "Cursiva"]];
-  const CAP_COLORS = [["#FFFFFF", "Blanco"], ["#FFD84D", "Amarillo"], ["#4FD8FF", "Cian"], ["#5DFFB8", "Verde"], ["#FF6A5E", "Rojo"], ["#FFB54A", "Naranja"]];
+  // estado de lo que se esta escribiendo en el chat (sobrevive a los repintados de datos; se limpia al cambiar de video)
+  let whyOpen = false, pick = new Set(), draft = "";
+  const ADJ = () => [(App.config.tags && App.config.tags[0]) || "Hook", "Subtítulos", "Intro", "Video", "Animaciones", "Música", "Audio", "Otro"];
   const V = () => (RV ? sel.video(RV.id) : null);
 
   // ---------- predictor: traduce los "parts" crudos de scoreVideo() a categorias simples (DECISIONES.md #9) ----------
@@ -4296,15 +4430,6 @@ Reglas:
   }
 
   // ---------- pintar paneles ----------
-  function opinion(v, sibs) {
-    const sc = sibs.map((x) => [x, App.pred.scoreVideo(x)]).filter((x) => x[1]);
-    if (!App.pred.enabled()) return `Revisa el gancho, el audio y los subtítulos. Anota en el cuadro exacto lo que quieras cambiar y se lo paso a Claude con <b>Enviar cambios</b>.`;
-    if (!sc.length) return "Este gancho todavía no tiene puntaje.";
-    const mine = sc.find((x) => x[0].id === v.id), best = sc.slice().sort((a, b) => b[1].score - a[1].score)[0], worst = sc.slice().sort((a, b) => a[1].score - b[1].score)[0];
-    if (!mine) return "Este gancho todavía no tiene puntaje.";
-    if (best[0].id === v.id) return `<b>v${v.version} puede ser la mejor de la pieza</b>${sc.length > 1 ? ` (${mine[1].score}, contra ${worst[1].score} de v${worst[0].version})` : ""}. ${mine[1].tier === "green" ? "Se parece a lo que sí funcionó." : "Aun así tiene margen: mira los factores."}`;
-    return `<b>v${v.version} sale en ${mine[1].score}</b>; v${best[0].version} lidera con ${best[1].score}. ${mine[1].fb.length ? "Lo que más ayudaría: " + esc(mine[1].fb[0]) : mine[1].fbClaude.length ? "Claude puede ajustarlo solo." : ""}`;
-  }
   function paintLeft() {
     const v = V(); if (!v) return; const sibs = sel.siblings(v);
     const g = sel.groupByPiece(sel.pending(v.brand).concat([v]).filter((x, i, a) => a.indexOf(x) === i));
@@ -4314,42 +4439,27 @@ Reglas:
       <p class="muted vhook">${esc(v.hook || "")}</p>`;
   }
   function paintRight() {
-    const v = V(); if (!v) return; const sibs = sel.siblings(v), r = App.pred.scoreVideo(v), notes = sel.notesOf(v);
-    // circulo del score: unico visible por default. Los factores van agrupados en espanol llano detras de "¿Por qué este score?" (DECISIONES.md #9)
+    const v = V(); if (!v) return; const r = App.pred.scoreVideo(v);
+    // lo unico que se ve por default: el boton del editor, el score y el chat. Las razones detras de "¿Por qué este score?" (DECISIONES.md #9/#11)
     const groups = r ? friendlyGroups(r.parts) : [];
-    const groupsHtml = groups.map((g) => { const dn = Math.round(g.net), sign = dn > 0 ? "+" : dn < 0 ? "−" : "±"; return `<li data-k="${g.net >= 0 ? "pos" : "neg"}"><i>${g.net >= 0 ? "✓" : "!"}</i><div><b>${esc(g.title)}</b><small>${g.items.map((x) => esc(x.text)).join(" ")}</small></div><span>${sign}${Math.abs(dn)}</span></li>`; }).join("");
-    const fix = r && (r.fb.length || r.fbClaude.length) ? `<div class="fixes"><b>${r.fb.length ? "Lo que puedes hacer" : "Lo ajusta Claude solo"}</b><ul>${(r.fb.length ? r.fb : r.fbClaude).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
-    const tags = App.config.tags.map((t) => `<button type="button" class="chip tg" data-act="rvtag" data-t="${esc(t)}" aria-pressed="${(v.tags || []).includes(t)}">${esc(t)}</button>`).join("");
-    const noteRows = notes.map((n) => `<li class="${sel.closedNote(n) ? "done" : ""}"><button class="chip tcb" type="button" data-act="rvseek" data-t="${n.t || 0}">${esc(n.tc || mmss(n.t))}</button><span>${esc(n.text)}</span>${n.sent === false ? `<button class="x" type="button" data-act="rvnotedel" data-id="${esc(n.id)}" aria-label="Borrar nota">${icon("x")}</button>` : `<em class="chip ${sel.closedNote(n) ? "good" : ""}">${sel.closedNote(n) ? "Resuelta" : "Enviada"}</em>`}</li>`).join("");
-    $("#rvright").innerHTML = `<div class="say"><div class="who"><span class="orb"></span><b>Jarvis</b></div><div class="msg lg">${opinion(v, sibs)}</div></div>
-      ${r ? `<section class="factors"><div class="fh">${ring(r.score / 100, 64, { r: 40, sw: 8, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num" style="font:500 20px/1">${r.score}</b>` })}<div><b>${esc(App.pred.TIER_TXT[r.tier])}</b><small class="muted">Aprox. ${r.prob}% de chance de pasar ${App.config.viralThreshold} vistas</small></div></div>${groupsHtml || fix ? `<details class="why-toggle"><summary>¿Por qué este score?</summary><ul class="why">${groupsHtml}</ul>${fix}</details>` : ""}</section>` : ""}
-      <section class="fb"><h4>Qué falla</h4><div class="tags">${tags}</div>
-        <div class="field"><label for="rvfb">Cambio para esta versión</label><textarea id="rvfb" rows="2" maxlength="2000" placeholder="${esc(App.say("Qué querés que cambie. Queda guardado y se envía con Enviar cambios.", "Qué quieres que cambie. Queda guardado y se envía con Enviar cambios."))}">${esc(v.feedback || "")}</textarea><span class="hint" id="rvfbstat">${v.feedbackDirty ? "Guardado. Se envía con Enviar cambios." : ""}</span></div></section>
-      <section class="notes"><h4>Notas por cuadro <small id="rvnotet">en <b class="num">${mmss(vEl ? vEl.currentTime : 0)}</b></small></h4>
-        <form class="noteform" id="rvnoteform"><input id="rvnote" type="text" maxlength="600" placeholder="Anota en este cuadro (N)" autocomplete="off"><button class="btn sm pri" type="submit">Anotar</button></form>
-        ${noteRows ? `<ul class="nl">${noteRows}</ul>` : '<p class="hint">Pausa en el momento exacto y escribe qué cambiar.</p>'}</section>
-      <div id="rvcaps"></div>`;
-    paintCaps(); paintMarks();
+    const why = groups.map((g) => { const dn = Math.round(g.net), sign = dn > 0 ? "+" : dn < 0 ? "−" : "±"; return `<li data-k="${g.net >= 0 ? "pos" : "neg"}"><i>${g.net >= 0 ? "✓" : "!"}</i><div><b>${esc(g.title)}</b><small>${g.items.map((x) => esc(x.text)).join(" ")}</small></div><span>${sign}${Math.abs(dn)}</span></li>`; }).join("");
+    const fixes = r && (r.fb.length || r.fbClaude.length) ? `<div class="fixes"><b>${r.fb.length ? "Cómo mejorarlo" : "Esto lo ajusta Claude solo"}</b><ul>${(r.fb.length ? r.fb : r.fbClaude).map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+    const lines = (v.feedback || "").split(/\n+/).filter(Boolean), tg = v.tags || [];
+    const thread = lines.length ? `<div class="rvthread">${lines.map((t, i) => `<div class="rvme">${i === 0 && tg.length ? `<small>${tg.map(esc).join(" · ")}</small>` : ""}<p>${esc(t)}</p></div>`).join("")}<p class="rvack">${v.feedbackDirty ? App.say("Anotado. Se lo paso a Claude con «Enviar cambios».", "Anotado. Se lo paso a Claude con «Enviar cambios».") : "Enviado a Claude."}</p></div>` : "";
+    $("#rvright").innerHTML = `<a class="btn rvmanual" id="rvmanual" href="#estudio/editor/${encodeURIComponent(v.id)}">${icon("film")}Abrir en editor manual</a>
+      ${r ? `<section class="rvscore"><div class="rvring" aria-label="Score ${r.score} de 100">${ring(r.score / 100, 132, { r: 44, sw: 7, color: App.pred.TIER_COLOR[r.tier], inner: `<b class="num rvn">${r.score}</b>` })}</div>
+        ${why || fixes ? `<button class="rvwhy" type="button" data-act="rvwhy" aria-expanded="${whyOpen}" aria-controls="rvwhybox">¿Por qué este score?${icon("chevdown")}</button>
+        <div class="rvwhybox${whyOpen ? " open" : ""}" id="rvwhybox"><div class="rvwhyin"><ul class="why">${why}</ul>${fixes}</div></div>` : ""}</section>` : ""}
+      <section class="rvchat" aria-label="Pedir ajustes"><h4 class="rvq">¿Qué ajustarías?</h4>
+        <div class="tags" role="group" aria-label="Qué ajustarías">${ADJ().map((t) => `<button type="button" class="chip tg" data-act="rvadj" data-t="${esc(t)}" aria-pressed="${pick.has(t)}">${esc(t)}</button>`).join("")}</div>
+        ${thread}
+        <form class="rvcomp" id="rvchat"><textarea id="rvfb" rows="2" maxlength="2000" aria-label="Detalles del ajuste" placeholder="${esc(App.say("Contame los detalles", "Cuéntame los detalles"))}">${esc(draft)}</textarea><button class="rvsend" type="submit" aria-label="Enviar ajuste">${icon("arrow")}</button></form></section>`;
+    paintMarks();
   }
   // ---------- subtitulos por palabra (misma logica que el portal) ----------
-  const capSel = new Set();
-  const capAllOn = () => App.store.get("cap-all", true) !== false;
+  // el texto del video (gancho y palabras de subtitulos) se pinta sobre el video; el estilo por palabra se edita en el editor
   const capStyle = (v, i) => { const s = v.wordStyles && v.wordStyles[i]; return s && (s.font || s.color) ? s : null; };
   function capEff(v, i) { const st = capStyle(v, i), c = v.caps[i]; return { font: (st && st.font) || (c[3] ? "aston" : c[4] ? "cursive" : "normal"), color: (st && st.color) || "" }; }
-  function paintCaps() {
-    const host = $("#rvcaps"), v = V(); if (!host || !v) return;
-    if (!v.caps || !v.caps.length) { host.innerHTML = `<section class="caps"><h4>Subtítulos</h4><p class="hint">La transcripción se carga cuando Claude rehace el video.</p></section>`; return; }
-    const changed = v.wordStyles ? Object.values(v.wordStyles).filter((s) => s && (s.font || s.color)).length : 0;
-    const words = v.caps.map((c, i) => { const e = capEff(v, i); return `<button type="button" class="cw ${e.font}${capSel.has(i) ? " sel" : ""}" data-act="rvcw" data-i="${i}"${e.color ? ` style="color:${esc(e.color)}"` : ""}>${esc(c[0])}</button>`; }).join(" ");
-    const bar = capSel.size ? `<div class="capbar"><b>${capSel.size} ${plural(capSel.size, "palabra elegida", "palabras elegidas")}</b><div class="capg">${CAP_FONTS.map(([k, t]) => `<button class="chip" type="button" data-act="rvcapfont" data-k="${k}">${t}</button>`).join("")}</div><div class="capg">${CAP_COLORS.map(([h, t]) => `<button class="cwatch" type="button" data-act="rvcapcolor" data-h="${h}" style="background:${h}" aria-label="${t}"></button>`).join("")}<button class="chip" type="button" data-act="rvcapcolor" data-h="">Sin color</button></div><div class="capg"><button class="chip" type="button" data-act="rvcapreset">Quitar estilo</button><button class="chip" type="button" data-act="rvcapclear">Soltar</button></div></div>` : `<p class="hint">Toca palabras para elegirlas y darles fuente o color. Las Aston son las especiales.</p>`;
-    host.innerHTML = `<section class="caps"><h4>Subtítulos <small>${changed ? changed + " " + plural(changed, "cambio", "cambios") + (v.wordStylesDirty ? ", sin enviar" : "") : ""}</small></h4>${bar}<div class="cws">${words}</div><label class="capall"><input type="checkbox" id="capall" ${capAllOn() ? "checked" : ""}> Aplicar a todas las versiones de esta pieza</label></section>`;
-  }
-  async function capApply(patch, reset) {
-    const v = V(); if (!v || !v.caps || !capSel.size) return; const next = { ...(v.wordStyles || {}) };
-    capSel.forEach((i) => { const cur = reset ? {} : { ...(next[i] || {}), ...patch }; Object.keys(cur).forEach((k) => { if (!cur[k]) delete cur[k]; }); next[i] = cur; });
-    const targets = capAllOn() ? sel.siblings(v).filter((x) => !x.published && x.caps && x.caps.length === v.caps.length) : [v];
-    await Promise.all(targets.map((x) => App.data.patchVideo(x, { wordStyles: next, wordStylesDirty: true }, true))); paintCaps(); App.updateSendBar(); paintOverlay();
-  }
   function paintMarks() {
     const m = $("#rvmarks"), v = V(); if (!m || !v) return; const d = (vEl && vEl.duration) || v.duration || 0;
     m.innerHTML = d ? sel.notesOf(v).map((n) => `<i class="mk" style="left:${Math.min(100, ((n.t || 0) / d) * 100)}%" title="${esc(n.text)}"></i>`).join("") : "";
@@ -4389,7 +4499,7 @@ Reglas:
   function tick() {
     if (!vEl || !RV) return; const d = vEl.duration || 0, t = vEl.currentTime || 0;
     if (d) { const p = (t / d) * 100; $("#rvfill").style.width = p + "%"; $("#rvknob").style.left = p + "%"; }
-    $("#rvtc").textContent = mmss(t) + (d ? " / " + mmss(d) : ""); const nt = $("#rvnotet b"); if (nt) nt.textContent = mmss(t);
+    $("#rvtc").textContent = mmss(t) + (d ? " / " + mmss(d) : ""); 
     paintOverlay(); raf = requestAnimationFrame(tick);
   }
   function setPlaying(on) { const b = $("#rvplaybtn"); if (b) b.innerHTML = icon(on ? "pause" : "play"); const s = $("#rvscreen"); if (s) s.classList.toggle("playing", on); }
@@ -4411,9 +4521,13 @@ Reglas:
     el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#estudio/agendados">Ver agendados</a></div></div>`;
     App.float(""); App.morph.sparkles(el.querySelector(".orb"), 6); RV.finished = true; cancelAnimationFrame(raf);
   }
-  function switchTo(id) {
-    RV.id = id; history.replaceState(null, "", "#estudio/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
-    const el = $("#rv"); if (el) el.dataset.id = id; if (vEl) vEl.pause(); loadVideo(); paintAll(); if (vEl) vEl.play().catch(() => {});
+  // inEditor: el editor esta abierto encima y la persona cambio de version desde sus pestanas v1/v2/v3. La ruta sigue siendo
+  // #estudio/editor/<id> (el editor se queda abierto y solo cambia de version): no se reescribe a "ver" ni se pone a sonar el
+  // video de abajo. Solo se mantiene al dia la vista general, que es la pantalla a la que se vuelve al cerrar el editor.
+  function switchTo(id, inEditor) {
+    RV.id = id; whyOpen = false; pick = new Set(); draft = "";
+    if (!inEditor) { history.replaceState(null, "", "#estudio/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; }
+    const el = $("#rv"); if (el) el.dataset.id = id; if (vEl) vEl.pause(); loadVideo(); paintAll(); if (vEl && !inEditor) vEl.play().catch(() => {});
   }
 
   // ---------- acciones ----------
@@ -4424,17 +4538,18 @@ Reglas:
   A.rvmute = (el) => { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); vEl.muted = on; };
   A.rvver = (el) => { if (el.dataset.id !== RV.id) switchTo(el.dataset.id); };
   A.rvdecide = (el) => decide(el.dataset.st);
-  A.rvseek = (el) => { if (vEl) { vEl.currentTime = +el.dataset.t || 0; vEl.pause(); } };
   A.rvpiece = (el) => { const v = V(); const groups = sel.groupByPiece(sel.pending(v.brand).concat(sel.siblings(v).filter((x) => !sel.isPending(x)))); const i = groups.findIndex((g) => g.piece === v.piece), n = groups[(i + +el.dataset.d + groups.length) % groups.length]; if (n) switchTo(n.vs[0].id); };
-  A.rvtag = (el) => { const v = V(); const cur = new Set(v.tags || []); cur.has(el.dataset.t) ? cur.delete(el.dataset.t) : cur.add(el.dataset.t); el.setAttribute("aria-pressed", cur.has(el.dataset.t)); App.act.setFeedback(v, v.feedback || "", [...cur]); if (!(v.feedback || "").trim()) App.toast("Escribe también qué cambiar para que se envíe."); };
-  A.rvnotedel = async (el) => { const n = S.notes.find((x) => x.id === el.dataset.id); if (n) { await App.act.removeNote(n); } };
-  A.rvcw = (el) => { const i = +el.dataset.i; capSel.has(i) ? capSel.delete(i) : capSel.add(i); paintCaps(); };
-  A.rvcapfont = (el) => capApply({ font: el.dataset.k });
-  A.rvcapcolor = (el) => capApply({ color: el.dataset.h });
-  A.rvcapreset = () => capApply({}, true);
-  A.rvcapclear = () => { capSel.clear(); paintCaps(); };
-
-  const fbSave = App.debounce(async () => { const v = V(); if (!v) return; const ta = $("#rvfb"); if (!ta) return; await App.act.setFeedback(v, ta.value, v.tags); const s = $("#rvfbstat"); if (s) s.textContent = ta.value.trim() ? "Guardado. Se envía con Enviar cambios." : ""; App.updateSendBar(); }, 600);
+  A.rvwhy = (el) => { whyOpen = !whyOpen; el.setAttribute("aria-expanded", String(whyOpen)); const b = $("#rvwhybox"); if (b) b.classList.toggle("open", whyOpen); };
+  A.rvadj = (el) => { const t = el.dataset.t; pick.has(t) ? pick.delete(t) : pick.add(t); el.setAttribute("aria-pressed", String(pick.has(t))); };
+  // el chat: lo que se manda queda como el cambio de esta version (feedback) y viaja con "Enviar cambios", igual que antes; cada mensaje nuevo se suma
+  async function sendAdjust() {
+    const v = V(), ta = $("#rvfb"); if (!v || !ta) return; const text = ta.value.trim(), tags = [...pick];
+    if (!text && !tags.length) { ta.focus(); return; }
+    const line = text || "Ajustar: " + tags.join(", ") + ".", prev = (v.feedback || "").trim();
+    pick = new Set(); draft = "";
+    await App.act.setFeedback(v, prev ? prev + "\n" + line : line, Array.from(new Set((v.tags || []).concat(tags))));
+    App.updateSendBar(); paintRight(); const nt = $("#rvfb"); if (nt) nt.focus();
+  }
 
   // ---------- montaje ----------
   App.reviewView = {
@@ -4444,29 +4559,28 @@ Reglas:
       if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#estudio">Volver a la lista</a></div>`; return; }
       if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
       App.float('<div class="capsule lg" id="rvdecide" role="group" aria-label="Decisión"></div>');
-      cancelAnimationFrame(raf); RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
+      cancelAnimationFrame(raf); whyOpen = false; pick = new Set(); draft = ""; RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
       vEl.muted = false; vEl.addEventListener("play", () => setPlaying(true)); vEl.addEventListener("pause", () => setPlaying(false));
       vEl.addEventListener("loadeddata", () => { clearTimeout(loadTimer); vmsg(""); vEl.style.opacity = 1; paintMarks(); });
       vEl.addEventListener("error", () => { if (vEl.getAttribute("src")) blobFallback(V(), "error " + (vEl.error ? vEl.error.code : "?")); });
       const sc = $("#rvscrub", root); let drag = false; const at = (e) => { const b = sc.getBoundingClientRect(); seek(Math.max(0, Math.min(1, (e.clientX - b.left) / b.width))); };
       sc.addEventListener("pointerdown", (e) => { drag = true; sc.setPointerCapture(e.pointerId); at(e); }); sc.addEventListener("pointermove", (e) => { if (drag) at(e); }); sc.addEventListener("pointerup", () => { drag = false; });
       sc.addEventListener("keydown", (e) => { if (e.key === "ArrowRight" && e.shiftKey) vEl.currentTime += 1; });
-      root.addEventListener("input", (e) => { if (e.target.id === "rvfb") fbSave(); });
-      root.addEventListener("change", (e) => { if (e.target.id === "capall") { App.store.set("cap-all", e.target.checked); paintCaps(); } });
-      root.addEventListener("submit", async (e) => { if (e.target.id !== "rvnoteform") return; e.preventDefault(); const inp = $("#rvnote"), t = inp.value.trim(); if (!t) return; vEl.pause(); inp.value = ""; await App.act.addNote(V(), vEl.currentTime || 0, t, V().tags); });
+      root.addEventListener("input", (e) => { if (e.target.id === "rvfb") draft = e.target.value; });
+      root.addEventListener("keydown", (e) => { if (e.target.id === "rvfb" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendAdjust(); } });
+      root.addEventListener("submit", (e) => { if (e.target.id !== "rvchat") return; e.preventDefault(); sendAdjust(); });
       if (App.store.get("safe", false)) { $("#rvsafebtn").setAttribute("aria-pressed", "true"); $("#rvsafe").hidden = false; }
       loadVideo(); paintAll(); raf = requestAnimationFrame(tick); vEl.play().catch(() => {});
     },
     // un cambio de ruta dentro de la revision (otra version) no reconstruye la pantalla
     routeChanged(r) {
       if (r.name !== "estudio" || (r.args[0] !== "ver" && r.args[0] !== "editor") || !RV || RV.finished || !$("#rv")) return false;
-      const id = r.args[1] || ""; if (id === RV.id) return true; if (sel.video(id)) { switchTo(id); return true; } return false;
+      const id = r.args[1] || ""; if (id === RV.id) return true; if (sel.video(id)) { switchTo(id, r.args[0] === "editor"); return true; } return false;
     },
     update(kinds) {
       if (!RV || !$("#rv") || RV.finished) return false;
       if (!sel.video(RV.id)) return false;
-      const ae = document.activeElement; if (ae && ae.id === "rvfb") { paintLeft(); paintDecide(); paintProgress(); return true; }
-      if (ae && ae.id === "rvnote") { paintLeft(); paintDecide(); paintProgress(); return true; }
+      const ae = document.activeElement; if (ae && ae.id === "rvfb") { paintLeft(); paintDecide(); paintProgress(); return true; } // escribiendo en el chat: no se le repinta el campo debajo
       paintAll(); return true;
     },
     key(e) {
@@ -4475,7 +4589,6 @@ Reglas:
       if (k === "a") decide("approved"); else if (k === "q") decide("maybe"); else if (k === "r") decide("rejected");
       else if (k === " ") { e.preventDefault(); A.rvplay(); }
       else if (k === "arrowright" || k === "arrowleft") { const v = V(), sibs = sel.siblings(v), i = sibs.findIndex((x) => x.id === v.id), n = sibs[(i + (k === "arrowright" ? 1 : -1) + sibs.length) % sibs.length]; if (n && n.id !== v.id) switchTo(n.id); }
-      else if (k === "n") { e.preventDefault(); const i = $("#rvnote"); if (i) { vEl.pause(); i.focus(); } }
       else if (k === "," || k === ".") { vEl.pause(); vEl.currentTime += (k === "." ? 1 : -1) / 30; }
       else if (k === "escape") App.go("estudio");
     },
@@ -4542,7 +4655,7 @@ Reglas:
   }
   function cloud(o) {
     o = o || {};
-    return `<div class="crear-wrap"><div class="crear-cloud jv solid-glass" role="group" aria-label="Crear"><div class="inner">
+    return `<div class="crear-wrap"><div class="crear-cloud jv solid-glass${o.hero ? " hero" : ""}" role="group" aria-label="Crear"><span class="crliq" aria-hidden="true"><i></i><i></i><i></i></span><div class="inner">
       <div class="jh"><span class="orb${o.busy ? " fast" : ""}"></span><div class="nm">Crear<small>${esc(o.status || "")}</small></div><span class="sp"></span>${App.ai.pillHtml("draft")}${o.back ? `<button class="iconbtn" type="button" data-act="crback" aria-label="Volver atrás">${icon("chevleft")}</button>` : ""}</div>
       <div class="log">${trail(o.trail)}</div>
       <div class="cbody">${o.body || ""}</div>
@@ -4576,7 +4689,7 @@ Reglas:
     </div>`;
   }
   function renderRoot() {
-    return cloud({ status: "¿qué armamos?", trail: [{ who: "ai", html: `<p>${esc(App.say("¿Qué querés crear?", "¿Qué quieres crear?"))}</p>` }], body: rootBody() }) + queueList();
+    return cloud({ hero: true, status: "¿qué armamos?", trail: [{ who: "ai", html: `<p>${esc(App.say("¿Qué querés crear?", "¿Qué quieres crear?"))}</p>` }], body: rootBody() }) + queueList();
   }
 
   // ---------- entrada desde afuera: Biblioteca y Laboratorio ("Usar en un video nuevo") dejan UI.draft.style/.notes;
@@ -4591,6 +4704,24 @@ Reglas:
     return true;
   }
 
+  // ---------- la nube de Crear: nace en el orbe de Jarvis, vuela hasta su sitio, florece y queda flotando ----------
+  // Es la misma gota y el mismo florecido que Jarvis (App.morph.fly + bloom): una sola transicion para "aparecer".
+  // Se hace UNA vez al entrar a Crear (los pasos y los caminos ya se mueven con advanceStep/advanceNav). Si Jarvis
+  // te trajo hasta aca, el florecido de la pantalla ya lo hizo el, asi que no se repite. Mientras Crear esta abierto
+  // las manchas del fondo se juntan detras de la nube (App.aura.mood, igual que Jarvis) y piensan cuando se envia.
+  let entered = false;
+  function gather(el) {
+    if ((App.jarvis && App.jarvis.isOpen()) || (App.celebrate && App.celebrate.isOpen())) return; // ellos ya juntaron el fondo detras de su propio panel
+    const r = el.getBoundingClientRect(), busy = $(".jh .orb.fast", el);
+    App.aura.mood(busy ? "think" : "focus", { x: r.x + r.width / 2, y: r.y + Math.min(r.height * 0.4, 260) });
+  }
+  const enter = (el) => App.morph.arrive(el);
+  App.on((ks) => {
+    if (!ks.has("route") || App.route().name === "crear") return;
+    entered = false;
+    if (!(App.jarvis && App.jarvis.isOpen()) && !(App.celebrate && App.celebrate.isOpen())) App.aura.mood(null);
+  });
+
   App.views.crear = {
     title: "Crear",
     render(r) {
@@ -4600,7 +4731,8 @@ Reglas:
       return App.crearVideo.render() + queueList();
     },
     bind(root, r) {
-      const c = caminoOf(r);
+      const c = caminoOf(r), el = $(".crear-cloud", root);
+      if (el) { if (!entered) { entered = true; enter(el); } gather(el); }
       if (c === "estilo" && App.crearEstilo.bind) App.crearEstilo.bind(root);
       if (c === "video" && App.crearVideo.bind) App.crearVideo.bind(root);
     },
@@ -4784,17 +4916,18 @@ Reglas:
 })();
 
 /* ===== views/crear-video ===== */
-/* Aura · Crear → "Un video nuevo" (camino B de DECISIONES.md #10). Elegís estilo(s) de la Biblioteca (combinarlos
-   o pedir una version distinta por cada uno), o un formato aparte (Long form / Long form a short form), y
-   subís solo el material que ese camino necesita. Termina en un pedido (requests/new_<ts>, kind "new_video"),
+/* Aura · Crear → "Un video nuevo" (camino B de DECISIONES.md #10). Arranca directo en "Elegí tu estilo o estilos
+   preferidos": estilo(s) de la Biblioteca (combinarlos o pedir una version distinta por cada uno). Long form y
+   Long form a short form son formatos aparte, a un toque debajo de la biblioteca. Subís solo el material que ese
+   camino necesita. Termina en un pedido (requests/new_<ts>, kind "new_video"),
    igual que Claude ya conocía. Subir archivos usa App.attach (mismo "+" y fichas con progreso que el resto
    de la plataforma), una instancia por categoría de material. */
 (function () {
   "use strict";
   const App = window.App, sel = App.sel, UI = App.ui, { $, $$, esc, icon, toast } = App;
   const Q = {
-    formato: "¿Qué querés armar?",
     estilos: "Elegí tu estilo o estilos preferidos.",
+    estilosCortos: "Ahora elegí en qué estilo o estilos querés los cortos.",
     material: "¿Qué material tenés para este estilo?",
     materialLong: "Subí el video largo. El B-roll es opcional, si tenés algo para poner acorde a lo que se va diciendo.",
     fuente: "Subí el video o pegá el link (puede ser de YouTube).",
@@ -4806,7 +4939,7 @@ Reglas:
   // estilo sin entrada acá pide solo "normal" (el contenido de base). B-roll y Reacción siempre quedan
   // ofrecidos como opcionales, para cualquier estilo (documentado en el reporte para que Daniel la ajuste).
   const STYLE_NEEDS = { "ensayo-combo": ["intro", "normal"] };
-  const fresh = () => ({ format: null, step: "formato", trail: [], styles: [], styleMode: "combinar", att: {}, linksText: "", notes: "", sourceMode: "file", sourceLink: "", srcAtt: null, err: "" });
+  const fresh = () => ({ format: "corto", step: "estilos", trail: [], styles: [], styleMode: "combinar", att: {}, linksText: "", notes: "", sourceMode: "file", sourceLink: "", srcAtt: null, err: "" });
   UI.crear.video = UI.crear.video || fresh();
   const ST = () => UI.crear.video;
   const attOf = (cat) => (ST().att[cat] = ST().att[cat] || App.attach.make());
@@ -4821,8 +4954,8 @@ Reglas:
     const st = fresh(), sid = resolveStyleId(pre.style);
     if (sid) {
       const name = (App.lib.catalog().find((i) => i.id === sid) || {}).name || "";
-      st.format = "corto"; st.styles = [sid]; st.step = "material";
-      st.trail.push({ who: "ai", html: `<p>${esc(Q.formato)}</p>` }, { who: "me", html: esc(FORMAT_LABEL.corto + ".") }, { who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(`Usar «${name}».`) });
+      st.styles = [sid]; st.step = "material";
+      st.trail.push({ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(`Usar «${name}».`) });
     } else if (pre.notes) {
       // llego algo de la Biblioteca que no es un estilo (una transicion, un texto, un sonido...): no hay nada que
       // preseleccionar, pero la nota no se pierde — queda cargada para cuando el pedido pida notas para Claude.
@@ -4833,29 +4966,23 @@ Reglas:
   }
 
   function stepTo(step, say) { App.crear.advanceStep(() => { if (say) ST().trail.push(...say); ST().step = step; ST().err = ""; }); return true; }
+  // el primer paso es la biblioteca de estilos: de ahi se vuelve a "¿Qué querés crear?" (crear.js)
   function prevOf(st) {
-    if (st.step === "material") return st.format === "corto" ? "estilos" : "formato";
-    if (st.step === "estilos") return st.format === "long2short" ? "fuente" : "formato";
-    if (st.step === "fuente") return "formato";
+    if (st.step === "material" || st.step === "fuente") return "estilos";
+    if (st.step === "estilos") return st.format === "long2short" ? "fuente" : null;
     return null;
   }
   function back() {
     const st = ST(); if (st.step === "sending" || st.step === "sent") return false;
     const p = prevOf(st); if (!p) return false;
-    if (st.trail.length >= 2) st.trail.splice(-2); // deshace el par {ai, me} que el paso actual empujo al llegar
-    return stepTo(p);
+    App.crear.advanceStep(() => {
+      if (st.trail.length >= 2) st.trail.splice(-2); // deshace el par {ai, me} que el paso actual empujo al llegar
+      if (p === "estilos" && st.format !== "long2short") st.format = "corto"; // volvio a la biblioteca desde un formato aparte
+      st.step = p; st.err = "";
+    });
+    return true;
   }
   function restart() { App.crear.advanceStep(() => { UI.crear.video = fresh(); }); }
-
-  // ---------- paso: formato ----------
-  function formatoView() {
-    const body = `<div class="crear-paths v3">
-      <button class="crear-path" type="button" data-act="crvformat" data-f="corto">${icon("sparkles")}<b>${esc(FORMAT_LABEL.corto)}</b><span>Elegís estilo(s) de la Biblioteca y subís lo que hay que editar.</span></button>
-      <button class="crear-path" type="button" data-act="crvformat" data-f="long">${icon("play")}<b>${esc(FORMAT_LABEL.long)}</b><span>Un video largo (podcast u otro contenido), con B-roll opcional.</span></button>
-      <button class="crear-path" type="button" data-act="crvformat" data-f="long2short">${icon("scissors")}<b>${esc(FORMAT_LABEL.long2short)}</b><span>Subís un video largo y lo convertimos en varios cortos.</span></button>
-    </div>`;
-    return App.crear.cloud({ status: "nuevo video", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.formato)}</p>` }]), body });
-  }
 
   // ---------- paso: estilos (compartido por "corto" y "long2short") ----------
   function styleNeeds(id) { const it = App.lib.catalog().find((x) => x.id === id); return (it && STYLE_NEEDS[it.studioId]) || []; }
@@ -4879,9 +5006,12 @@ Reglas:
       <button type="button" role="radio" aria-checked="${m === "versiones"}" class="${m === "versiones" ? "on" : ""}" data-act="crvmode" data-m="versiones">${icon("layers")}Una versión por estilo</button></div></div>`;
   }
   function estilosView() {
-    const body = styleGallery() + styleModeHtml() + (ST().err ? `<p class="status err">${esc(ST().err)}</p>` : "");
-    return App.crear.cloud({ status: "elegí el estilo", back: true, trail: ST().trail.concat([{ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }]), body,
-      chips: [{ act: "crvcontinue", label: "Continuar", icon: "arrow", pri: true }] });
+    const st = ST(), first = st.format !== "long2short";
+    // formatos aparte (solo en la primera pantalla): no necesitan elegir estilo antes de subir el video. Van arriba de la biblioteca, a un toque, para que no haya que bajar hasta el final a buscarlos
+    const other = first ? `<div class="crfmt"><span>O un formato aparte:</span><button type="button" class="chip" data-act="crvother" data-f="long">${icon("play")}${esc(FORMAT_LABEL.long)}</button><button type="button" class="chip" data-act="crvother" data-f="long2short">${icon("scissors")}${esc(FORMAT_LABEL.long2short)}</button></div>` : "";
+    const body = other + styleGallery() + styleModeHtml() + (st.err ? `<p class="status err">${esc(st.err)}</p>` : "");
+    const chips = [{ act: "crvcontinue", label: "Continuar", icon: "arrow", pri: true }];
+    return App.crear.cloud({ status: first ? "elegí el estilo" : "estilo de los cortos", back: true, trail: st.trail.concat([{ who: "ai", html: `<p>${esc(first ? Q.estilos : Q.estilosCortos)}</p>` }]), body, chips });
   }
 
   // ---------- paso: material (categorías de upload) ----------
@@ -4927,7 +5057,7 @@ Reglas:
     if (s === "material") return materialView();
     if (s === "fuente") return fuenteView();
     if (s === "sending" || s === "sent") return sentView();
-    return formatoView();
+    return estilosView();
   }
 
   // ---------- continuar / enviar ----------
@@ -4992,10 +5122,11 @@ Reglas:
 
   App.crearVideo = { render, bind, back, arriveWith };
   const A = App.acts;
-  A.crvformat = (el) => {
+  // "Long form" / "Long form a short form": se salta la biblioteca. Long form pide solo el video largo (+ B-roll
+  // opcional); long form a short form pide el video (archivo o link) y recien despues los estilos de los cortos.
+  A.crvother = (el) => {
     const f = el.dataset.f, st = ST(); st.format = f;
-    const next = f === "long" ? "material" : f === "long2short" ? "fuente" : "estilos";
-    stepTo(next, [{ who: "ai", html: `<p>${esc(Q.formato)}</p>` }, { who: "me", html: esc(FORMAT_LABEL[f] + ".") }]);
+    stepTo(f === "long" ? "material" : "fuente", [{ who: "ai", html: `<p>${esc(Q.estilos)}</p>` }, { who: "me", html: esc(FORMAT_LABEL[f] + ".") }]);
   };
   A.crvsty = (el) => { const id = el.dataset.id, st = ST(), i = st.styles.indexOf(id); if (i >= 0) st.styles.splice(i, 1); else st.styles.push(id); App.render(true); };
   A.crvmode = (el) => { ST().styleMode = el.dataset.m; App.render(true); };
@@ -5458,6 +5589,22 @@ Reglas:
   }
   const stat = (label, val, delta, series, sub, color) => `<div class="card lg stat"><div class="ch">${label}<span class="sp"></span>${delta != null ? `<span class="chip ${delta >= 0 ? "good" : "bad"}">${pctTxt(delta)}</span>` : ""}</div><div class="big-num" data-count="${val}" data-compact="1">${fmt(val)}</div>${sub ? `<p class="muted">${sub}</p>` : ""}${series ? `<div class="spk">${spark(series, 220, 48, { color })}</div>` : ""}</div>`;
 
+  // Logros: viven AQUI, dentro de Métricas, no en una pestaña (DECISIONES.md #1 y #13). Los hitos de seguidores, vistas, likes y guardados
+  // (y los demás) con su progreso; cuando se cruza uno nuevo se celebra al abrir la app o esta pantalla (celebrate.js).
+  const LG_FIRST = ["followers", "views", "likes", "saved"];
+  function logros() {
+    const T = App.trophies, cs = T.cards(), all = T.all(cs), list = (UI.scope === "total" || !cs.brands[UI.scope] ? cs.total : cs.brands[UI.scope]).slice();
+    list.sort((a, b) => { const ia = LG_FIRST.indexOf(a.key), ib = LG_FIRST.indexOf(b.key); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    const nw = new Set(T.newIds(all)), got = list.filter((c) => c.got > 0).length;
+    const card = (c) => {
+      const tier = c.tier >= 0 ? T.TIERS[c.tier] : null, fresh = c.ids.some((id) => nw.has(id));
+      const next = c.next == null ? "Todos los escalones logrados" : `Próximo: ${T.TIERS[T.tierOf(c.got, c.steps.length)][0]} a ${fmt(c.next)} · faltan ${fmt(c.next - c.value)}`;
+      return `<article class="mlg-c ${fresh ? "fresh" : ""}" style="--tc:${tier ? tier[1] : "#9fb0ac"}"><span class="medal ${tier ? "" : "locked"}" style="--m:${tier ? tier[1] : "#9fb0ac"}">${icon(c.def.icon)}</span>
+        <div class="mlg-b"><h3>${esc(c.def.name)}${tier ? `<em>${tier[0]}</em>` : ""}${fresh ? `<i class="mlg-new">Nuevo</i>` : ""}</h3><b class="num">${fmt(c.value)}</b><div class="bar" style="--p:${Math.round(c.ratio * 100)}%"><i></i></div><small class="muted">${next}</small></div></article>`;
+    };
+    return `<section class="card lg mlg" id="mlogros"><div class="ch">${icon("trophy")}Logros<span class="sp"></span>${nw.size ? `<button class="btn sm pri" type="button" data-act="celebrate">Ver lo nuevo</button>` : `<span class="faint">${got} de ${list.length}</span>`}</div><div class="mlgs">${list.map(card).join("")}</div></section>`;
+  }
+
   App.views.metricas = {
     title: "Métricas",
     render() {
@@ -5484,7 +5631,7 @@ Reglas:
         <div class="grid cols2"><section class="card lg"><div class="ch">${icon("star")}Mejores reels · ${mname.toLowerCase()}</div>${top.length ? `<ol class="top">${top3}</ol>${rows.length > UI.m.rank ? `<button class="btn sm ghost" type="button" data-act="mmore">Ver más</button>` : ""}` : `<p class="muted">Sin reels en este rango.</p>`}</section>
           <section class="card lg"><div class="ch">${icon("calendar")}Ritmo de publicación<span class="sp"></span><span class="faint">próximos 14 días</span></div><div class="pace">${barsSvg(future, 280, 96, { color: "var(--accent)", gap: 5 })}</div><p class="muted">${gaps ? `<b>${gaps} ${plural(gaps, "día", "días")}</b> sin nada agendado en las próximas dos semanas.` : "Hay algo agendado todos los días."}</p>
           ${best.length ? `<div class="besth"><span class="eyebrow">Mejores horas para publicar</span><div>${best.map(([h, v]) => `<span class="chip">${App.pad(h)}:00 · ${fmt(v)} vistas</span>`).join("")}</div></div>` : ""}
-          ${S.brands.length > 1 && UI.scope === "total" ? `<div class="cmp"><span class="eyebrow">Por cuenta · 7 días</span>${S.brands.map((b) => { const e = sel.evoOf(b); return `<div class="cmprow"><i class="dot" style="--c:${esc(b.color || "var(--accent)")}"></i><b>${esc(b.name)}</b><span class="num">${e ? fmt(e.views) : "–"}</span><span class="muted">${e ? (e.net >= 0 ? "+" : "") + e.net + " seg." : ""}</span></div>`; }).join("")}</div>` : ""}</section></div>`;
+          ${S.brands.length > 1 && UI.scope === "total" ? `<div class="cmp"><span class="eyebrow">Por cuenta · 7 días</span>${S.brands.map((b) => { const e = sel.evoOf(b); return `<div class="cmprow"><i class="dot" style="--c:${esc(b.color || "var(--accent)")}"></i><b>${esc(b.name)}</b><span class="num">${e ? fmt(e.views) : "–"}</span><span class="muted">${e ? (e.net >= 0 ? "+" : "") + e.net + " seg." : ""}</span></div>`; }).join("")}</div>` : ""}</section></div>${logros()}`;
     },
     // "home" tambien dispara un nuevo bind (y por lo tanto una nueva revisión de hitos): ahi vive home/trophies, y el baseline
     // se escribe de forma asincrona -- la primera llamada a bind() puede correr antes de que esa escritura se asiente.
@@ -5503,8 +5650,8 @@ Reglas:
 })();
 
 /* ===== views/celebrate ===== */
-/* Aura · celebracion de logros. Cuando llega un logro o un nivel nuevo, la gota sale del orbe, florece una tarjeta de vidrio y la medalla cae con rebote,
-   con anillos y destellos. Un logro por pagina (los de "todas las cuentas" primero) y, al final, la subida de nivel. Al cerrar se marca como visto. */
+/* Aura · celebracion de logros. Cuando llega un logro nuevo, la gota sale del orbe, florece una tarjeta de vidrio y la medalla cae con rebote,
+   con anillos, destellos y confeti, felicitando y motivando. Un logro por pagina (los de "todas las cuentas" primero). Sin niveles ni XP. Al cerrar se marca como visto. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, { $, $$, esc, icon, fmt } = App, T = App.trophies;
@@ -5523,15 +5670,8 @@ Reglas:
       <span class="eyebrow">${it.brand ? esc(it.brand) + " · " : ""}Hito nuevo</span>
       <h2 class="cel-t">${pick(PRAISE, it.id)} Llegaste a ${esc(it.line)}.</h2>
       <span class="cel-tier"><i></i>${esc(T.TIERS[it.tier][0])}</span>
-      <p class="cel-p">${it.extra ? `Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino. ` : ""}${pick(MOTIVATE, it.id + "m")}</p>
-      <span class="cel-xp" data-xp="${it.xp}">+${it.xp} XP</span></div>`;
+      <p class="cel-p">${it.extra ? `Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino. ` : ""}${pick(MOTIVATE, it.id + "m")}</p></div>`;
   };
-  const slideLevel = (lv) => `<div class="cel-slide level" style="--m:#ffcf6e"><div class="cel-hero"><i class="cel-blob b1"></i><i class="cel-blob b2"></i><i class="cel-blob b3"></i><i class="cel-ring"></i><i class="cel-ring r2"></i><div class="lvbadge cel-badge"><b class="num" data-from="${lv.from}" data-to="${lv.to}">${lv.from}</b><small>NIVEL</small></div></div>
-      <span class="eyebrow">Subiste de nivel</span><h2 class="cel-t">${pick(PRAISE, lv.to)} Ahora eres nivel ${lv.to}.</h2>
-      <span class="cel-tier"><i></i>${fmt(lv.xp)} XP en total</span>
-      <div class="bar big cel-bar" style="--p:${Math.round(Math.min(1, Math.max(0, lv.ratio)) * 100)}%"><i></i></div>
-      <p class="cel-p">Faltan ${fmt(lv.left)} XP para el nivel ${lv.to + 1}. Cada hito de tus redes suma.</p></div>`;
-
   function ensureWrap() {
     let w = $("#celwrap"); if (w) return w;
     w = document.createElement("div"); w.className = "jv-wrap cel-wrap"; w.id = "celwrap";
@@ -5541,31 +5681,24 @@ Reglas:
     w.addEventListener("keydown", (e) => { if (!cur) return; if (e.key === "ArrowRight") { e.preventDefault(); next(true); } else if (e.key === "ArrowLeft") { e.preventDefault(); go(Math.max(0, cur.i - 1)); } else if (e.key === "Escape") { e.stopPropagation(); close(); } });
     return w;
   }
-  function countUp(el, from, to, ms, fmtFn) {
-    if (!el) return; if (App.reduceMotion() || from === to) { el.textContent = fmtFn(to); return; }
-    const t0 = performance.now(); (function f(t) { const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(f); })(t0);
-  }
   function go(i) {
     if (!cur) return; cur.i = i; const slides = $$(".cel-slide", cur.wrap), last = i === slides.length - 1;
     slides.forEach((sl, k) => { sl.toggleAttribute("data-on", k === i); sl.toggleAttribute("data-past", k < i); });
     $$(".cel-dots i", cur.wrap).forEach((d, k) => d.classList.toggle("on", k === i));
     const btn = $("#celnext", cur.wrap); btn.textContent = last ? "¡Genial!" : "Siguiente"; btn.focus({ preventScroll: true });
-    const sl = slides[i], hero = $(".cel-hero", sl); if (hero) App.morph.sparkles(hero, sl.classList.contains("level") ? 12 : 9);
-    App.morph.confetti(cur.wrap, sl.classList.contains("level") ? 110 : i === 0 ? 90 : 60); // confeti en cada pagina: el hito nuevo se festeja de verdad
-    const xp = $(".cel-xp", sl); if (xp) countUp(xp, 0, +xp.dataset.xp, 900, (n) => "+" + n + " XP");
-    const lb = $(".cel-badge b", sl); if (lb) countUp(lb, +lb.dataset.from, +lb.dataset.to, 1100, String);
-    const bar = $(".cel-bar", sl); if (bar) { bar.classList.remove("go"); void bar.offsetWidth; bar.classList.add("go"); }
+    const sl = slides[i], hero = $(".cel-hero", sl); if (hero) App.morph.sparkles(hero, 9);
+    App.morph.confetti(cur.wrap, i === 0 ? 90 : 60); // confeti en cada pagina: el hito nuevo se festeja de verdad
     const tt = $(".cel-t", sl); if (tt) { tt.id = "celtitle"; }
   }
   function next(quiet) { if (!cur) return; const n = $$(".cel-slide", cur.wrap).length; if (cur.i < n - 1) go(cur.i + 1); else if (!quiet) close(); }
 
   async function show(data) {
     if (cur) return false; const real = !data; data = data || T.fresh(); if (!data) return false;
-    const slides = data.items.slice(0, 5).map(slideItem); if (data.level) slides.push(slideLevel(data.level));
+    const slides = data.items.slice(0, 5).map(slideItem); // sin niveles ni XP: solo reconocimiento por el hito (DECISIONES.md #13)
     if (!slides.length) return false;
     const wrap = ensureWrap(), panel = $("#cel", wrap), from = $$(".orb[data-orb]").find((o) => o.offsetParent) || null;
     $("#celslides", wrap).innerHTML = slides.join(""); $("#celdots", wrap).innerHTML = slides.map(() => "<i></i>").join(""); $("#celdots", wrap).hidden = slides.length < 2;
-    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more && !data.level) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} hitos más en Métricas.`); }
+    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} hitos más en Métricas.`); }
     cur = { data, i: 0, wrap, panel, from, real }; if (real) done.add(data.ids.slice().sort().join("|"));
     const a = App.aura.el(); prevTone = (a && a.dataset.tone) || "base"; App.aura.tone("gold"); App.aura.mood("focus", { x: innerWidth / 2, y: innerHeight * 0.42 });
     await App.morph.open(from, wrap, panel); if (cur) go(0);
@@ -5587,8 +5720,8 @@ Reglas:
   }
   // para probar la animacion (modo demostracion): usa tus logros mas altos y una subida de nivel de mentira, sin marcar nada como visto
   function sample() {
-    const cs = T.cards(), top = cs.total.filter((c) => c.got > 0).sort((x, y) => y.tier - x.tier || y.ratio - x.ratio).slice(0, 2), lv = T.level(T.totalXp(cs));
-    return { items: top.map((c) => ({ id: c.id, group: "total", brand: "", key: c.key, def: c.def, step: c.steps[c.got - 1], tier: c.tier, extra: 0, xp: 5, ids: [], line: T.UNIT[c.key] ? T.UNIT[c.key](c.steps[c.got - 1]) : fmt(c.steps[c.got - 1]) })), ids: [], xp: 10, level: { from: Math.max(1, lv.level - 1), to: lv.level, xp: lv.xp, ratio: lv.ratio, left: lv.to - lv.xp }, now: lv };
+    const cs = T.cards(), top = cs.total.filter((c) => c.got > 0).sort((x, y) => y.tier - x.tier || y.ratio - x.ratio).slice(0, 2);
+    return { items: top.map((c) => ({ id: c.id, group: "total", brand: "", key: c.key, def: c.def, step: c.steps[c.got - 1], tier: c.tier, extra: 0, xp: 5, ids: [], line: T.UNIT[c.key] ? T.UNIT[c.key](c.steps[c.got - 1]) : fmt(c.steps[c.got - 1]) })), ids: [] };
   }
   App.celebrate = { show, close, check, sample, isOpen: () => !!cur };
   App.acts.celebrate = () => App.celebrate.show();
@@ -5601,33 +5734,60 @@ Reglas:
   "use strict";
   const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon, plural } = App;
 
-  // ---------- Notas ----------
-  const SCOPE_ICON = { VIDEO: "film", PIEZA: "layers", CUENTA: "users", GENERAL: "note", ELEGIDOS: "check", ESTILO: "sparkles" };
-  function noteRow(n, kind) {
-    return `<li class="nrow"><span class="chip">${esc(App.act.noteScope(n))}</span><div><b>${esc(App.act.noteTitle(n))}</b><p>${esc(n.text)}</p><small class="faint">${n.created ? App.ago(n.created) : ""}${(n.tags || []).length ? " · " + esc(n.tags.join(", ")) : ""}</small></div>
-      ${kind === "unsent" ? `<button class="btn sm ghost" type="button" data-act="notedel" data-id="${esc(n.id)}">Quitar</button>` : kind === "sent" ? `<span class="chip">Enviada${n.reply ? "" : ""}</span>` : `<button class="btn sm ghost" type="button" data-act="notereopen" data-id="${esc(n.id)}">Reabrir</button>`}${n.reply ? `<p class="reply">Claude: ${esc(n.reply)}</p>` : ""}</li>`;
+  // ---------- Notas: "¿Cómo puedo mejorar tu experiencia aquí?" (DECISIONES.md #12) ----------
+  // Ya no es una lista de borradores: es una nube flotante (la misma materia que Jarvis, nunca un circulo perfecto) con una sola pregunta y un
+  // espacio para escribir. Cada mensaje se manda a Claude en el acto (App.act.sendExperience) y la nube responde "Recibido. ¿Hay algo más?"
+  // hasta que la persona dice que no hay nada mas ("Eso es todo", o escribir "no"/"nada"): ahi dice "Muchas gracias, haremos lo mejor...".
+  // Los cambios sin enviar (videos, referencias, subtitulos) se ven y se mandan desde la barra de abajo, que ahora tambien esta aqui.
+  UI.notas = UI.notas || { step: "ask", n: 0 };
+  const SAY = { ask: "¿Cómo puedo mejorar tu experiencia aquí?", more: "<b>Recibido.</b> ¿Hay algo más?", thanks: "Muchas gracias, haremos lo mejor por mejorar tu experiencia." };
+  const END = /^\s*(no|nada|nada m[aá]s|eso es todo|es todo|ya|listo|ninguno|no,? gracias|no,? nada)[\s.!¡]*$/i;
+  let ntIn = false;
+  const ntSpring = "cubic-bezier(.16,1,.3,1)";
+  function ntSay(step, instant) {
+    const el = $("#ntsay"), nt = $(".nt"); if (!el || !nt) return;
+    nt.dataset.step = step; UI.notas.step = step;
+    const apply = () => { el.innerHTML = `<span>${SAY[step]}</span>`; if (!App.reduceMotion() && el.firstElementChild.animate) el.firstElementChild.animate([{ opacity: 0, transform: "translateY(14px)", filter: "blur(10px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], { duration: 700, easing: ntSpring, fill: "backwards" }); };
+    const cur = el.firstElementChild;
+    if (instant || App.reduceMotion() || !cur || !cur.animate) { apply(); return; }
+    cur.animate([{ opacity: 1, filter: "blur(0)" }, { opacity: 0, transform: "translateY(-10px)", filter: "blur(8px)" }], { duration: 220, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).finished.then(apply, apply);
   }
+  // al recibir algo la nube se "traga" el mensaje: se aprieta y se asienta como una gota (solo transform, sobre el cuerpo; el contorno sigue su propio vaiven)
+  function ntPulse() { const c = $("#ntcloud"); if (c && !App.reduceMotion() && c.animate) c.animate([{ transform: "scale(1)" }, { transform: "scale(1.045, .965)" }, { transform: "scale(.99, 1.015)" }, { transform: "scale(1)" }], { duration: 900, easing: ntSpring }); }
+  function ntGather() { const c = $("#ntcloud"); if (!c) return; const r = c.getBoundingClientRect(); App.aura.mood("focus", { x: r.x + r.width / 2, y: r.y + r.height / 2 }); }
+  async function ntSend(text) {
+    const form = $("#ntform"), ta = $("#ntbox"), btn = form && $("button", form); if (!ta) return;
+    if (!text) { ta.focus(); if (ta.animate && !App.reduceMotion()) form.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(5px)" }, { transform: "translateX(0)" }], { duration: 320, easing: "ease-out" }); return; }
+    if (END.test(text)) { ntFinish(); return; }
+    ta.disabled = true; if (btn) btn.disabled = true;
+    const ok = await App.act.sendExperience(text);
+    ta.disabled = false; if (btn) btn.disabled = false;
+    if (!ok) { App.toast("No se pudo enviar. Prueba de nuevo."); ta.focus(); return; }
+    UI.notas.n++; ta.value = ""; ntPulse(); ntSay("more"); ta.focus();
+  }
+  function ntFinish() { ntPulse(); ntSay("thanks"); const c = $("#ntcloud"); if (c) App.morph.sparkles(c, 8); const ta = $("#ntbox"); if (ta) ta.value = ""; }
   App.views.notas = {
     title: "Notas",
     render() {
-      const items = App.act.pendingItems(), n = items.length, sent = S.notes.filter((x) => x.sent === true && !sel.closedNote(x)).sort((a, b) => String(b.created || "").localeCompare(String(a.created || ""))), done = S.notes.filter(sel.closedNote).slice(0, 12);
-      const tagOpts = [["general", "Todo el espacio"], ...S.brands.map((b) => ["brand:" + b.id, b.name])];
-      return `<div class="vhead"><div class="t"><span class="eyebrow">Para Claude</span><h1 class="h-l">${n ? `<em>${n} ${plural(n, "cambio", "cambios")}</em> sin enviar` : "Todo <em>enviado</em>"}</h1><p class="muted">Lo que escribes en videos, subtítulos, Laboratorio y referencias se junta aquí. Se envía todo junto, una sola vez.</p></div><div class="r">${n ? `<button class="btn pri lg2" type="button" data-act="sendall">Enviar cambios<b>${n}</b></button>` : ""}</div></div>
-        <div class="grid cols2 notasg"><section class="card lg"><div class="ch">${icon("send")}Sin enviar<span class="sp"></span>${n ? `<button class="lnk" type="button" data-act="sundoall">Descartar todo</button>` : ""}</div>
-          ${n ? `<ul class="plist">${items.map((it, i) => `<li class="pit"><div><span class="eyebrow">${esc(it.kind)}</span><p>${esc(it.label)}</p></div><button class="btn sm ghost" type="button" data-act="sundo" data-i="${i}">Quitar</button></li>`).join("")}</ul>` : `<div class="empty small"><span class="orb"></span><p>No hay nada pendiente de enviar.</p></div>`}</section>
-          <section class="card lg"><div class="ch">${icon("note")}Nota rápida</div><form class="field" id="quicknote"><label class="sr" for="qn">Nota</label><textarea id="qn" rows="4" maxlength="2000" placeholder="${esc(App.say("Qué querés que cambie o mejore. Queda como borrador hasta Enviar cambios.", "Qué quieres que cambie o mejore. Queda como borrador hasta Enviar cambios."))}"></textarea>
-            <div class="row"><select id="qnscope" aria-label="Aplica a">${tagOpts.map(([k, t]) => `<option value="${esc(k)}">${esc(t)}</option>`).join("")}</select><button class="btn pri" type="submit">Guardar nota</button></div></form></section></div>
-        <section class="card lg" style="margin-top:16px"><div class="ch">${icon("clock")}Enviadas, esperando a Claude<span class="sp"></span><span class="faint">${sent.length}</span></div>${sent.length ? `<ul class="nrows">${sent.map((x) => noteRow(x, "sent")).join("")}</ul>` : `<p class="muted">Nada esperando respuesta.</p>`}</section>
-        ${done.length ? `<section class="card lg" style="margin-top:16px"><div class="ch">${icon("check")}Resueltas</div><ul class="nrows">${done.map((x) => noteRow(x, "done")).join("")}</ul></section>` : ""}`;
+      const st = UI.notas.step;
+      return `<div class="nt" data-step="${st}"><div class="nt-float"><div class="nt-cloud" id="ntcloud" role="group" aria-label="Cuéntame cómo mejorar tu experiencia"><span class="crliq" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div class="nt-in"><span class="orb nt-orb" aria-hidden="true"></span><p class="nt-say" id="ntsay" aria-live="polite"><span>${SAY[st]}</span></p>
+          <form class="rvcomp nt-form" id="ntform"><textarea id="ntbox" rows="2" maxlength="2000" placeholder="Escribe aquí" aria-label="Tu idea o comentario"></textarea><button class="rvsend" type="submit" aria-label="Enviar">${icon("arrow")}</button></form>
+          <button class="nt-end" type="button" data-act="ntend">Eso es todo</button><button class="nt-again" type="button" data-act="ntagain">Escribir otra idea</button></div></div></div></div>`;
     },
     bind(root) {
-      const f = $("#quicknote", root); if (!f) return;
-      f.addEventListener("submit", async (e) => { e.preventDefault(); const t = $("#qn").value.trim(); if (!t) return; const v = $("#qnscope").value, ctx = v === "general" ? { scope: "general", title: "Todo el espacio" } : { scope: "brand", brand: v.split(":")[1], title: "Toda la cuenta" }; const id = await App.act.createFeedback(ctx, t, []); App.toast(id ? "Nota guardada. Se envía con Enviar cambios." : "No se pudo guardar. Prueba de nuevo."); $("#qn").value = ""; });
+      const f = $("#ntform", root), ta = $("#ntbox", root), c = $("#ntcloud", root); if (!f || !c) return;
+      if (!ntIn) { ntIn = true; App.morph.arrive(c); }
+      ntGather();
+      f.addEventListener("submit", (e) => { e.preventDefault(); ntSend(ta.value.trim()); });
+      ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); ntSend(ta.value.trim()); } });
+      if (UI.notas.step !== "thanks" && !App._morphNav) setTimeout(() => { if (document.contains(ta)) ta.focus({ preventScroll: true }); }, 900);
     },
-    update(kinds) { const a = document.activeElement; return !!(a && a.id === "qn"); },
+    update() { return true; }, // nada de aqui depende de los datos: no se repinta (y no se pierde lo que se esta escribiendo)
   };
-  App.acts.notedel = (el) => { const n = S.notes.find((x) => x.id === el.dataset.id); if (n) App.act.removeNote(n); };
-  App.acts.notereopen = (el) => { const n = S.notes.find((x) => x.id === el.dataset.id); if (n) App.act.patchNote(n, { status: "open", sent: false }); };
+  App.acts.ntend = () => ntFinish();
+  App.acts.ntagain = () => { ntSay("ask"); const ta = $("#ntbox"); if (ta) ta.focus(); };
+  App.on((ks) => { if (!ks.has("route") || App.route().name === "notas") return; ntIn = false; UI.notas = { step: "ask", n: 0 }; if (!(App.jarvis && App.jarvis.isOpen()) && !(App.celebrate && App.celebrate.isOpen()) && App.route().name !== "crear") App.aura.mood(null); });
 
   // ---------- Ajustes ----------
   const row = (title, sub, ctl) => `<div class="srow"><div><b>${title}</b>${sub ? `<small class="muted">${sub}</small>` : ""}</div>${ctl}</div>`;
@@ -5640,8 +5800,7 @@ Reglas:
       return `<div class="vhead"><div class="t"><span class="eyebrow">${esc(c.name)}</span><h1 class="h-l">Ajustes</h1><p class="muted">Tu espacio de trabajo, el aspecto y la conexión con Claude.</p></div></div>
         <div class="grid cols2 setg"><section class="card lg"><div class="ch">${icon("sun")}Aspecto</div>
           ${row("Tema", "Auto sigue a tu dispositivo.", `<div class="seg" role="radiogroup">${[["auto", "Auto"], ["day", "Día"], ["night", "Noche"]].map(([k, n]) => `<button type="button" role="radio" aria-checked="${tm === k}" class="${tm === k ? "on" : ""}" aria-pressed="${tm === k}" data-act="settheme" data-k="${k}">${n}</button>`).join("")}</div>`)}
-          ${row("Zona segura de Instagram", "Muestra por defecto el recuadro seguro al revisar videos.", sw("setsafe", App.store.get("safe", false), "Zona segura"))}
-          ${row("Subtítulos en todas las versiones", "Un cambio de palabras se aplica a toda la pieza.", sw("setcapall", App.store.get("cap-all", true) !== false, "Aplicar a todas"))}</section>
+          ${row("Zona segura de Instagram", "Muestra por defecto el recuadro seguro al revisar videos.", sw("setsafe", App.store.get("safe", false), "Zona segura"))}</section>
         <section class="card lg"><div class="ch">${icon("sparkles")}Jarvis</div>
           ${row("Modelo e intensidad", "El de siempre para Jarvis, el Estudio, el Laboratorio y los videos nuevos.", App.ai.pillHtml("global"))}
           ${row("Respuestas en voz", "Jarvis lee en voz alta sus respuestas.", sw("setvoice", App.store.get("jv-voice", true) !== false, "Voz"))}
@@ -5657,14 +5816,13 @@ Reglas:
           ${claude && !S.videos.length ? row("Cargar datos de ejemplo", "Tu base está vacía. Carga piezas, métricas y un editor listo para recorrer la plataforma.", `<button class="btn sm pri" type="button" data-act="seeddemo">Cargar</button>`) : ""}
           ${row("Espacio de trabajo", "Cambia entre configuraciones de marca para probar la plataforma.", `<select class="mini-sel" data-change="setpreset" aria-label="Espacio">${Object.values(App.PRESETS).map((p) => `<option value="${p.id}" ${p.id === c.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>`)}
           ${row("Exportar datos", "Descarga un respaldo de lo que ves (JSON).", `<button class="btn sm" type="button" data-act="setexport">${icon("download")}Exportar</button>`)}</section>
-        <section class="card lg span2"><div class="ch">${icon("keyboard")}Atajos</div><div class="keys">${[["⌘ K", "Jarvis"], ["A", "Aprobar"], ["Q", "Quizás"], ["R", "Rechazar"], ["← →", "Cambiar de versión"], ["Espacio", "Pausa"], ["N", "Nota en el cuadro"], ["Esc", "Volver"]].map(([k, t]) => `<span><kbd class="kb">${k}</kbd>${t}</span>`).join("")}</div></section></div>`;
+        <section class="card lg span2"><div class="ch">${icon("keyboard")}Atajos</div><div class="keys">${[["⌘ K", "Jarvis"], ["A", "Aprobar"], ["Q", "Quizás"], ["R", "Rechazar"], ["← →", "Cambiar de versión"], ["Espacio", "Pausa"], ["Esc", "Volver"]].map(([k, t]) => `<span><kbd class="kb">${k}</kbd>${t}</span>`).join("")}</div></section></div>`;
     },
     bind(root) { const f = $("#addacc", root); if (f) f.addEventListener("submit", async (e) => { e.preventDefault(); const name = $("#aan").value.trim(); if (!name) return; const id = name.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); const ok = await App.data.set("brands", id, { name, handle: $("#aah").value.trim(), blogId: $("#aab").value.trim(), color: "#0f6b6c", order: S.brands.length + 1, lang: "es", network: "instagram" }); App.toast(ok ? "Cuenta agregada." : "No se pudo agregar."); }); },
   };
   const A = App.acts;
   A.settheme = (el, e) => App.theme.set(el.dataset.k, e).then(() => App.render(true));
   A.setsafe = (el) => { const on = el.getAttribute("aria-checked") !== "true"; App.store.set("safe", on); el.setAttribute("aria-checked", on); };
-  A.setcapall = (el) => { const on = el.getAttribute("aria-checked") !== "true"; App.store.set("cap-all", on); el.setAttribute("aria-checked", on); };
   A.setvoice = (el) => { const on = el.getAttribute("aria-checked") !== "true"; App.store.set("jv-voice", on); el.setAttribute("aria-checked", on); };
   A.setpreset = (el) => App.setPreset(el.value);
   A.setexport = async () => { const data = { exported: App.stamp(), space: App.config.id, brands: S.brands, videos: S.videos, notes: S.notes, requests: S.requests, refs: S.refs, styles: S.expStyles }; const ok = await App.adapter().download(`aura-${App.config.id}-${App.dayKey(new Date())}.json`, JSON.stringify(data, null, 2)); App.toast(ok ? "Respaldo listo." : "No se pudo descargar."); };
@@ -5782,11 +5940,13 @@ Reglas:
       // que ya no corresponde a donde esta parada.
       App.toast("El motor del Estudio no cargó. Revisa tu conexión y recarga."); App.go("estudio", { replace: true }); return;
     }
+    const sameEditor = !!ST.SE && !!E("st") && !E("st").hidden; // cambio de version (v1/v2/v3) con el editor ya abierto: se queda en el editor, sin reabrirlo
     if (ST.SE) teardown();
     const doc = ver(vid), spec = doc && doc.spec ? SM().clone(doc.spec) : null;
     ST.SE = { vid, spec, rev: doc ? doc.rev || 0 : 0, hist: SM().createHistory(100), sel: null, t: 0, zoom: 64, safe: false, muted: false, tool: null, trSide: "in", handle: null, dirty: false, qa: null, log: doc && doc.log ? doc.log.slice() : [], raf: 0, saveT: 0, ruleT: 0, openedAt: Date.now() };
     const el = ensureShell(); el.hidden = false; el.classList.remove("insp-open"); App.studioOpen = true; document.body.style.overflow = "hidden"; App.updateSendBar();
-    el.animate([{ opacity: 0, transform: "scale(1.015)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
+    if (!sameEditor) el.animate([{ opacity: 0, transform: "scale(1.015)" }, { opacity: 1, transform: "none" }], { duration: 420, easing: "cubic-bezier(.16,1,.3,1)" });
+    else { const ph = E("st-phone"); if (ph) ph.animate([{ opacity: 0.35, transform: "scale(.985)" }, { opacity: 1, transform: "none" }], { duration: 380, easing: "cubic-bezier(.16,1,.3,1)" }); }
     if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
     ST.renderTop(); ST.renderDock(); ST.renderInspector(); ST.renderBanner();
     // Nunca dejar la vista previa en blanco para siempre y sin ningun aviso: si tarda demasiado
@@ -6275,13 +6435,11 @@ Reglas:
     const s = SE(), reqs = ST.reqsOf(s.vid).filter((r) => r.kind !== "export"), cs = s.sel && s.sel !== "subs" && s.spec ? SM().findClip(s.spec, s.sel) : null;
     const att = (s.att = s.att || App.attach.make());
     pane.innerHTML = `<div class="st-ask"><div class="st-askbox">${att.chips()}<textarea id="st-ask-text" rows="3" placeholder="Pídelo como se lo dirías a una persona" aria-label="Qué quieres cambiar">${esc(s.askText || "")}</textarea><div class="st-askbar">${att.btn()}${App.ai.pillHtml("global")}<span class="sp"></span><button class="go" id="st-ask-go" type="button" aria-label="Pedir a Claude">${icon("arrow")}</button></div></div>
-      <div class="st-chips">${SLib().EJEMPLOS_PEDIDO.map((t, i) => `<button type="button" data-ex="${i}">${esc(t)}</button>`).join("")}</div>
       <label class="st-f"><span class="l">Dónde</span><select id="st-ask-scope"><option value="video">En todo este video</option>${cs ? `<option value="clip">Solo en lo elegido (${esc(ST.clipText(cs.track.kind, cs.clip))})</option>` : ""}<option value="piece">En todas las versiones de la pieza</option></select></label></div>
       <h3>Pedidos${reqs.length ? ` · ${reqs.length}` : ""}</h3><div id="st-reqs">${reqs.map(reqHtml).join("") || '<div class="st-empty">Todavía no le pediste nada a Claude en este video.</div>'}</div>${s.spec ? `<h3>Tus cambios</h3>${logHtml(6)}` : ""}`;
     att.bind(pane.querySelector(".st-askbox"));
     const ta = E("st-ask-text"); ta.addEventListener("input", () => { s.askText = ta.value; });
     ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); E("st-ask-go").click(); } });
-    pane.querySelectorAll("[data-ex]").forEach((b) => b.addEventListener("click", () => { ta.value = SLib().EJEMPLOS_PEDIDO[+b.dataset.ex]; s.askText = ta.value; ta.focus(); }));
     E("st-ask-go").addEventListener("click", async () => {
       if (att.busy()) { App.toast("Espera a que terminen de subir los archivos."); return; }
       const hasFiles = att.items.some((x) => x.state === "done"), text = ta.value.trim() || (hasFiles ? "Usa lo que te adjunto." : "");
@@ -6488,7 +6646,7 @@ Reglas:
   D.seedTrophies = function () {
     if (!window.App || !App.trophies) return;
     const T = App.trophies, cs = T.cards(), ids = T.all(cs).flatMap((c) => c.ids); if (!ids.length) return;
-    const keep = ids.filter((i) => /^total:(streak|weekFollowers|best):/.test(i)).slice(-2), at = App.stamp();
+    const keep = ["likes", "saved", "streak"].map((k) => ids.filter((i) => i.indexOf("total:" + k + ":") === 0).slice(-1)[0]).filter(Boolean), at = App.stamp(); // un hito nuevo por tarjeta: likes, guardados y racha
     App.S.trophyDoc = { baseline: at, level: Math.max(1, T.level(T.totalXp(cs)).level - 1), seen: Object.fromEntries(ids.filter((i) => !keep.includes(i)).map((i) => [i, at])) }; App.data.set("home", "trophies", App.S.trophyDoc); App.emit("home");
   };
 })();

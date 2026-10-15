@@ -1,5 +1,5 @@
-/* Aura · celebracion de logros. Cuando llega un logro o un nivel nuevo, la gota sale del orbe, florece una tarjeta de vidrio y la medalla cae con rebote,
-   con anillos y destellos. Un logro por pagina (los de "todas las cuentas" primero) y, al final, la subida de nivel. Al cerrar se marca como visto. */
+/* Aura · celebracion de logros. Cuando llega un logro nuevo, la gota sale del orbe, florece una tarjeta de vidrio y la medalla cae con rebote,
+   con anillos, destellos y confeti, felicitando y motivando. Un logro por pagina (los de "todas las cuentas" primero). Sin niveles ni XP. Al cerrar se marca como visto. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, { $, $$, esc, icon, fmt } = App, T = App.trophies;
@@ -18,15 +18,8 @@
       <span class="eyebrow">${it.brand ? esc(it.brand) + " · " : ""}Hito nuevo</span>
       <h2 class="cel-t">${pick(PRAISE, it.id)} Llegaste a ${esc(it.line)}.</h2>
       <span class="cel-tier"><i></i>${esc(T.TIERS[it.tier][0])}</span>
-      <p class="cel-p">${it.extra ? `Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino. ` : ""}${pick(MOTIVATE, it.id + "m")}</p>
-      <span class="cel-xp" data-xp="${it.xp}">+${it.xp} XP</span></div>`;
+      <p class="cel-p">${it.extra ? `Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino. ` : ""}${pick(MOTIVATE, it.id + "m")}</p></div>`;
   };
-  const slideLevel = (lv) => `<div class="cel-slide level" style="--m:#ffcf6e"><div class="cel-hero"><i class="cel-blob b1"></i><i class="cel-blob b2"></i><i class="cel-blob b3"></i><i class="cel-ring"></i><i class="cel-ring r2"></i><div class="lvbadge cel-badge"><b class="num" data-from="${lv.from}" data-to="${lv.to}">${lv.from}</b><small>NIVEL</small></div></div>
-      <span class="eyebrow">Subiste de nivel</span><h2 class="cel-t">${pick(PRAISE, lv.to)} Ahora eres nivel ${lv.to}.</h2>
-      <span class="cel-tier"><i></i>${fmt(lv.xp)} XP en total</span>
-      <div class="bar big cel-bar" style="--p:${Math.round(Math.min(1, Math.max(0, lv.ratio)) * 100)}%"><i></i></div>
-      <p class="cel-p">Faltan ${fmt(lv.left)} XP para el nivel ${lv.to + 1}. Cada hito de tus redes suma.</p></div>`;
-
   function ensureWrap() {
     let w = $("#celwrap"); if (w) return w;
     w = document.createElement("div"); w.className = "jv-wrap cel-wrap"; w.id = "celwrap";
@@ -36,31 +29,24 @@
     w.addEventListener("keydown", (e) => { if (!cur) return; if (e.key === "ArrowRight") { e.preventDefault(); next(true); } else if (e.key === "ArrowLeft") { e.preventDefault(); go(Math.max(0, cur.i - 1)); } else if (e.key === "Escape") { e.stopPropagation(); close(); } });
     return w;
   }
-  function countUp(el, from, to, ms, fmtFn) {
-    if (!el) return; if (App.reduceMotion() || from === to) { el.textContent = fmtFn(to); return; }
-    const t0 = performance.now(); (function f(t) { const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(f); })(t0);
-  }
   function go(i) {
     if (!cur) return; cur.i = i; const slides = $$(".cel-slide", cur.wrap), last = i === slides.length - 1;
     slides.forEach((sl, k) => { sl.toggleAttribute("data-on", k === i); sl.toggleAttribute("data-past", k < i); });
     $$(".cel-dots i", cur.wrap).forEach((d, k) => d.classList.toggle("on", k === i));
     const btn = $("#celnext", cur.wrap); btn.textContent = last ? "¡Genial!" : "Siguiente"; btn.focus({ preventScroll: true });
-    const sl = slides[i], hero = $(".cel-hero", sl); if (hero) App.morph.sparkles(hero, sl.classList.contains("level") ? 12 : 9);
-    App.morph.confetti(cur.wrap, sl.classList.contains("level") ? 110 : i === 0 ? 90 : 60); // confeti en cada pagina: el hito nuevo se festeja de verdad
-    const xp = $(".cel-xp", sl); if (xp) countUp(xp, 0, +xp.dataset.xp, 900, (n) => "+" + n + " XP");
-    const lb = $(".cel-badge b", sl); if (lb) countUp(lb, +lb.dataset.from, +lb.dataset.to, 1100, String);
-    const bar = $(".cel-bar", sl); if (bar) { bar.classList.remove("go"); void bar.offsetWidth; bar.classList.add("go"); }
+    const sl = slides[i], hero = $(".cel-hero", sl); if (hero) App.morph.sparkles(hero, 9);
+    App.morph.confetti(cur.wrap, i === 0 ? 90 : 60); // confeti en cada pagina: el hito nuevo se festeja de verdad
     const tt = $(".cel-t", sl); if (tt) { tt.id = "celtitle"; }
   }
   function next(quiet) { if (!cur) return; const n = $$(".cel-slide", cur.wrap).length; if (cur.i < n - 1) go(cur.i + 1); else if (!quiet) close(); }
 
   async function show(data) {
     if (cur) return false; const real = !data; data = data || T.fresh(); if (!data) return false;
-    const slides = data.items.slice(0, 5).map(slideItem); if (data.level) slides.push(slideLevel(data.level));
+    const slides = data.items.slice(0, 5).map(slideItem); // sin niveles ni XP: solo reconocimiento por el hito (DECISIONES.md #13)
     if (!slides.length) return false;
     const wrap = ensureWrap(), panel = $("#cel", wrap), from = $$(".orb[data-orb]").find((o) => o.offsetParent) || null;
     $("#celslides", wrap).innerHTML = slides.join(""); $("#celdots", wrap).innerHTML = slides.map(() => "<i></i>").join(""); $("#celdots", wrap).hidden = slides.length < 2;
-    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more && !data.level) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} hitos más en Métricas.`); }
+    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} hitos más en Métricas.`); }
     cur = { data, i: 0, wrap, panel, from, real }; if (real) done.add(data.ids.slice().sort().join("|"));
     const a = App.aura.el(); prevTone = (a && a.dataset.tone) || "base"; App.aura.tone("gold"); App.aura.mood("focus", { x: innerWidth / 2, y: innerHeight * 0.42 });
     await App.morph.open(from, wrap, panel); if (cur) go(0);
@@ -82,8 +68,8 @@
   }
   // para probar la animacion (modo demostracion): usa tus logros mas altos y una subida de nivel de mentira, sin marcar nada como visto
   function sample() {
-    const cs = T.cards(), top = cs.total.filter((c) => c.got > 0).sort((x, y) => y.tier - x.tier || y.ratio - x.ratio).slice(0, 2), lv = T.level(T.totalXp(cs));
-    return { items: top.map((c) => ({ id: c.id, group: "total", brand: "", key: c.key, def: c.def, step: c.steps[c.got - 1], tier: c.tier, extra: 0, xp: 5, ids: [], line: T.UNIT[c.key] ? T.UNIT[c.key](c.steps[c.got - 1]) : fmt(c.steps[c.got - 1]) })), ids: [], xp: 10, level: { from: Math.max(1, lv.level - 1), to: lv.level, xp: lv.xp, ratio: lv.ratio, left: lv.to - lv.xp }, now: lv };
+    const cs = T.cards(), top = cs.total.filter((c) => c.got > 0).sort((x, y) => y.tier - x.tier || y.ratio - x.ratio).slice(0, 2);
+    return { items: top.map((c) => ({ id: c.id, group: "total", brand: "", key: c.key, def: c.def, step: c.steps[c.got - 1], tier: c.tier, extra: 0, xp: 5, ids: [], line: T.UNIT[c.key] ? T.UNIT[c.key](c.steps[c.got - 1]) : fmt(c.steps[c.got - 1]) })), ids: [] };
   }
   App.celebrate = { show, close, check, sample, isOpen: () => !!cur };
   App.acts.celebrate = () => App.celebrate.show();
