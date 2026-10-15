@@ -34,21 +34,27 @@
     return id;
   };
 
-  // ---------- inicio del Estudio: elegir un video ----------
+  // ---------- Estudio: listado (lo que antes era la pestaña "Aprobar") -> vista general -> editor completo. Ver DECISIONES.md #2. ----------
+  // Listado = App.listView (por aprobar / agendados / rechazados, de aprobar-list.js) para TODOS los videos de la cuenta.
+  // Click en una version -> vista general (App.reviewView, de aprobar-review.js): predictor, subtitulos, Jarvis opina, aprobar/rechazar/agendar.
+  // Desde ahi, "Abrir en editor" -> #estudio/editor/<id> abre el editor completo (ST.open, mas abajo). El editor nunca es la pantalla de entrada.
+  const GENERAL = new Set(["ver", "editor"]); // sub-rutas que muestran la vista general (App.reviewView) debajo (el editor se abre encima, superpuesto)
   App.views.estudio = {
     title: "Estudio", wide: true,
-    render() {
-      const b = sel.brand(), groups = sel.groupByPiece(S.videos.filter((v) => v.brand === b.id && !v.published && !v.demo));
-      const head = `<div class="vhead"><div class="t"><span class="eyebrow">${esc(b.name)}</span><h1 class="h-l">${App.say("Elegí un video y <em>editalo</em>", "Elige un video y <em>edítalo</em>")}</h1><p class="muted">Lo que ves es exactamente lo que se exporta. Claude te ayuda con lo que pidas.</p></div></div>`;
-      if (!groups.length) return head + `<div class="empty card lg"><span class="orb"></span><h3>No hay videos para editar</h3><p>Cuando haya piezas en ${esc(b.name)} aparecen aquí.</p><a class="btn pri" href="#crear">Pedir un video</a></div>`;
-      return head + `<div class="st-home rise">${groups.map((g) => `<section class="card lg"><div class="ch"><b>${esc(g.name)}</b><span class="sp"></span><span class="faint">${g.vs.length} ${plural(g.vs.length, "versión", "versiones")}</span></div><div class="st-vrow">${g.vs.map((v) => {
-        const act = reqsOf(v.id).filter((q) => !isDone(q)).length, spec = hasSpec(v.id);
-        return `<a class="st-vc2" href="#estudio/${encodeURIComponent(v.id)}" data-go="estudio/${encodeURIComponent(v.id)}">${App.vidThumb(v, { cap: false, style: "width:100%;aspect-ratio:9/16" })}<span class="vn">v${v.version}</span>${act ? `<span class="chip apricot w">Claude · ${act}</span>` : spec ? `<span class="chip good w">Editable</span>` : ""}</a>`; }).join("")}</div></section>`).join("")}</div>`;
-    },
-    update() { return false; },
+    render(r) { return GENERAL.has(r.args[0]) ? App.reviewView.render(r) : (App.reviewView.teardown(), App.listView.render(r)); },
+    bind(root, r) { return GENERAL.has(r.args[0]) ? App.reviewView.bind(root, r) : App.listView.bind(root, r); },
+    routeChanged(r) { return App.reviewView.routeChanged(r); },
+    update(kinds) { return GENERAL.has(App.route().args[0]) ? App.reviewView.update(kinds) : false; },
+    key(e) { if (GENERAL.has(App.route().args[0])) App.reviewView.key(e); },
   };
   App.studioRoute = function () {
-    const r = App.route(), id = r.name === "estudio" ? r.args[0] : null;
+    const r = App.route();
+    // La vista general (App.reviewView) tiene su propio video en loop con requestAnimationFrame: si la persona se va
+    // de "ver"/"editor" derecho a otra pantalla (un link directo, un tool de Jarvis, no el boton de volver) nunca pasa
+    // por el render() que la desmonta. App.studioRoute ya corre en cada cambio de ruta, asi que es el lugar parejo
+    // para desmontarla tambien -- si no, el tick() de esa vista sigue escribiendo sobre nodos que ya no existen.
+    if (!(r.name === "estudio" && GENERAL.has(r.args[0]))) App.reviewView.teardown();
+    const id = r.name === "estudio" && r.args[0] === "editor" ? r.args[1] : null;
     if (!id) { if (ST.SE) ST.close(true); return; }
     if (!sel.video(id)) return;
     if (!ST.SE || ST.SE.vid !== id) ST.open(id); else { E("st").hidden = false; ST.renderTop(); }
@@ -87,6 +93,9 @@
     const v = sel.video(vid); if (!v) return;
     if (!window.StudioModel || !window.gsap) {
       if ((_retries || 0) < 20) { setTimeout(() => ST.open(vid, (_retries || 0) + 1), 150); return; }
+      // Este aviso puede llegar tarde (hasta 3s de reintentos) y encontrar a la persona ya en otra pantalla: ir al
+      // listado (nunca a la vista general de este video) para no reabrir de golpe una pantalla con video en loop
+      // que ya no corresponde a donde esta parada.
       App.toast("El motor del Estudio no cargó. Revisa tu conexión y recarga."); App.go("estudio", { replace: true }); return;
     }
     if (ST.SE) teardown();
@@ -108,8 +117,10 @@
   };
   function teardown() { const SE = ST.SE; if (!SE) return; saveNow(); cancelAnimationFrame(SE.raf); try { if (SE.handle && SE.handle.destroy) SE.handle.destroy(); } catch (e) { /* ya cerrado */ } const s = E("st-stage"); if (s) s.innerHTML = ""; ST.SE = null; }
   ST.close = function (silent) {
-    if (!ST.SE) return; teardown(); const el = E("st"); if (el) el.hidden = true; App.studioOpen = false; document.body.style.overflow = ""; App.updateSendBar();
-    if (!silent) App.go("estudio");
+    if (!ST.SE) return; const vid = ST.SE.vid; teardown(); const el = E("st"); if (el) el.hidden = true; App.studioOpen = false; document.body.style.overflow = ""; App.updateSendBar();
+    // El editor nunca es la pantalla de entrada (DECISIONES.md #2): al cerrarlo se vuelve a la vista general de este
+    // mismo video, no al listado -- es la pantalla "de abajo" real, no un salto a otro lado.
+    if (!silent) App.go("estudio/ver/" + encodeURIComponent(vid));
   };
   ST.teardown = teardown;
 
@@ -223,7 +234,7 @@
     E("st-play").addEventListener("click", toggle);
     E("st-safe").addEventListener("click", () => { const SE = ST.SE; SE.safe = !SE.safe; if (SE.handle && SE.handle.setSafe) SE.handle.setSafe(SE.safe); E("st-safe").setAttribute("aria-pressed", String(SE.safe)); });
     E("st-mute").addEventListener("click", () => { const SE = ST.SE; SE.muted = !SE.muted; SE.handle.video.muted = SE.muted; E("st-mute").setAttribute("aria-pressed", String(SE.muted)); E("st-mute").innerHTML = icon(SE.muted ? "mute" : "volume"); });
-    E("st-vers").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.id === "st-addver") { ST.stylePicker("new"); return; } if (b.dataset.vid) App.go("estudio/" + encodeURIComponent(b.dataset.vid), { replace: true }); });
+    E("st-vers").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; if (b.id === "st-addver") { ST.stylePicker("new"); return; } if (b.dataset.vid) App.go("estudio/editor/" + encodeURIComponent(b.dataset.vid), { replace: true }); });
     E("st-dock").addEventListener("click", (e) => { const b = e.target.closest("[data-tool]"); if (!b || b.disabled) return; const k = b.dataset.tool; ST.SE.tool === k ? ST.closeTool() : ST.openTool(k); });
     E("st-iclose").addEventListener("click", () => ST.closeTool());
     E("st-hit").addEventListener("pointerdown", hitDown);

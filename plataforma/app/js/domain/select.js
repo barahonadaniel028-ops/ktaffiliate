@@ -105,7 +105,7 @@
     const auto = [];
     S.brands.forEach((b) => {
       const r = sel.runway(b);
-      if (r.pend) auto.push({ id: "aprobar_" + b.id, urgency: "today", title: `${r.pend} ${plural(r.pend, "video", "videos")} por aprobar en ${b.name}`, detail: `Son ${r.pendPieces} ${plural(r.pendPieces, "pieza", "piezas")} con sus versiones. Aprobar es dejarlas agendadas.`, link: "#aprobar", brand: b.id, auto: true });
+      if (r.pend) auto.push({ id: "aprobar_" + b.id, urgency: "today", title: `${r.pend} ${plural(r.pend, "video", "videos")} por aprobar en ${b.name}`, detail: `Son ${r.pendPieces} ${plural(r.pendPieces, "pieza", "piezas")} con sus versiones. Aprobar es dejarlas agendadas.`, link: "#estudio", brand: b.id, auto: true });
       if (r.days < App.config.runwayWarn) auto.push({ id: "runway_" + b.id, urgency: "now", title: `Quedan ${r.days} ${plural(r.days, "día", "días")} de contenido en ${b.name}`, detail: "Hay que producir o aprobar más piezas.", link: "#crear", brand: b.id, auto: true });
     });
     const mine = (S.homeTodo || []).filter((t) => t && t.id && !S.homeDone[t.id]);

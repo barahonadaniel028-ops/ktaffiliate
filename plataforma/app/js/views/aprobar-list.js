@@ -1,4 +1,5 @@
-/* Aura · Aprobar (lista): piezas con sus versiones, en tres pestañas (por aprobar, agendados, rechazados), seleccion en lote y entrada a la revision. */
+/* Aura · Estudio - listado (antes "Aprobar"): piezas con sus versiones, en tres pestañas (por aprobar, agendados, rechazados), seleccion en lote
+   y entrada a la vista general. Fusionado dentro de Estudio, ver DECISIONES.md #2: "Aprobar" ya no es una seccion de nav propia. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, UI = App.ui, { esc, icon, plural, vidThumb } = App;
@@ -14,7 +15,7 @@
     const notes = sel.openNotes(v).length;
     return `<div class="ver ${on ? "on" : ""}" data-id="${esc(v.id)}">
       <button class="pick" type="button" data-act="pick" data-id="${esc(v.id)}" aria-pressed="${on}" aria-label="Elegir ${esc(sel.label(v))}">${icon("check")}</button>
-      <a class="vlink" href="#aprobar/ver/${encodeURIComponent(v.id)}" data-go="aprobar/ver/${encodeURIComponent(v.id)}" aria-label="Revisar ${esc(sel.label(v))}">${vidThumb(v, { cs: 10, style: "width:100%;aspect-ratio:9/16" })}
+      <a class="vlink" href="#estudio/ver/${encodeURIComponent(v.id)}" data-go="estudio/ver/${encodeURIComponent(v.id)}" aria-label="Revisar ${esc(sel.label(v))}">${vidThumb(v, { cs: 10, style: "width:100%;aspect-ratio:9/16" })}
         ${r ? `<span class="rk" style="--c:${color}" title="Puntaje ${r.score}">${r.score}</span>` : ""}<span class="vn">v${v.version}</span></a>
       <div class="vm">${meta}${notes ? `<span class="chip">${notes} ${plural(notes, "nota", "notas")}</span>` : ""}</div></div>`;
   }
@@ -25,7 +26,7 @@
         ${gs ? `<span class="chip" style="color:${App.pred.TIER_COLOR[gs.tier]}" title="Puntaje promedio de la pieza">Promedio ${gs.avg}</span>` : ""}
         <button class="btn sm ghost" type="button" data-act="pickpiece" data-piece="${esc(g.brand + "|" + g.piece)}" aria-pressed="${allOn}">${allOn ? "Quitar elección" : "Elegir las " + g.vs.length}</button></header>
       <div class="vers">${g.vs.map((v) => versionCard(v, tab)).join("")}</div>
-      <footer>${tab === "por-aprobar" ? `<a class="btn sm pri" href="#aprobar/ver/${encodeURIComponent(first.id)}" data-go="aprobar/ver/${encodeURIComponent(first.id)}">Revisar${g.vs.length > 1 ? " las " + g.vs.length : ""}</a><button class="btn sm good" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="approved">${icon("check")}Aprobar todas</button><button class="btn sm bad" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="rejected">${icon("x")}Rechazar</button>`
+      <footer>${tab === "por-aprobar" ? `<a class="btn sm pri" href="#estudio/ver/${encodeURIComponent(first.id)}" data-go="estudio/ver/${encodeURIComponent(first.id)}">Revisar${g.vs.length > 1 ? " las " + g.vs.length : ""}</a><button class="btn sm good" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="approved">${icon("check")}Aprobar todas</button><button class="btn sm bad" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="rejected">${icon("x")}Rechazar</button>`
         : tab === "agendados" ? `<button class="btn sm ghost" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="pending">Devolver a Por aprobar</button><button class="btn sm bad ghost" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="rejected">Rechazar</button>`
         : `<button class="btn sm" type="button" data-act="piecestatus" data-piece="${esc(g.brand + "|" + g.piece)}" data-st="pending">Recuperar</button>`}</footer></article>`;
   }
@@ -37,7 +38,7 @@
       const total = sel.allPending().length, others = total - np;
       const head = `<div class="vhead"><div class="t"><span class="eyebrow">${esc(b.name)}</span><h1 class="h-l">${tab === "por-aprobar" ? (np ? `<em>${np} ${plural(np, "video", "videos")}</em> por decidir` : "Todo <em>decidido</em>") : tab === "agendados" ? `<em>${na}</em> ${plural(na, "agendado", "agendados")}` : `<em>${nr}</em> ${plural(nr, "rechazado", "rechazados")}`}</h1>
         <p class="muted">${tab === "por-aprobar" ? (np ? `${groups.length} ${plural(groups.length, "pieza", "piezas")}. Aprobar es dejarlas agendadas; Claude las programa en Metricool.` : others ? `${others} ${plural(others, "video", "videos")} esperan en otra cuenta.` : "No queda nada por aprobar.") : tab === "agendados" ? "Aprobadas. Las que dicen «Esperando agendar» las programa Claude en un momento." : "Rechazadas. Se pueden recuperar."}</p></div>
-        <div class="r">${tab === "por-aprobar" && np ? `<a class="btn pri lg2" href="#aprobar/ver/${encodeURIComponent(groups[0].vs[0].id)}" data-go="aprobar/ver/${encodeURIComponent(groups[0].vs[0].id)}">Empezar<b>${np}</b></a>` : ""}</div></div>
+        <div class="r">${tab === "por-aprobar" && np ? `<a class="btn pri lg2" href="#estudio/ver/${encodeURIComponent(groups[0].vs[0].id)}" data-go="estudio/ver/${encodeURIComponent(groups[0].vs[0].id)}">Empezar<b>${np}</b></a>` : ""}</div></div>
         <div class="tabs"><div class="seg lg" role="tablist">${TABS.map(([k, n]) => `<button role="tab" type="button" class="${k === tab ? "on" : ""}" aria-pressed="${k === tab}" data-act="aptab" data-tab="${k}">${n}${cnt[k] ? `<b>${cnt[k]}</b>` : ""}</button>`).join("")}</div></div>`;
       const body = groups.length ? `<div class="pieces rise">${groups.map((g) => pieceCard(g, tab)).join("")}</div>`
         : `<div class="empty card lg"><span class="orb"></span><h3>${tab === "por-aprobar" ? "No hay nada por aprobar" : tab === "agendados" ? "Todavía no hay agendados" : "Nada rechazado"}</h3><p>${tab === "por-aprobar" ? App.say("Pedí un video nuevo y aparece acá apenas Claude lo termine.", "Pide un video nuevo y aparece aquí apenas Claude lo termine.") : "Cuando apruebes videos, los verás aquí."}</p><a class="btn pri" href="#crear" data-go="crear">Pedir un video</a></div>`;
@@ -49,7 +50,7 @@
     return `<div class="bulk lg" id="bulk"><span><b class="num">${picked.size}</b> ${plural(picked.size, "elegido", "elegidos")}</span><button class="btn sm good" type="button" data-act="bulk" data-st="approved">${icon("check")}Aprobar</button><button class="btn sm bad" type="button" data-act="bulk" data-st="rejected">${icon("x")}Rechazar</button><button class="btn sm ghost" type="button" data-act="bulk" data-st="clear">Soltar</button></div>`;
   }
   const A = App.acts;
-  A.aptab = (el) => { picked.clear(); App.go("aprobar" + (el.dataset.tab === "por-aprobar" ? "" : "/" + el.dataset.tab)); };
+  A.aptab = (el) => { picked.clear(); App.go("estudio" + (el.dataset.tab === "por-aprobar" ? "" : "/" + el.dataset.tab)); };
   A.pick = (el) => { const id = el.dataset.id; picked.has(id) ? picked.delete(id) : picked.add(id); App.render(true); };
   A.pickpiece = (el) => { const [b, p] = el.dataset.piece.split("|"), vs = S.videos.filter((v) => v.brand === b && v.piece === p && !v.published && listMatches(v)), on = vs.every((v) => picked.has(v.id)); vs.forEach((v) => (on ? picked.delete(v.id) : picked.add(v.id))); App.render(true); };
   const listMatches = (v) => { const t = tabOf(App.route()); return t === "agendados" ? v.status === "approved" : t === "rechazados" ? v.status === "rejected" : sel.isPending(v); };

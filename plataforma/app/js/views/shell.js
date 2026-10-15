@@ -4,10 +4,10 @@
   "use strict";
   const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon } = App;
   App.views = App.views || {}; App.acts = App.acts || {};
-  const MORE = ["biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  const MORE = ["biblioteca", "laboratorio", "metricas", "logros", "notas", "ajustes"];
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
-  function counts() { return { aprobar: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, logros: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
+  function counts() { return { estudio: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, logros: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
     const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
@@ -22,7 +22,7 @@
   }
   function tabHtml() {
     const c = counts(), cur = App.route().name, tb = (k, n, ic) => `<a class="tb" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`;
-    return `${tb("hoy", "Hoy", "home")}${tb("aprobar", "Aprobar", "check")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${MORE.includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
+    return `${tb("hoy", "Hoy", "home")}${tb("estudio", "Estudio", "film")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${MORE.includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
   }
   // el riel y la barra solo se reescriben si cambiaron (asi no se pierden hovers ni foco)
   const setHtml = (el, html) => { if (el && el._h !== html) { el.innerHTML = html; el._h = html; } };
@@ -32,7 +32,7 @@
   App.float = (html) => { const f = $("#floating"); if (!f) return null; f.innerHTML = html || ""; return f.firstElementChild; };
 
   // ---------- nube de fondo: tono por seccion y animo (jarvis escuchando, pensando) ----------
-  const TONE = { hoy: "base", aprobar: "warm", crear: "warm", biblioteca: "cool", laboratorio: "vivid", metricas: "cool", logros: "gold", notas: "base", estudio: "cool", ajustes: "base" };
+  const TONE = { hoy: "base", crear: "warm", biblioteca: "cool", laboratorio: "vivid", metricas: "cool", logros: "gold", notas: "base", estudio: "warm", ajustes: "base" };
   App.aura = {
     el: () => $(".aura"),
     mood(m, at) { const a = $(".aura"); if (!a) return; if (m) a.dataset.mood = m; else delete a.dataset.mood; if (at) { a.style.setProperty("--gx", ((at.x / innerWidth - 0.5) * 30).toFixed(1) + "vmax"); a.style.setProperty("--gy", ((at.y / innerHeight - 0.5) * 30).toFixed(1) + "vmax"); } },
@@ -52,7 +52,7 @@
     const same = key === lastKey, y = same ? window.scrollY : 0, my = ++token;
     lastKey = key; lastHtml = html;
     document.title = v.title ? `${v.title} · ${App.config.name}` : App.config.name;
-    document.body.classList.toggle("in-review", r.name === "aprobar" && r.args[0] === "ver");
+    document.body.classList.toggle("in-review", r.name === "estudio" && r.args[0] === "ver");
     App.aura.tone(TONE[r.name]);
     const upd = () => {
       if (my !== token) return;

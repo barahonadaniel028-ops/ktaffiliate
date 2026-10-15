@@ -13,7 +13,7 @@
   const COMMANDS = () => [
     ...App.nav.map(([k, n, ic]) => ({ id: "go:" + k, label: "Ir a " + n, icon: ic, run: () => nav("#" + k), kw: n })),
     { id: "go:ajustes", label: "Ir a Ajustes", icon: "settings", run: () => nav("#ajustes"), kw: "ajustes configuracion" },
-    { id: "act:approve", label: App.say("Empezar a aprobar", "Empezar a aprobar"), icon: "check", run: () => nav("#aprobar"), kw: "aprobar decidir videos pendientes" },
+    { id: "act:approve", label: App.say("Empezar a aprobar", "Empezar a aprobar"), icon: "check", run: () => nav("#estudio"), kw: "aprobar decidir videos pendientes estudio" },
     { id: "act:new", label: "Pedir un video nuevo", icon: "plus", run: () => nav("#crear"), kw: "crear nuevo pedir video subir" },
     { id: "act:upload", label: "Subir videos", icon: "upload", run: () => nav("#crear/subir"), kw: "subir archivos crudos" },
     { id: "act:theme", label: "Cambiar entre día y noche", icon: "moon", run: () => { close(); setTimeout(() => App.theme.toggle(), 380); }, kw: "tema dia noche oscuro claro" },
@@ -49,20 +49,23 @@ Reglas:
     hits.forEach((v) => { const k = v.brand + "|" + v.piece; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(v); });
     return [...groups.values()];
   }
-  const ROUTES = ["hoy", "aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  // "aprobar" ya no es una pantalla propia (se fusiono en Estudio, DECISIONES.md #2): un link, un tool call o una frase
+  // vieja que todavia diga "aprobar" sigue entrando, pero a Estudio -- no se rompe ni se recrea la pantalla vieja.
+  const LEGACY_VIEW = { aprobar: "estudio" };
   function tools() {
     const stat = (t) => { const s = $("#jvstat"); if (s) s.textContent = t; };
     return [
-      { name: "go_to", description: "Abre una pantalla. view = hoy, aprobar, crear, biblioteca, laboratorio, metricas, logros, notas, estudio o ajustes. Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
+      { name: "go_to", description: "Abre una pantalla. view = hoy, crear, biblioteca, laboratorio, metricas, logros, notas, estudio o ajustes ('estudio' es tambien donde se aprueba, agenda o rechaza). Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
         inputSchema: { type: "object", properties: { view: { type: "string" }, brand: { type: "string" } }, required: ["view"] },
-        execute: ({ view, brand }) => { const v = norm(view).replace(/^#/, ""); if (!ROUTES.includes(v)) throw new Error("pantalla desconocida: " + view); if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); stat("abriendo…"); setTimeout(() => nav("#" + v), 350); return "ok"; } },
+        execute: ({ view, brand }) => { const raw = norm(view).replace(/^#/, ""), v = LEGACY_VIEW[raw] || raw; if (!ROUTES.includes(v)) throw new Error("pantalla desconocida: " + view); if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); stat("abriendo…"); setTimeout(() => nav("#" + v), 350); return "ok"; } },
       { name: "propose_approval", description: "Prepara aprobar TODAS las versiones por aprobar de UNA pieza. NO aprueba nada: muestra un botón de confirmación. piece = nombre o parte del nombre; brand opcional.",
         inputSchema: { type: "object", properties: { piece: { type: "string" }, brand: { type: "string" } }, required: ["piece"] },
         execute: ({ piece, brand }) => { const g = findPending(piece, brand); if (!g.length) throw new Error("no hay videos por aprobar que coincidan con " + piece); if (g.length > 1) return "Coinciden varias piezas, pide que elija: " + g.map((x) => `${x[0].pieceName || x[0].piece} (${x[0].brand})`).join("; "); const b = sel.brandOf(g[0][0]); confirmCtx = { ids: g[0].map((v) => v.id), label: g[0][0].pieceName || g[0][0].piece, brand: b ? b.name : g[0][0].brand }; showConfirm(); return `Mostré el botón para aprobar ${g[0].length} versiones de ${confirmCtx.label}. Falta que confirme.`; } },
       { name: "mark_todo_done", description: "Marca como hecho un pendiente de la lista por su id (solo los no automáticos).", inputSchema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
         execute: async ({ id }) => { if (!S.homeTodo.some((t) => t && t.id === String(id))) throw new Error("ese pendiente no se puede marcar acá"); await App.act.markTodoDone(String(id)); return "ok"; } },
       { name: "open_studio", description: "Abre el Estudio (editor) con un video. piece = nombre de la pieza; version opcional (número).", inputSchema: { type: "object", properties: { piece: { type: "string" }, version: { type: "number" } }, required: ["piece"] },
-        execute: ({ piece, version }) => { const q = norm(piece), vs = S.videos.filter((v) => norm(`${v.piece} ${v.pieceName || ""}`).includes(q) && (!version || v.version === version)); if (!vs.length) throw new Error("no encontré esa pieza"); const v = vs[0]; setTimeout(() => nav("#estudio/" + encodeURIComponent(v.id)), 350); return "Abriendo " + sel.label(v); } },
+        execute: ({ piece, version }) => { const q = norm(piece), vs = S.videos.filter((v) => norm(`${v.piece} ${v.pieceName || ""}`).includes(q) && (!version || v.version === version)); if (!vs.length) throw new Error("no encontré esa pieza"); const v = vs[0]; setTimeout(() => nav("#estudio/editor/" + encodeURIComponent(v.id)), 350); return "Abriendo " + sel.label(v); } },
       { name: "new_request", description: "Lleva a Crear con un pedido empezado. topic = la idea del video; brand opcional.", inputSchema: { type: "object", properties: { topic: { type: "string" }, brand: { type: "string" } }, required: ["topic"] },
         execute: ({ topic, brand }) => { if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); App.ui.draft = Object.assign(App.ui.draft || {}, { topic: String(topic || "").slice(0, 600) }); setTimeout(() => nav("#crear"), 350); return "Abrí Crear con la idea cargada; falta que confirme y envíe."; } },
       { name: "leave_feedback", description: "Guarda feedback general como borrador en Notas; llega a Claude con Enviar cambios. scope = general o brand (con brand).", inputSchema: { type: "object", properties: { text: { type: "string" }, scope: { type: "string" }, brand: { type: "string" } }, required: ["text"] },
@@ -175,10 +178,11 @@ Reglas:
   function local(text, files) {
     const q = norm(text), reply = (t, extra) => { const d = add("a", t, true); if (extra) d.insertAdjacentHTML("beforeend", extra); turns.push({ role: "assistant", content: d.textContent }); speak(d.textContent); };
     const rs = S.brands.map((b) => [b, sel.runway(b)]);
-    const goto = /(llevame|llevame a|llevame|ve a|ir a|abre|abrir|muestrame|llevame)/.test(q) && ROUTES.find((r) => q.includes(r) || (r === "metricas" && /redes|numeros/.test(q)));
+    const hit = /(llevame|llevame a|llevame|ve a|ir a|abre|abrir|muestrame|llevame)/.test(q) && ROUTES.concat(Object.keys(LEGACY_VIEW)).find((r) => q.includes(r) || (r === "metricas" && /redes|numeros/.test(q)));
+    const goto = hit && (LEGACY_VIEW[hit] || hit);
     if (goto) { reply(`Te llevo a ${goto}.`); setTimeout(() => nav("#" + goto), 450); return; }
     if (/estudio|editor/.test(q)) { reply("Abro el Estudio."); setTimeout(() => nav("#estudio"), 450); return; }
-    if (/pendiente|aprobar|decidir|que tengo/.test(q)) { const n = sel.allPending().length; reply(n ? `Tienes <b>${n} ${plural(n, "video", "videos")}</b> por aprobar. ` + rs.filter((x) => x[1].pend).map((x) => `${esc(x[0].name)}: ${x[1].pend}`).join(" · ") : "No tienes nada por aprobar. Todo decidido.", n ? '<p><button class="btn sm" data-cmd-go="aprobar" onclick="location.hash=\'#aprobar\'">Ir a aprobar</button></p>' : ""); return; }
+    if (/pendiente|aprobar|decidir|que tengo/.test(q)) { const n = sel.allPending().length; reply(n ? `Tienes <b>${n} ${plural(n, "video", "videos")}</b> por aprobar. ` + rs.filter((x) => x[1].pend).map((x) => `${esc(x[0].name)}: ${x[1].pend}`).join(" · ") : "No tienes nada por aprobar. Todo decidido.", n ? '<p><button class="btn sm" data-cmd-go="estudio" onclick="location.hash=\'#estudio\'">Ir a aprobar</button></p>' : ""); return; }
     if (/contenido|queda|runway|dias/.test(q)) { reply(rs.map((x) => `<b>${esc(x[0].name)}</b>: ${x[1].days} ${plural(x[1].days, "día", "días")}${x[1].last ? " (hasta el " + sel.showDateL(x[1].last) + ")" : ""}`).join("<br>")); return; }
     if (/redes|vistas|seguidor|instagram|metrica|resultado/.test(q)) { const ev = S.brands.map((b) => [b, sel.evoOf(b)]).filter((x) => x[1]); reply(ev.length ? ev.map((x) => `<b>${esc(x[0].name)}</b>: ${fmt(x[1].views)} vistas, ${x[1].net >= 0 ? "+" : ""}${x[1].net} seguidores esta semana`).join("<br>") : "Todavía no tengo datos de Metricool cargados."); return; }
     if (/ventas|comision|dinero|stripe/.test(q)) { reply("Esa parte no está en esta plataforma: nos enfocamos en redes sociales."); return; }

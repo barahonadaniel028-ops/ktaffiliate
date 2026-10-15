@@ -19,7 +19,7 @@
     const list = sel.allPending(), groups = sel.groupByPiece(list), first = list.slice(0, 5);
     if (!list.length) return `<div class="card lg"><div class="ch">${icon("check")}Por aprobar</div><div class="mini-empty"><b class="big-num">0</b><p class="muted">Todo decidido. ${App.say("Pedí", "Pide")} contenido nuevo para seguir.</p><a class="btn sm" href="#crear">Pedir un video</a></div></div>`;
     const thumbs = first.map((v) => { const r = App.pred.scoreVideo(v); return vidThumb(v, { score: r ? r.score : null, color: r ? App.pred.TIER_COLOR[r.tier] : undefined, cs: 8, style: "width:62px;height:110px" }); }).join("");
-    return `<a class="card lg" href="#aprobar" data-go="aprobar"><div class="ch">${icon("check")}Por aprobar<span class="sp"></span><span class="chip apricot">${list.length}</span></div><div class="thumbs">${thumbs}</div><p class="muted" style="margin-top:12px">${groups.length} ${plural(groups.length, "pieza", "piezas")} · aprobar es dejarlas agendadas</p></a>`;
+    return `<a class="card lg" href="#estudio" data-go="estudio"><div class="ch">${icon("check")}Por aprobar<span class="sp"></span><span class="chip apricot">${list.length}</span></div><div class="thumbs">${thumbs}</div><p class="muted" style="margin-top:12px">${groups.length} ${plural(groups.length, "pieza", "piezas")} · aprobar es dejarlas agendadas</p></a>`;
   }
   // analiticas a la vista apenas entras: las cuatro cifras de la semana con su curva, de todas las cuentas juntas
   function analyticsCard() {
@@ -59,7 +59,7 @@
   App.views.hoy = {
     title: "Hoy",
     render() {
-      const ph = sel.phrase(), n = sel.allPending().length, prim = ph.cta === "aprobar" || n ? `<a class="btn pri lg2" href="#aprobar" data-go="aprobar">Empezar a aprobar${n ? `<b>${n}</b>` : ""}</a>` : `<a class="btn pri lg2" href="#crear" data-go="crear">Pedir un video</a>`;
+      const ph = sel.phrase(), n = sel.allPending().length, prim = ph.cta === "aprobar" || n ? `<a class="btn pri lg2" href="#estudio" data-go="estudio">Empezar a aprobar${n ? `<b>${n}</b>` : ""}</a>` : `<a class="btn pri lg2" href="#crear" data-go="crear">Pedir un video</a>`;
       return `<div class="hoy">
         <section class="talk">
           <button class="orb" data-orb data-act="jarvis" type="button" aria-label="Hablar con Jarvis" style="width:var(--orb,132px);height:var(--orb,132px)"></button>

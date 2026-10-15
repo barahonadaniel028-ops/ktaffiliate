@@ -42,7 +42,8 @@
   // No es un modelo de lenguaje: es un conjunto chico de reglas fieles al RULES() de jarvis.js (ir a una pantalla, proponer aprobar una pieza,
   // responder con datos reales del resumen, o pasarle la tarea a Claude). Alcanza para probar de punta a punta que sample()+tools funciona
   // contra el contrato (ejecuta herramientas reales: go_to navega, propose_approval muestra la tarjeta de confirmacion real).
-  const ROUTES = ["hoy", "aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
+  const LEGACY_VIEW = { aprobar: "estudio" }; // "aprobar" se fusiono en Estudio (DECISIONES.md #2); ver el mismo alias en jarvis.js
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   function briefOf(messages) {
     try {
@@ -71,7 +72,8 @@
       (async () => {
         try {
           const wantsGo = /(llevame|lleva|ve a|ir a|anda a|abre|abrir|muestrame|mostrame)/.test(q);
-          const goView = wantsGo ? (ROUTES.find((r) => q.includes(r)) || (/redes|numeros/.test(q) ? "metricas" : null)) : null;
+          const goHit = wantsGo ? (ROUTES.concat(Object.keys(LEGACY_VIEW)).find((r) => q.includes(r)) || (/redes|numeros/.test(q) ? "metricas" : null)) : null;
+          const goView = goHit && (LEGACY_VIEW[goHit] || goHit);
           if (goView && tool("go_to")) { await tool("go_to").execute({ view: goView }); say(`Te llevo a ${goView}.`); return; }
           const apM = q.match(/^aprueba (.+)/) || q.match(/^aprobar (.+)/);
           if (apM && tool("propose_approval")) {

@@ -1,5 +1,7 @@
-/* Aura · Aprobar (revision): el video al centro, versiones a la izquierda, Jarvis y el predictor a la derecha, y la capsula de decision abajo.
-   Notas por cuadro, zona segura, subtitulos por palabra, atajos A/Q/R, ←/→ versiones, espacio, N. Todo en una sola pantalla sin recargar el video. */
+/* Aura · Estudio - vista general (antes "Aprobar"): el video al centro, versiones a la izquierda, Jarvis y el predictor a la derecha, y la capsula
+   de decision abajo. Notas por cuadro, zona segura, subtitulos por palabra, atajos A/Q/R, ←/→ versiones, espacio, N. Todo en una sola pantalla sin
+   recargar el video. Se entra aca desde el listado de Estudio (antes "Aprobar"); desde aca, "Abrir en editor" lleva al editor completo (ver
+   estudio-core.js, App.views.estudio). Ver DECISIONES.md #2. */
 (function () {
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, { $, $$, esc, icon, plural, ring, mmss } = App;
@@ -56,7 +58,7 @@
         <section class="rv-center" aria-label="Video"><div class="glow" aria-hidden="true"></div>
           <div class="frame lg" data-shared-target><div class="screen" id="rvscreen"><div class="still" id="rvstill"></div><video id="rvvideo" playsinline preload="auto" loop></video><div class="ov" id="rvov"></div><div class="vmsg" id="rvmsg" hidden></div><div class="safewrap" id="rvsafe" hidden>${safeSvg()}</div><button class="playhit" type="button" data-act="rvplay" aria-label="Reproducir o pausar"></button></div>
             <div class="ctrl"><button class="iconbtn sm" type="button" data-act="rvplay" id="rvplaybtn" aria-label="Reproducir">${icon("play")}</button><div class="scrub" id="rvscrub" role="slider" aria-label="Posición del video" tabindex="0"><i class="fill" id="rvfill"></i><span id="rvmarks"></span><b class="knob" id="rvknob"></b></div><span class="tc num" id="rvtc">0:00</span></div></div>
-          <div class="rv-tools"><button class="chip" type="button" data-act="rvsafe" id="rvsafebtn" aria-pressed="false">${icon("frame")}Zona segura</button><button class="chip" type="button" data-act="rvmute" id="rvmutebtn" aria-pressed="false">${icon("volume")}Sonido</button><a class="chip" id="rvstudio" href="#estudio">${icon("film")}Abrir en el Estudio</a></div></section>
+          <div class="rv-tools"><button class="chip" type="button" data-act="rvsafe" id="rvsafebtn" aria-pressed="false">${icon("frame")}Zona segura</button><button class="chip" type="button" data-act="rvmute" id="rvmutebtn" aria-pressed="false">${icon("volume")}Sonido</button><a class="chip" id="rvstudio" href="#estudio">${icon("film")}Abrir en editor</a></div></section>
         <aside class="rv-right" id="rvright" aria-label="Análisis"></aside></div></div>`;
   }
 
@@ -136,7 +138,7 @@
     else if (v.caps && v.caps.length) { const f = Math.floor(t * (v.capFps || 30)); const i = v.caps.findIndex((c) => f >= c[1] && f < c[2]); if (i >= 0) { const e = capEff(v, i); html = `<div class="wordcap ${e.font}"${e.color ? ` style="color:${esc(e.color)}"` : ""}>${esc(v.caps[i][0])}</div>`; } }
     ov.innerHTML = html;
   }
-  function paintAll() { paintLeft(); paintRight(); paintDecide(); paintProgress(); const v = V(); if (v) { const a = $("#rvstudio"); if (a) a.href = "#estudio/" + encodeURIComponent(v.id); } }
+  function paintAll() { paintLeft(); paintRight(); paintDecide(); paintProgress(); const v = V(); if (v) { const a = $("#rvstudio"); if (a) a.href = "#estudio/editor/" + encodeURIComponent(v.id); } }
 
   // ---------- video ----------
   const vmsg = (h) => { const m = $("#rvmsg"); if (m) { m.hidden = !h; m.innerHTML = h || ""; } };
@@ -173,17 +175,17 @@
   }
   function finish() {
     const c = RV.counts, el = $("#rv"); if (!el) return; if (vEl) vEl.pause();
-    el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#aprobar/agendados">Ver agendados</a></div></div>`;
+    el.innerHTML = `<div class="rv-done"><span class="orb" style="width:96px;height:96px"></span><h1 class="h-xl">Todo <em>decidido</em></h1><p class="muted">${c.approved || 0} aprobadas · ${c.rejected || 0} rechazadas · ${c.maybe || 0} en duda. Claude agenda las aprobadas.</p><div class="acts"><a class="btn pri lg2" href="#hoy">Volver a Hoy</a><a class="btn lg2" href="#crear">Pedir un video</a><a class="btn lg2" href="#estudio/agendados">Ver agendados</a></div></div>`;
     App.float(""); App.morph.sparkles(el.querySelector(".orb"), 6); RV.finished = true; cancelAnimationFrame(raf);
   }
   function switchTo(id) {
-    RV.id = id; history.replaceState(null, "", "#aprobar/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
+    RV.id = id; history.replaceState(null, "", "#estudio/ver/" + encodeURIComponent(id)); App.route().args = ["ver", id]; App._reviewRoute = id; capSel.clear();
     const el = $("#rv"); if (el) el.dataset.id = id; if (vEl) vEl.pause(); loadVideo(); paintAll(); if (vEl) vEl.play().catch(() => {});
   }
 
   // ---------- acciones ----------
   const A = App.acts;
-  A.rvback = () => App.go("aprobar");
+  A.rvback = () => App.go("estudio");
   A.rvplay = () => { if (!vEl) return; if (vEl.paused) vEl.play().catch(() => {}); else vEl.pause(); };
   A.rvsafe = (el) => { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); $("#rvsafe").hidden = !on; App.store.set("safe", on); };
   A.rvmute = (el) => { const on = el.getAttribute("aria-pressed") !== "true"; el.setAttribute("aria-pressed", on); vEl.muted = on; };
@@ -206,7 +208,7 @@
     render(r) { return skeleton(r.args[1] || ""); },
     bind(root, r) {
       const id = r.args[1] || "", v = sel.video(id);
-      if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#aprobar">Volver a la lista</a></div>`; return; }
+      if (!v) { root.innerHTML = `<div class="empty card lg"><span class="orb"></span><h3>No encuentro ese video</h3><a class="btn pri" href="#estudio">Volver a la lista</a></div>`; return; }
       if (v.brand !== App.ui.brandId) sel.setBrand(v.brand);
       App.float('<div class="capsule lg" id="rvdecide" role="group" aria-label="Decisión"></div>');
       cancelAnimationFrame(raf); RV = { id, seen: new Set(), counts: {}, done: 0, total: sel.allPending().length }; vEl = $("#rvvideo", root);
@@ -224,7 +226,7 @@
     },
     // un cambio de ruta dentro de la revision (otra version) no reconstruye la pantalla
     routeChanged(r) {
-      if (r.name !== "aprobar" || r.args[0] !== "ver" || !RV || RV.finished || !$("#rv")) return false;
+      if (r.name !== "estudio" || (r.args[0] !== "ver" && r.args[0] !== "editor") || !RV || RV.finished || !$("#rv")) return false;
       const id = r.args[1] || ""; if (id === RV.id) return true; if (sel.video(id)) { switchTo(id); return true; } return false;
     },
     update(kinds) {
@@ -235,23 +237,17 @@
       paintAll(); return true;
     },
     key(e) {
-      if (!RV || RV.finished) { if (e.key === "Escape") App.go("aprobar"); return; }
+      if (!RV || RV.finished) { if (e.key === "Escape") App.go("estudio"); return; }
       const k = e.key.toLowerCase();
       if (k === "a") decide("approved"); else if (k === "q") decide("maybe"); else if (k === "r") decide("rejected");
       else if (k === " ") { e.preventDefault(); A.rvplay(); }
       else if (k === "arrowright" || k === "arrowleft") { const v = V(), sibs = sel.siblings(v), i = sibs.findIndex((x) => x.id === v.id), n = sibs[(i + (k === "arrowright" ? 1 : -1) + sibs.length) % sibs.length]; if (n && n.id !== v.id) switchTo(n.id); }
       else if (k === "n") { e.preventDefault(); const i = $("#rvnote"); if (i) { vEl.pause(); i.focus(); } }
       else if (k === "," || k === ".") { vEl.pause(); vEl.currentTime += (k === "." ? 1 : -1) / 30; }
-      else if (k === "escape") App.go("aprobar");
+      else if (k === "escape") App.go("estudio");
     },
     teardown() { cancelAnimationFrame(raf); if (vEl) { try { vEl.pause(); } catch (x) { /* ya cerrado */ } } RV = null; },
   };
-  App.views.aprobar = {
-    title: "Aprobar", wide: true,
-    render(r) { return r.args[0] === "ver" ? App.reviewView.render(r) : (App.reviewView.teardown(), App.listView.render(r)); },
-    bind(root, r) { return r.args[0] === "ver" ? App.reviewView.bind(root, r) : App.listView.bind(root, r); },
-    routeChanged(r) { return App.reviewView.routeChanged(r); },
-    update(kinds) { return App.route().args[0] === "ver" ? App.reviewView.update(kinds) : false; },
-    key(e) { if (App.route().args[0] === "ver") App.reviewView.key(e); },
-  };
+  // El dispatcher de la pantalla (listado / vista general / editor) vive en App.views.estudio, ver estudio-core.js --
+  // "Aprobar" ya no es una vista propia (DECISIONES.md #2): esto solo expone App.reviewView para que ese dispatcher lo use.
 })();
