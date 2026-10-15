@@ -28,6 +28,7 @@
   function liftOff(cb) {
     const old = $(".crear-cloud");
     if (!old || App.reduceMotion()) { cb(null); return; }
+    App.morph.lite("step", true, 1800); // mientras el panel se recoge y florece, el vidrio de la pantalla no desenfoca (lo mas caro de repintar)
     const r = App.morph.rectOf(old), at = { x: r.x + r.w / 2, y: r.y + Math.min(r.h * 0.3, 150) };
     old.style.pointerEvents = "none";
     App.morph.wilt(old, at, 230).then(() => cb(at));

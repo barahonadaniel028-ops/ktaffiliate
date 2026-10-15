@@ -97,7 +97,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => window.__sawPre === true && window.__preOpacity === "0"), "la nube espera invisible mientras la gota vuela desde el orbe");
   await wait(p, 1900);
   ok(await p.evaluate(() => { const c = document.querySelector(".crear-cloud"); return !c.classList.contains("arr-pre") && c.classList.contains("arr-in") && getComputedStyle(c).opacity === "1"; }), "la nube florece al aterrizar la gota");
-  ok(await p.evaluate(() => /crFloat/.test(getComputedStyle(document.querySelector(".crear-cloud")).animationName) && /crShape/.test(getComputedStyle(document.querySelector(".crear-cloud")).animationName)), "queda flotando y su contorno se deforma como un liquido");
+  ok(await p.evaluate(() => { const c = document.querySelector(".crear-cloud"), kf = [...document.getAnimations()].find((a) => a.effect && a.effect.target === c); const props = kf ? kf.effect.getKeyframes().flatMap((k) => Object.keys(k)) : []; return /crFloat/.test(getComputedStyle(c).animationName) && props.includes("transform") && !props.includes("borderRadius"); }), "queda flotando solo con transform (se compone en la GPU, no repinta la tarjeta)");
   ok(await p.evaluate(() => document.querySelector(".aura").dataset.mood === "focus"), "el fondo se junta detras de la nube");
   await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 700);
   ok(await p.evaluate(() => !document.querySelector(".aura").dataset.mood), "al salir de Crear el fondo vuelve a su lugar");
