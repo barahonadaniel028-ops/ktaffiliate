@@ -31,24 +31,27 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => App.S.videos.length > 20), "carga los videos de demostracion");
   ok(await p.evaluate(() => !!document.querySelector(".hoy h1") && document.querySelector(".hoy h1").textContent.length > 20), "Hoy muestra la frase del dia");
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad|\$\d/i.test(document.body.innerText))), "Hoy no menciona ventas ni dinero");
-  for (const r of ["aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) {
+  for (const r of ["crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) {
     await p.evaluate((h) => { location.hash = "#" + h; }, r); await p.waitForFunction((n) => !!document.querySelector(`.view[data-view="${n}"]`), r, { timeout: 5000 }).catch(() => {}); await wait(p, 250);
     ok(await p.evaluate((n) => !!document.querySelector(`.view[data-view="${n}"]`) && document.querySelector(".view").innerText.length > 40, r), "vista " + r + " dibuja contenido");
   }
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad/i.test(document.body.innerText))), "ninguna vista menciona ventas");
+  await p.evaluate(() => { location.hash = "#aprobar"; }); await wait(p, 400);
+  ok(await p.evaluate(() => App.route().name === "estudio"), "#aprobar (hash viejo) redirige a Estudio, ya no es una pantalla propia");
 
-  console.log("\n== Aprobar ==");
-  await nav(p, "#aprobar", 300);
+  console.log("\n== Estudio: listado y vista general (antes la pestaña Aprobar) ==");
+  await nav(p, "#estudio", 300);
   const pend0 = await p.evaluate(() => App.sel.allPending().length);
   const firstId = await p.evaluate(() => App.sel.groupByPiece(App.sel.pending())[0].vs[0].id);
-  await p.evaluate((id) => { location.hash = "#aprobar/ver/" + encodeURIComponent(id); }, firstId); await wait(p, 1200);
-  ok(await p.evaluate(() => !!document.querySelector("#rvdecide .btn.pri")), "la revision muestra la capsula de decision");
+  await p.evaluate((id) => { location.hash = "#estudio/ver/" + encodeURIComponent(id); }, firstId); await wait(p, 1200);
+  ok(await p.evaluate(() => !!document.querySelector("#rvdecide .btn.pri")), "la vista general muestra la capsula de decision");
   ok(await p.evaluate(() => document.querySelectorAll("#rvleft .vb").length >= 3), "muestra las versiones de la pieza");
-  ok(await p.evaluate(() => document.querySelectorAll("#rvright .why li").length >= 3), "muestra los factores del predictor");
+  ok(await p.evaluate(() => { const n = document.querySelectorAll("#rvright .why li").length; return n >= 1 && n <= 3; }), "los factores del predictor quedan agrupados en categorias simples (no la lista cruda de hasta 6)");
+  ok(await p.evaluate(() => { const d = document.querySelector("#rvright .why-toggle"); return !!d && !d.open; }), "el detalle de \"¿Por qué este score?\" esta cerrado por default");
   await p.keyboard.press("a"); await wait(p, 700);
   const after = await p.evaluate((id) => ({ st: App.sel.video(id).status, nxt: location.hash, log: (window.__auraLog || []).filter((x) => x[1] === "requests").map((x) => x[2]) }), firstId);
   ok(after.st === "approved", "A aprueba la version", after.st);
-  ok(after.nxt !== "#aprobar/ver/" + encodeURIComponent(firstId), "avanza a la siguiente version");
+  ok(after.nxt !== "#estudio/ver/" + encodeURIComponent(firstId), "avanza a la siguiente version");
   await wait(p, 4600);
   const log = await p.evaluate(() => window.__auraLog.map((x) => x[0] + ":" + x[1] + ":" + x[2]));
   ok(log.some((l) => l.startsWith("set:requests:schedule_")), "aprobar = agendar: escribe requests/schedule_*", log.slice(-4).join(" | "));
@@ -59,13 +62,16 @@ async function open(browser, url, init, viewport, o) {
   await p.fill("#rvnote", "Nota de prueba en el cuadro"); await p.keyboard.press("Enter"); await wait(p, 600);
   ok(await p.evaluate(() => App.S.notes.some((n) => n.text === "Nota de prueba en el cuadro" && n.sent === false)), "guarda una nota por cuadro como borrador");
   ok(await p.evaluate(() => App.sel.unsentCount() >= 4), "la barra cuenta los cambios sin enviar");
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.press("Escape"); await wait(p, 500);
+  ok(await p.evaluate(() => App.route().name === "estudio" && !App.route().args[0]), "Escape desde la vista general vuelve al listado de Estudio");
   // en lote desde la lista
-  await nav(p, "#aprobar", 300);
+  await nav(p, "#estudio", 300);
   await p.click(".piece .pick >> nth=0"); await p.click(".piece .pick >> nth=1"); await wait(p, 300);
   ok(await p.evaluate(() => !!document.querySelector("#bulk")), "seleccionar versiones muestra la barra de lote");
   await p.click('[data-act="bulk"][data-st="approved"]'); await wait(p, 600);
   ok(await p.evaluate(() => App.S.videos.filter((v) => v.status === "approved").length >= 2), "aprobar en lote funciona");
+  ok(!(await p.evaluate(() => !!document.querySelector('[data-nav="aprobar"]'))), "ya no hay un item de nav propio para Aprobar");
 
   console.log("\n== Enviar cambios ==");
   const before = await p.evaluate(() => App.sel.unsentCount());
@@ -136,9 +142,9 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => document.querySelectorAll(".tr").length >= 6 && !!document.querySelector(".lvlhero")), "logros: nivel y tarjetas");
   ok(await p.evaluate(() => document.querySelectorAll(".tr.fresh").length >= 1), "hay logros nuevos para celebrar");
 
-  console.log("\n== Estudio ==");
+  console.log("\n== Estudio: editor completo ==");
   const ed = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
-  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, ed); await wait(p, 2200);
+  await p.evaluate((id) => { location.hash = "#estudio/editor/" + encodeURIComponent(id); }, ed); await wait(p, 2200);
   ok(await p.evaluate(() => !!(App.st.SE && App.st.SE.handle && App.st.SE.spec)), "abre el editor con el motor original");
   await p.click('.st-clip[data-k="text"] >> nth=0'); await wait(p, 400);
   ok(await p.evaluate(() => !!document.querySelector("#st-ft")), "seleccionar un clip abre sus ajustes");
@@ -162,8 +168,8 @@ async function open(browser, url, init, viewport, o) {
   await nav(p, "#hoy", 300);
   await p.keyboard.press("Control+k"); await wait(p, 1100);
   ok(await p.evaluate(() => App.jarvis.isOpen() && document.querySelectorAll("#jvcmds button").length >= 4), "Ctrl+K abre Jarvis con comandos");
-  await p.fill("#jvbox", "aprobar"); await p.keyboard.press("Enter"); await p.waitForFunction(() => App.route().name === "aprobar" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
-  ok(await p.evaluate(() => App.route().name === "aprobar" && !App.jarvis.isOpen()), "un comando lleva a la pantalla y cierra el panel");
+  await p.fill("#jvbox", "aprobar"); await p.keyboard.press("Enter"); await p.waitForFunction(() => App.route().name === "estudio" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
+  ok(await p.evaluate(() => App.route().name === "estudio" && !App.jarvis.isOpen()), "un comando lleva a la pantalla y cierra el panel");
   await nav(p, "#hoy", 300); await p.click('[data-act="theme"]'); await p.waitForFunction(() => document.documentElement.getAttribute("data-aura") === "night", null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
   const th = await p.evaluate(() => document.documentElement.getAttribute("data-aura") + "|" + getComputedStyle(document.documentElement).getPropertyValue("--base").trim());
   ok(/^night\|#06100f/.test(th), "el boton cambia a noche", th);
@@ -204,7 +210,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => window.__mock.uploads.length === 1 && App.ui.files[0].state === "done" && /^[0-9a-f]{32}$/.test(App.ui.files[0].id)), "subir usa assets.upload y guarda el id", JSON.stringify(await p.evaluate(() => window.__mock.uploads)));
   await p.evaluate(() => { location.hash = "#estudio"; }); await wait(p, 600);
   const edSim = await p.evaluate(() => (App.S.studioVersions.find((x) => x.spec) || {}).id);
-  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, edSim); await wait(p, 2200);
+  await p.evaluate((id) => { location.hash = "#estudio/editor/" + encodeURIComponent(id); }, edSim); await wait(p, 2200);
   ok(await p.evaluate(() => !!(App.st.SE && App.st.SE.handle && App.st.SE.spec)), "abre el Estudio de un video con spec contra el simulador");
   await p.keyboard.press("Escape"); await wait(p, 500);
   await p.evaluate(() => { location.hash = "#hoy"; }); await wait(p, 500);
@@ -241,7 +247,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => App.ai.get("draft").model === "claude-opus-5-5"), "despues de enviar, Crear vuelve al modelo de siempre");
   await p.evaluate(() => { localStorage.removeItem("aura:ai"); });
   const ed2 = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
-  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, ed2); await wait(p, 2200);
+  await p.evaluate((id) => { location.hash = "#estudio/editor/" + encodeURIComponent(id); }, ed2); await wait(p, 2200);
   await p.click("#st-ask-btn"); await wait(p, 600);
   ok(await p.evaluate(() => !!document.querySelector('#st-ipane .aipill') && /Sonnet 5\.5/.test(document.querySelector('#st-ipane .aipill').textContent)), "el chat del Estudio muestra el modelo");
   await p.click('#st-ipane .aipill'); await wait(p, 300); await p.click('.aimenu [data-e="low"]'); await p.keyboard.press("Escape"); await wait(p, 200);
@@ -279,7 +285,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => document.querySelectorAll("#jv .atts:not(.sent) .achip").length === 0), "se puede quitar un adjunto");
   await p.evaluate(() => App.jarvis.close()); await wait(p, 1200);
   const ed3 = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
-  await p.evaluate((id) => { location.hash = "#estudio/" + encodeURIComponent(id); }, ed3); await wait(p, 2400);
+  await p.evaluate((id) => { location.hash = "#estudio/editor/" + encodeURIComponent(id); }, ed3); await wait(p, 2400);
   await p.click("#st-ask-btn"); await wait(p, 600);
   await p.setInputFiles('#st-ipane [data-att-in]', png); await wait(p, 1000);
   await p.fill("#st-ask-text", "Usa esta foto de fondo"); await p.click("#st-ask-go"); await wait(p, 1200);
@@ -311,8 +317,8 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Hoy no tiene scroll horizontal");
   // el contenedor principal recorta el desborde (overflow-x: clip), asi que ademas del scroll se revisa que nada visible se salga de la pantalla
   const spill = () => document.querySelector("#main") && [...document.querySelectorAll("#main *")].filter((e) => { const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || r.right <= innerWidth + 2) return false; for (let a = e.parentElement; a && a.id !== "main"; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return false; } return getComputedStyle(e).position !== "fixed"; }).slice(0, 3).map((e) => e.tagName.toLowerCase() + "." + String(e.className).split(" ").slice(0, 2).join(".")).join(" | ");
-  for (const r of ["hoy", "aprobar", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
-  await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#aprobar/ver/" + encodeURIComponent(v.id); }); await wait(p, 1200);
+  for (const r of ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
+  await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#estudio/ver/" + encodeURIComponent(v.id); }); await wait(p, 1200);
   ok(await p.evaluate(() => { const b = document.querySelector("#rvdecide").getBoundingClientRect(); return b.bottom <= innerHeight && b.top > 300; }), "la capsula de decision queda visible sobre la barra");
   ok(p.errs.length === 0, "sin errores en telefono", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
