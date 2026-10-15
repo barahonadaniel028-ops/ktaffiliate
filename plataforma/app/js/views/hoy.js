@@ -1,7 +1,7 @@
 /* Aura · Hoy: la frase del dia y las tarjetas de lo que sigue. */
 (function () {
   "use strict";
-  const App = window.App, S = App.S, sel = App.sel, { esc, icon, fmt, plural, ring, spark, vidThumb } = App;
+  const App = window.App, S = App.S, sel = App.sel, { $, esc, icon, fmt, plural, ring, spark, vidThumb } = App;
 
   const greet = () => { const h = new Date().getHours(); return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches"; };
   const wave = '<i class="wv"><b style="height:6px"></b><b style="height:12px"></b><b style="height:8px"></b><b style="height:15px"></b><b style="height:7px"></b></i>';
@@ -54,8 +54,9 @@
     title: "Hoy",
     render() {
       const ph = sel.phrase(), n = sel.allPending().length, prim = ph.cta === "aprobar" || n ? `<a class="btn pri lg2" href="#estudio" data-go="estudio">Empezar a aprobar${n ? `<b>${n}</b>` : ""}</a>` : `<a class="btn pri lg2" href="#crear" data-go="crear">Pedir un video</a>`;
-      // mientras falten pasos de introduccion, una tarjeta chica arriba de todo lleva a "Empieza aquí" (DECISIONES.md #18)
-      return `<div class="hoy">${App.onboarding ? App.onboarding.hoyCard() : ""}
+      // mientras falten pasos de introduccion, una tarjeta chica arriba de todo lleva a "Empieza aquí" (DECISIONES.md #18). Aca va solo el hueco: la tarjeta
+      // la mete y la mantiene al dia empieza.js (en bind y al avanzar un paso), asi el progreso no cambia este HTML ni repinta Hoy entero.
+      return `<div class="hoy"><div class="es-hoy-slot" data-es-hoy></div>
         <section class="talk">
           <button class="orb" data-orb data-act="jarvis" type="button" aria-label="Hablar con Jarvis" style="width:var(--orb,132px);height:var(--orb,132px)"></button>
           <p class="hi">${esc(greet())}, ${esc(App.config.owner)} ${wave}</p>
@@ -64,7 +65,7 @@
         </section>
         <section class="cards rise">${analyticsCard()}${runwayCard()}${todoCard()}${approveCard()}${labCard()}${requestsCard()}</section></div>`;
     },
-    bind(root) { App.observeDemos(root); App.trophies.ensureBaseline(App.trophies.all(App.trophies.cards())); App.celebrate.check(); },
+    bind(root) { if (App.onboarding) App.onboarding.syncHoy($("[data-es-hoy]", root)); App.observeDemos(root); App.trophies.ensureBaseline(App.trophies.all(App.trophies.cards())); App.celebrate.check(); },
   };
   App.acts.tododone = async (el) => { el.disabled = true; await App.act.markTodoDone(el.dataset.id); App.toast("Hecho. Un pendiente menos."); };
 })();

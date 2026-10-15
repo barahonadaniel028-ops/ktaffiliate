@@ -15,14 +15,15 @@
   const App = window.App, S = App.S, { $, $$, esc, icon, ring, plural } = App, say = App.say, owner = App.config.owner;
 
   // ---------- los pasos ----------
-  // cada uno lleva a la persona DIRECTO al lugar (href, o act si hay que abrir algo como Jarvis); `desc` es una sola frase de para que sirve.
+  // cada uno lleva a la persona DIRECTO al lugar (href, o act si hay que abrir algo como Jarvis); `desc` es una sola frase de para que sirve;
+  // `did` es lo mismo en pasado (para el aviso "¡Paso listo!"; el pretérito es igual con vos que con tú).
   const STEPS = [
-    { id: "jarvis", icon: "sparkles", title: say("Conocé a Jarvis", "Conoce a Jarvis"), desc: say("Es tu asistente: preguntale lo que quieras o pedile que te lleve a cualquier pantalla.", "Es tu asistente: pregúntale lo que quieras o pídele que te lleve a cualquier pantalla."), cta: "Abrir a Jarvis", act: "esjarvis", href: "#hoy" },
-    { id: "estilo", icon: "book", title: say("Mirá tus estilos", "Mira tus estilos"), desc: "En la Biblioteca y el Laboratorio están los estilos que le dan su look a tus videos.", cta: "Ver los estilos", href: "#biblioteca" },
-    { id: "grabar", icon: "camera", title: say("Grabá tu primer video", "Graba tu primer video"), desc: say("Con el teleprompter el guion se mueve solo mientras hablás a la cámara.", "Con el teleprompter el guion se mueve solo mientras hablas a la cámara."), cta: "Ir a Grabar", href: "#crear/grabar" },
-    { id: "pedido", icon: "wand", title: say("Pedí tu primer video", "Pide tu primer video"), desc: say("Contale a Claude qué querés y lo produce por vos.", "Cuéntale a Claude qué quieres y lo produce por ti."), cta: "Pedir un video", href: "#crear" },
-    { id: "revisar", icon: "film", title: say("Aprobá o rechazá un video", "Aprueba o rechaza un video"), desc: say("Vos decidís qué sale a tus redes: aprobar es dejarlo agendado.", "Tú decides qué sale a tus redes: aprobar es dejarlo agendado."), cta: "Abrir el Estudio", href: "#estudio" },
-    { id: "metricas", icon: "chart", title: say("Mirá cómo te va", "Mira cómo te va"), desc: "Vistas, seguidores y logros de tus redes, todo en un solo lugar.", cta: "Ver Métricas", href: "#metricas" },
+    { id: "jarvis", icon: "sparkles", title: say("Conocé a Jarvis", "Conoce a Jarvis"), did: "Conociste a Jarvis", desc: say("Es tu asistente: preguntale lo que quieras o pedile que te lleve a cualquier pantalla.", "Es tu asistente: pregúntale lo que quieras o pídele que te lleve a cualquier pantalla."), cta: "Hablar con Jarvis", act: "esjarvis", href: "#hoy" },
+    { id: "estilo", icon: "book", title: say("Mirá tus estilos", "Mira tus estilos"), did: "Miraste tus estilos", desc: "En la Biblioteca y el Laboratorio están los estilos que le dan su look a tus videos.", cta: "Ver los estilos", href: "#biblioteca" },
+    { id: "grabar", icon: "camera", title: say("Grabá tu primer video", "Graba tu primer video"), did: "Grabaste tu primer video", desc: say("Con el teleprompter el guion se mueve solo mientras hablás a la cámara.", "Con el teleprompter el guion se mueve solo mientras hablas a la cámara."), cta: "Ir a Grabar", href: "#crear/grabar" },
+    { id: "pedido", icon: "wand", title: say("Pedí tu primer video", "Pide tu primer video"), did: "Pediste tu primer video", desc: say("Contale a Claude qué querés y lo produce por vos.", "Cuéntale a Claude qué quieres y lo produce por ti."), cta: "Pedir un video", href: "#crear" },
+    { id: "revisar", icon: "film", title: say("Aprobá o rechazá un video", "Aprueba o rechaza un video"), did: "Revisaste un video", desc: say("Vos decidís qué sale a tus redes: aprobar es dejarlo agendado.", "Tú decides qué sale a tus redes: aprobar es dejarlo agendado."), cta: "Abrir el Estudio", href: "#estudio" },
+    { id: "metricas", icon: "chart", title: say("Mirá cómo te va", "Mira cómo te va"), did: "Miraste cómo te va", desc: "Vistas, seguidores y logros de tus redes, todo en un solo lugar.", cta: "Ver Métricas", href: "#metricas" },
   ];
   const stepOf = (id) => STEPS.find((s) => s.id === id) || null;
 
@@ -70,14 +71,17 @@
     if (wasPending !== pending()) afterChrome(() => flip(before));
     try { if (App.adapter() && App.adapter().canWrite && App.adapter().canWrite()) await App.data.set("home", "onboarding", next); } catch (e) { /* el respaldo local ya quedo */ }
   }
-  async function markDone(id) {
+  // `o.toast`: true = avisa siempre (lo marco la persona a mano: el aviso trae "Deshacer"); si no, avisa solo cuando no esta mirando esta pantalla
+  // (alli ya se ve el paso girar y brillar). El aviso espera a que no haya Jarvis/editor abiertos para no taparlos.
+  async function markDone(id, o) {
     if (!stepOf(id) || isDone(id)) return false;
-    const finishing = wouldFinish(id), d = doc();
+    const finishing = wouldFinish(id), d = doc(), toast = !!(o && o.toast);
     justDone.add(id);
     const p = save({ ...d, steps: { ...d.steps, [id]: App.stamp() } });
-    if (finishing) finale(); else pulseNav();
+    if (finishing) finale(); else { pulseNav(); if (!(o && o.quiet)) whenFree(() => { if (isDone(id) && (toast || App.route().name !== "empieza")) doneToast(id); }); }
     await p; return true;
   }
+  function doneToast(id) { const s = stepOf(id), P = progress(); if (s) App.toast(`¡Paso listo! ${s.did} (${P.done} de ${P.total}).`, () => unmark(id), 7000); }
   async function unmark(id) {
     if (!isDone(id)) return false;
     const d = doc(), steps = { ...d.steps }; delete steps[id]; justDone.delete(id);
@@ -95,10 +99,15 @@
   const fresh = (t) => { const ms = Date.parse(t); return Number.isFinite(ms) && Math.abs(Date.now() - ms) < 60000; };
   // pedido: un pedido de video o de estilo creado por esta persona. En demostracion los pedidos de ejemplo ya vienen en la memoria: solo cuentan los nuevos.
   // Con la base real cuenta cualquiera suyo (si ya pidio videos antes, ya lo hizo); despues de "Volver a ver los pasos" solo los posteriores a esa marca.
+  // Si todavia no se sabe quien es la persona (la capacidad "user" llega despues de conectar) no se puede decir "suyo": cuentan solo los pedidos que aparecen
+  // despues de abrir la pantalla, que son los de esta sesion.
   function checkRequests() {
-    if (isDone("pedido") || !S.userId || !S.ready.requests) return;
-    const since = doc().resetAt || "", demo = S.mode === "demo";
-    if (S.requests.some((r) => (r.kind === "new_video" || r.kind === "new_style") && r.by === S.userId && !(demo && reqBase && reqBase.has(r.id)) && (!since || String(r.at || "") > since))) markDone("pedido");
+    if (isDone("pedido") || !S.ready.requests) return;
+    const since = doc().resetAt || "", demo = S.mode === "demo", isNew = (r) => !(reqBase && reqBase.has(r.id));
+    const theirs = (r) => (demo ? isNew(r) && r.by === S.userId : S.userId ? r.by === S.userId : isNew(r));
+    const mine = S.requests.filter((r) => (r.kind === "new_video" || r.kind === "new_style") && (!since || String(r.at || "") > since) && theirs(r));
+    // un pedido viejo (de antes de abrir hoy el portal) se cuenta sin aviso: no hace falta decirle "¡Paso listo!" por algo que hizo hace semanas
+    if (mine.length) markDone("pedido", { quiet: !mine.some((r) => fresh(r.at)) });
   }
   // revisar: un video que cambia a aprobado o rechazado AHORA (decidedAt reciente) y que ya estaba cargado: no cuentan los que ya venian decididos ni los que llegan nuevos
   function checkVideos(changed) {
@@ -121,13 +130,13 @@
     jvObs.observe(w, { attributes: true, attributeFilter: ["class"] });
   }
   // grabar: la funcion Grabar llama markDone("grabar") o emite "aura:grabado"; ademas, si el teleprompter termina con una grabacion (o una lectura
-  // de mas de 4 s) se cuenta aca. Se envuelve onDone sin cambiar nada de lo que devuelve App.teleprompter.open.
+  // de mas de 5 s: abrirlo y cerrarlo enseguida no cuenta) se cuenta aca. Se envuelve onDone sin cambiar nada de lo que devuelve App.teleprompter.open.
   function hookTeleprompter() {
     const T = App.teleprompter; if (!T || typeof T.open !== "function" || T.open.__empieza) return;
     const orig = T.open;
     T.open = function (o) {
       o = o || {}; const user = o.onDone;
-      return orig.call(T, Object.assign({}, o, { onDone(res) { if (res && (res.recorded || res.durationMs >= 4000)) markDone("grabar"); if (user) return user.apply(this, arguments); } }));
+      return orig.call(T, Object.assign({}, o, { onDone(res) { if (res && (res.recorded || res.durationMs >= 5000)) markDone("grabar"); if (user) return user.apply(this, arguments); } }));
     };
     T.open.__empieza = true;
   }
@@ -161,7 +170,7 @@
     if (!nx) return `<div class="es-next" data-k="all"><a class="btn pri lg2" href="#hoy">${icon("home")}Ir a Hoy</a><button class="es-quiet" type="button" data-act="esreset">${icon("refresh")}Volver a ver los pasos</button></div>`;
     return `<div class="es-next" data-k="${nx.id}"><span class="es-nx-k">${P.done ? "Tu siguiente paso" : "Para empezar"}</span><b class="es-nx-t">${esc(nx.title)}</b>${cta(nx, "pri lg2")}</div>`;
   }
-  const ringArgs = (p) => { const C = 2 * Math.PI * 42; return `${(C * p).toFixed(1)} ${C.toFixed(1)}`; };
+  const ringArgs = (p, r) => { const C = 2 * Math.PI * (r || 42); return `${(C * p).toFixed(1)} ${C.toFixed(1)}`; }; // r = radio con el que se dibujo el anillo (ring() de util.js)
   function cloudHtml() {
     const P = progress();
     return `<section class="es-cloud" id="escloud" aria-labelledby="esh1"><span class="es-liq" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -210,6 +219,7 @@
   App.views.empieza = {
     title: "Empieza aquí",
     render() {
+      justDone = new Set(); // la pantalla se dibuja ya con los estados al dia: lo que se completo estando en otra pantalla no hace falta festejarlo ahora
       return `<div class="es" data-complete="${pending() ? 0 : 1}"><div class="es-hero"><div class="es-float">${cloudHtml()}</div></div>
         <ol class="es-list rise" aria-label="Pasos para empezar">${STEPS.map(stepHtml).join("")}</ol></div>`;
     },
@@ -226,10 +236,14 @@
   A.esjarvis = () => { if (App.jarvis && App.jarvis.open) App.jarvis.open(); };
   A.esmark = (el) => {
     const id = el.dataset.id, s = stepOf(id); if (!s || isDone(id)) return;
-    const finishing = wouldFinish(id); markDone(id);
-    if (!finishing) App.toast(`Listo: ${s.title}.`, () => unmark(id), 6000);
-    // en el telefono la lista es larga: el paso que sigue se acerca solo si quedo fuera de vista
-    requestAnimationFrame(() => requestAnimationFrame(() => { const n = $('.es-li[data-state="next"]'); if (!n) return; const r = n.getBoundingClientRect(); if (r.top > innerHeight - 140 || r.bottom < 90) n.scrollIntoView({ block: "center", behavior: App.reduceMotion() ? "auto" : "smooth" }); }));
+    markDone(id, { toast: true }); // el aviso trae "Deshacer" (si era el ultimo paso, en su lugar viene el festejo)
+    // el foco pasa al boton principal del paso que sigue (el "Ya lo hice" que se toco desaparece); y en el telefono, donde la lista es larga,
+    // ese paso se acerca solo si quedo fuera de vista
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const n = $('.es-li[data-state="next"]'); if (!n) return;
+      const c = $(".es-cta", n); if (c) try { c.focus({ preventScroll: true }); } catch (e) { /* sin foco */ }
+      const r = n.getBoundingClientRect(); if (r.top > innerHeight - 140 || r.bottom < 90) n.scrollIntoView({ block: "center", behavior: App.reduceMotion() ? "auto" : "smooth" });
+    }));
   };
   A.esreset = () => { const prev = doc(); reset(); App.toast("Listo, volvimos a empezar.", () => save(prev), 8000); };
 
@@ -239,7 +253,8 @@
   const PRAISE = ["¡Lo lograste!", "¡Buen trabajo!", "¡Excelente!"];
   const MOTIVATE = ["Lo que viene es lo mejor: un video a la vez, tu cuenta va a crecer.", "Con constancia, cada pieza que se publica suma.", "Ya está todo a mano: ahora lo importante es la constancia."];
   let fin = null;
-  function finale() { whenFree(showFinale); }
+  // el festejo espera un momento: en la propia pantalla, a que se vea girar el ultimo paso; y en Hoy/Metricas, a que pase (o no) el aviso de hitos de celebrate.js (1,1 s), para no apilarse
+  function finale() { const r = App.route().name; setTimeout(() => whenFree(showFinale), r === "empieza" ? 900 : r === "hoy" || r === "metricas" ? 1700 : 300); }
   function showFinale() {
     if (fin) return;
     const root = $("#aura-root") || document.body, k = App.hash(owner || "") % PRAISE.length, prevFocus = document.activeElement, a = App.aura.el(), prevTone = (a && a.dataset.tone) || "base";
@@ -273,14 +288,33 @@
   A.esfinclose = () => closeFinale();
 
   // ---------- la tarjeta chica de Hoy mientras falten pasos ----------
+  // Hoy dibuja solo un hueco vacio (data-es-hoy) y la tarjeta se mete y se actualiza desde aca: asi avanzar un paso no obliga a repintar toda la pantalla de Hoy
+  // (se veria parpadear justo cuando abris a Jarvis desde Hoy, que es el paso 1). Al terminar los pasos la tarjeta se desvanece y el hueco se cierra.
+  const hoyLabel = (P, nx) => `Empieza aquí: ${P.done} de ${P.total} pasos. ${P.done ? "Seguir con" : "Empezar con"} ${nx.title}`;
   function hoyCard() {
     if (!pending()) return "";
     const P = progress(), nx = nextStep();
-    return `<a class="es-hoy lg" href="#empieza" aria-label="Empieza aquí: ${P.done} de ${P.total} pasos. ${esc(P.done ? "Seguir con" : "Empezar con")} ${esc(nx.title)}">
-      ${ring(P.done / P.total, 52, { r: 40, sw: 8, inner: `<b class="num es-hoy-n">${P.done}<small>/${P.total}</small></b>` })}
-      <span class="es-hoy-t"><b>Empieza <em>aquí</em></b><span>${P.done ? "Siguiente" : "Primer paso"}: ${esc(nx.title)}</span></span>
-      <span class="btn sm pri es-hoy-go">${P.done ? "Seguir" : "Empezar"}${icon("arrow")}</span></a>`;
+    return `<a class="es-hoy lg" href="#empieza" aria-label="${esc(hoyLabel(P, nx))}">${ring(P.done / P.total, 52, { r: 40, sw: 8, inner: `<b class="num es-hoy-n">${P.done}<small>/${P.total}</small></b>` })}<span class="es-hoy-t"><b>Empieza <em>aquí</em></b><span>${esc((P.done ? "Siguiente" : "Primer paso") + ": " + nx.title)}</span></span><span class="btn sm pri es-hoy-go">${P.done ? "Seguir" : "Empezar"}${icon("arrow")}</span></a>`;
   }
+  function syncHoy(slot) {
+    slot = slot && slot.nodeType === 1 ? slot : $("[data-es-hoy]"); if (!slot) return;
+    const P = progress(), nx = nextStep(), key = nx ? P.done + ":" + nx.id : "", cur = $(".es-hoy:not(.leaving)", slot);
+    if (slot.dataset.k === key && !!cur === !!key) return;
+    slot.dataset.k = key;
+    if (!key) { // terminaron: la tarjeta se va flotando hacia arriba (transform/opacity) y recien despues se cierra el hueco
+      if (cur) { cur.classList.add("leaving"); const rm = () => cur.remove(); if (App.reduceMotion() || !cur.animate) rm(); else cur.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-12px) scale(.985)" }], { duration: 420, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).finished.then(rm, rm); }
+      return;
+    }
+    if (!cur) { slot.insertAdjacentHTML("afterbegin", hoyCard()); return; }
+    // el mismo tarjeta avanza: el anillo crece, el numero y el texto se cambian en su lugar
+    const rv = $(".ring-val", cur), n = $(".es-hoy-n", cur), t = $(".es-hoy-t span", cur), go = $(".es-hoy-go", cur);
+    if (rv) rv.style.strokeDasharray = ringArgs(P.done / P.total, 40);
+    if (n) { n.innerHTML = `${P.done}<small>/${P.total}</small>`; swapIn(n); }
+    if (t) { t.textContent = (P.done ? "Siguiente" : "Primer paso") + ": " + nx.title; swapIn(t); }
+    if (go) go.innerHTML = `${P.done ? "Seguir" : "Empezar"}${icon("arrow")}`;
+    cur.setAttribute("aria-label", hoyLabel(P, nx));
+  }
+  App.on(() => syncHoy());
 
-  App.onboarding = { STEPS, doc, isDone, progress, pending, markDone, unmark, reset, next: nextStep, hoyCard };
+  App.onboarding = { STEPS, doc, isDone, progress, pending, markDone, unmark, reset, next: nextStep, hoyCard, syncHoy };
 })();
