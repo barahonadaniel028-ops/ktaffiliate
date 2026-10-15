@@ -1840,7 +1840,33 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
     }
     try { navigator.vibrate && navigator.vibrate(18); } catch (e) { /* sin vibracion */ }
   }
-  App.morph = { open, close, travel, fly, bloom, wilt, pop, view, sparkles, rectOf, center, spring, OUT, IN, clean };
+  // confeti de celebracion (DECISIONES.md #1): una rafaga de papelitos en los colores de la marca que sale de donde cae la medalla,
+  // sube desacelerando, se abre y cae acelerando (gravedad en dos tramos, no una curva unica). Solo transform/opacity (GPU).
+  // Con "reducir movimiento" no hay confeti: la felicitacion y la frase siguen ahi.
+  function confetti(host, n) {
+    if (App.reduceMotion() || !host) return;
+    const L = document.createElement("div"); L.className = "confeti"; L.setAttribute("aria-hidden", "true");
+    L.style.cssText = "position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:6";
+    host.appendChild(L);
+    const W = host.clientWidth || innerWidth, H = host.clientHeight || innerHeight, ox = W / 2, oy = H * 0.42, total = n || 70;
+    const COLORS = ["var(--apricot)", "var(--rose)", "var(--mint)", "var(--sand)", "var(--teal)", "#ffffff", "#ffcf6e"];
+    let alive = total; const end = () => { if (--alive === 0) L.remove(); };
+    for (let i = 0; i < total; i++) {
+      const p = document.createElement("i"), w = 6 + Math.random() * 7, h = Math.random() < 0.4 ? w : w * 1.7;
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * 2.3, v = 220 + Math.random() * 340, rot = (Math.random() - 0.5) * 900;
+      const px = ox + Math.cos(ang) * v * 0.55, py = oy + Math.sin(ang) * v * 0.55;
+      const ex = ox + Math.cos(ang) * v * 1.05 + (Math.random() - 0.5) * 120, ey = H + 40 + Math.random() * 60;
+      p.style.cssText = `position:absolute;left:0;top:0;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;border-radius:${Math.random() < 0.35 ? "50%" : "2px"};background:${COLORS[i % COLORS.length]};opacity:0;will-change:transform,opacity`;
+      L.appendChild(p);
+      p.animate([
+        { transform: `translate(${ox}px,${oy}px) rotate(0deg)`, opacity: 1, offset: 0, easing: "cubic-bezier(.15,.75,.35,1)" },
+        { transform: `translate(${px.toFixed(1)}px,${py.toFixed(1)}px) rotate(${(rot * 0.4).toFixed(0)}deg)`, opacity: 1, offset: 0.32, easing: "cubic-bezier(.45,0,.85,.55)" },
+        { transform: `translate(${ex.toFixed(1)}px,${ey.toFixed(1)}px) rotate(${rot.toFixed(0)}deg)`, opacity: 1, offset: 0.9 },
+        { transform: `translate(${ex.toFixed(1)}px,${ey.toFixed(1)}px) rotate(${rot.toFixed(0)}deg)`, opacity: 0, offset: 1 },
+      ], { duration: 1900 + Math.random() * 1300, delay: Math.random() * 260, easing: "linear", fill: "both" }).finished.then(end, end);
+    }
+  }
+  App.morph = { open, close, travel, fly, bloom, wilt, pop, view, sparkles, confetti, rectOf, center, spring, OUT, IN, clean };
 })();
 
 /* ===== engine/studio-engine ===== */
@@ -5525,6 +5551,7 @@ Reglas:
     $$(".cel-dots i", cur.wrap).forEach((d, k) => d.classList.toggle("on", k === i));
     const btn = $("#celnext", cur.wrap); btn.textContent = last ? "¡Genial!" : "Siguiente"; btn.focus({ preventScroll: true });
     const sl = slides[i], hero = $(".cel-hero", sl); if (hero) App.morph.sparkles(hero, sl.classList.contains("level") ? 12 : 9);
+    App.morph.confetti(cur.wrap, sl.classList.contains("level") ? 110 : i === 0 ? 90 : 60); // confeti en cada pagina: el hito nuevo se festeja de verdad
     const xp = $(".cel-xp", sl); if (xp) countUp(xp, 0, +xp.dataset.xp, 900, (n) => "+" + n + " XP");
     const lb = $(".cel-badge b", sl); if (lb) countUp(lb, +lb.dataset.from, +lb.dataset.to, 1100, String);
     const bar = $(".cel-bar", sl); if (bar) { bar.classList.remove("go"); void bar.offsetWidth; bar.classList.add("go"); }

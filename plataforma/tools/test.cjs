@@ -340,7 +340,9 @@ async function open(browser, url, init, viewport, o) {
   await nav(p, "#hoy", 300);
   ok(await p.evaluate(() => !document.querySelector(".tcard") && document.querySelector(".cards").children[0].classList.contains("an")), "Hoy ya no tiene una tarjeta de Logros: la primera es Analiticas");
   ok(await p.evaluate(() => document.querySelectorAll(".an-s").length === 4 && document.querySelectorAll(".an-s .spk svg").length >= 3), "las cuatro cifras de la semana con su curva");
-  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await p.waitForSelector(".cel-slide[data-on] .cel-t", { timeout: 9000 }).catch(() => {}); await wait(p, 2200);
+  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await p.waitForSelector(".cel-slide[data-on] .cel-t", { timeout: 9000 }).catch(() => {}); await wait(p, 600);
+  const confeti = await p.evaluate(() => document.querySelectorAll("#celwrap .confeti i").length); await wait(p, 1600);
+  ok(confeti >= 30, "la celebracion lanza confeti en los colores de la marca");
   ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && +getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity > 0.9), "al entrar a Hoy se celebra el hito nuevo con la tarjeta de la gota");
   ok(await p.evaluate(() => /¡|Buen trabajo|hace|Excelente|vas muy bien|esfuerzo/i.test(document.querySelector(".cel-slide[data-on] .cel-t").textContent)), "el titulo felicita, no solo informa el numero");
   ok(await p.evaluate(() => document.querySelector(".cel-slide[data-on] .cel-p").textContent.length > 10), "hay una frase motivacional ademas del dato");

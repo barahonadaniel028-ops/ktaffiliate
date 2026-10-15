@@ -46,6 +46,7 @@
     $$(".cel-dots i", cur.wrap).forEach((d, k) => d.classList.toggle("on", k === i));
     const btn = $("#celnext", cur.wrap); btn.textContent = last ? "¡Genial!" : "Siguiente"; btn.focus({ preventScroll: true });
     const sl = slides[i], hero = $(".cel-hero", sl); if (hero) App.morph.sparkles(hero, sl.classList.contains("level") ? 12 : 9);
+    App.morph.confetti(cur.wrap, sl.classList.contains("level") ? 110 : i === 0 ? 90 : 60); // confeti en cada pagina: el hito nuevo se festeja de verdad
     const xp = $(".cel-xp", sl); if (xp) countUp(xp, 0, +xp.dataset.xp, 900, (n) => "+" + n + " XP");
     const lb = $(".cel-badge b", sl); if (lb) countUp(lb, +lb.dataset.from, +lb.dataset.to, 1100, String);
     const bar = $(".cel-bar", sl); if (bar) { bar.classList.remove("go"); void bar.offsetWidth; bar.classList.add("go"); }
