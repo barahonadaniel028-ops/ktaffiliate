@@ -5,7 +5,7 @@
   const S = (App.S = {
     brands: App.config.brands.slice(), videos: [], notes: [], requests: [], refs: [], expStyles: [], expRounds: [], expCards: [], libraryItems: [],
     studioProjects: [], studioVersions: [], studioRequests: [], studioFeedback: [], studioTranscripts: [],
-    metrics: {}, evolution: {}, schedule: {}, rounds: {}, homeTodo: [], homeDone: {}, trophyDoc: null, system: null,
+    metrics: {}, evolution: {}, schedule: {}, rounds: {}, homeTodo: [], homeDone: {}, trophyDoc: null, onboardDoc: null, system: null,
     live: {}, liveEvo: {}, ready: {}, mode: "demo", claudeState: "off", userId: null, canWrite: true,
   });
   App.loading = () => !S.ready.videos;
@@ -38,7 +38,7 @@
     metrics: (d) => { S.metrics = {}; d.forEach((x) => { S.metrics[x.id] = x.data(); }); }, evolution: (d) => { S.evolution = {}; d.forEach((x) => { S.evolution[x.id] = x.data(); }); },
     schedule: (d) => { S.schedule = {}; d.forEach((x) => { S.schedule[x.id] = x.data().slots || {}; }); }, rounds: (d) => { S.rounds = {}; d.forEach((x) => { S.rounds[x.id] = x.data(); }); },
     system: (d) => { const x = d.find((y) => y.id === "status"); S.system = x ? x.data() : null; },
-    home: (d) => { const t = d.find((x) => x.id === "todo"), dn = d.find((x) => x.id === "done"), tr = d.find((x) => x.id === "trophies"); S.homeTodo = (t && t.data().items) || []; S.homeDone = dn ? dn.data() : {}; S.trophyDoc = tr ? tr.data() : null; },
+    home: (d) => { const t = d.find((x) => x.id === "todo"), dn = d.find((x) => x.id === "done"), tr = d.find((x) => x.id === "trophies"); S.homeTodo = (t && t.data().items) || []; S.homeDone = dn ? dn.data() : {}; S.trophyDoc = tr ? tr.data() : null; const ob = d.find((x) => x.id === "onboarding"); S.onboardDoc = ob ? ob.data() : null; },
   };
   App.COLLECTIONS = Object.keys(MAP);
   if (!UI.brandId || !S.brands.some((b) => b.id === UI.brandId)) UI.brandId = S.brands[0] && S.brands[0].id;

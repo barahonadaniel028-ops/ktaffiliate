@@ -34,6 +34,8 @@
     let ok = false;
     if (!wantDemo && window.claude && window.claude.use) { try { ok = await App.connect(App.adapters.claude()); } catch (e) { ok = false; } }
     if (!ok) { await App.connect(App.adapters.demo(window.AuraDemo ? window.AuraDemo.seed(App.config.id) : {})); }
+    // la primera vez que se abre el portal lo primero que se ve es "Empieza aquí", hasta completar todos los pasos (DECISIONES.md #18)
+    if ((!location.hash || location.hash === "#") && App.onboarding && App.onboarding.pending()) App.go("empieza", { replace: true });
     App.emit("route");
     // carga inicial de Metricool (en demo trae filas de ejemplo)
     setTimeout(() => { App.act.maybeLoadMetrics(); if (S.mode === "demo" && window.AuraDemo) setTimeout(() => window.AuraDemo.seedTrophies(), 900); }, 300);

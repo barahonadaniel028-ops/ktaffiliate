@@ -7,7 +7,7 @@
   "use strict";
   const App = window.App, S = App.S, sel = App.sel, UI = App.ui, { $, $$, esc, icon, plural, bytes, toast } = App;
   UI.crear = UI.crear || {};
-  const CAMINOS = ["estilo", "video"];
+  const CAMINOS = ["estilo", "video", "grabar"];
   const caminoOf = (r) => (CAMINOS.includes(r.args[0]) ? r.args[0] : null);
   const STATUS = { pedido: ["Pedido", ""], produccion: ["En producción", "apricot"], revisar: ["Listo para revisar", "good"], listo: ["Listo", "good"], bloqueado: ["Bloqueado", "bad"], cancelado: ["Cancelado", ""] };
   // el modelo de este pedido: arranca en el de siempre y, si se cambia aqui (pill en el encabezado de la nube),
@@ -83,7 +83,8 @@
 
   // ---------- raiz: "¿Qué querés crear?" ----------
   function rootBody() {
-    return `<div class="crear-paths">
+    return `<div class="crear-paths v3">
+      <button class="crear-path" type="button" data-act="crgo" data-c="grabar">${icon("camera")}<b>Grabar</b><span>Te acompaño a grabar: ideas, guion y teleprompter.</span></button>
       <button class="crear-path" type="button" data-act="crgo" data-c="estilo">${icon("sparkles")}<b>Un estilo nuevo</b><span>A partir de referencias, videos o ideas que te gustan.</span></button>
       <button class="crear-path" type="button" data-act="crgo" data-c="video">${icon("wand")}<b>Un video nuevo</b><span>Elegís el estilo y subís lo que hay que editar.</span></button>
     </div>`;
@@ -128,6 +129,7 @@
       const c = caminoOf(r);
       if (!c) { if (consumeIncoming()) return `<div class="empty"><span class="orb"></span></div>`; return renderRoot(); }
       if (c === "estilo") return App.crearEstilo.render() + queueList();
+      if (c === "grabar") return App.crearGrabar.render(); // Grabar (DECISIONES.md #19): acompañante para grabar, con teleprompter; no lleva la cola de pedidos
       return App.crearVideo.render() + queueList();
     },
     bind(root, r) {
@@ -135,6 +137,7 @@
       if (el) { if (!entered) { entered = true; enter(el); } gather(el); }
       if (c === "estilo" && App.crearEstilo.bind) App.crearEstilo.bind(root);
       if (c === "video" && App.crearVideo.bind) App.crearVideo.bind(root);
+      if (c === "grabar" && App.crearGrabar.bind) App.crearGrabar.bind(root);
     },
     update(kinds) {
       if (kinds.has("requests") || kinds.has("exp_styles") || kinds.has("refs")) return false; // la cola y los avisos se actualizan solos
@@ -161,7 +164,7 @@
   const A = App.acts;
   A.crgo = (el) => App.crear.advanceNav("crear/" + el.dataset.c);
   A.crback = () => {
-    const c = caminoOf(App.route()), mod = c === "estilo" ? App.crearEstilo : c === "video" ? App.crearVideo : null;
+    const c = caminoOf(App.route()), mod = c === "estilo" ? App.crearEstilo : c === "video" ? App.crearVideo : c === "grabar" ? App.crearGrabar : null;
     if (mod && mod.back && mod.back()) return; // el camino maneja su propio paso atrás (vuelve al paso anterior)
     App.crear.advanceNav("crear"); // ya estaba en el primer paso: vuelve a "¿qué querés crear?"
   };

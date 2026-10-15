@@ -23,11 +23,11 @@ local = None
 if "--local" in sys.argv:
     local = Path(sys.argv[sys.argv.index("--local") + 1]).resolve()
 
-CSS = ["tokens", "base", "shell", "v-ai", "v-hoy", "v-aprobar", "v-crear", "v-biblioteca", "v-lab", "v-metricas", "v-cel", "v-notas", "studio"]
+CSS = ["tokens", "base", "shell", "v-ai", "v-hoy", "v-aprobar", "v-crear", "v-grabar", "v-teleprompter", "v-empieza", "v-biblioteca", "v-lab", "v-metricas", "v-cel", "v-notas", "studio"]
 JS = ["core/util", "core/config", "core/state", "core/adapters/util", "core/adapters/claude", "core/adapters/demo", "core/theme", "core/router", "core/motion",
       "engine/studio-engine", "engine/dna", "engine/pred-data", "engine/pred",
       "domain/select", "domain/actions", "domain/library", "domain/trophies",
-      "views/shell", "views/ai", "views/attach", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/crear-estilo", "views/crear-video", "views/biblioteca",
+      "views/shell", "views/ai", "views/attach", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/crear-estilo", "views/crear-video", "views/grabar", "views/teleprompter", "views/empieza", "views/biblioteca",
       "views/laboratorio", "views/metricas", "views/celebrate", "views/notas-ajustes", "views/estudio-core", "views/estudio-panels",
       "dev/fixtures", "dev/demo-video", "boot"]
 

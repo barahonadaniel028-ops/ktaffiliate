@@ -5,13 +5,15 @@
   const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon } = App;
   App.views = App.views || {}; App.acts = App.acts || {};
   const MORE = ["biblioteca", "laboratorio", "metricas", "notas", "ajustes"];
+  const pend = () => !!(App.onboarding && App.onboarding.pending && App.onboarding.pending());
+  const moreList = () => (pend() ? ["hoy"].concat(MORE) : MORE.slice(0, -1).concat(["empieza", "ajustes"]));
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
   // el conteo de hitos nuevos (antes el badge de "Logros") marca ahora el item de nav de Métricas, donde viven los hitos -- DECISIONES.md #1
   function counts() { return { estudio: App.sel.allPending().length, crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
-    const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
+    const items = App.navOrder().map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
     return `<a class="logo" href="#hoy" aria-label="${esc(App.config.name)}">${esc(App.config.short)}</a>${items}<span class="sp"></span><a class="nv" href="#ajustes" data-nav="ajustes" ${cur === "ajustes" ? 'aria-current="page"' : ""}>${icon("settings")}<span>Ajustes</span></a>`;
   }
   function topHtml() {
@@ -59,7 +61,9 @@
   App.acts.brandmenu = (el) => openBrandMenu(el);
   function tabHtml() {
     const c = counts(), cur = App.route().name, tb = (k, n, ic) => `<a class="tb" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`;
-    return `${tb("hoy", "Hoy", "home")}${tb("estudio", "Estudio", "film")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${MORE.includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
+    // con la introduccion sin terminar, "Empieza aquí" ocupa el primer lugar de la barra (Hoy pasa a "Más"); al terminarla vuelve Hoy y "Empieza aquí" baja a "Más"
+    const first = pend() ? tb("empieza", "Empieza", "flag") : tb("hoy", "Hoy", "home");
+    return `${first}${tb("estudio", "Estudio", "film")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${moreList().includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
   }
   // el riel y la barra solo se reescriben si cambiaron (asi no se pierden hovers ni foco)
   const setHtml = (el, html) => { if (el && el._h !== html) { el.innerHTML = html; el._h = html; } };
@@ -129,7 +133,7 @@
   A.theme = (el, e) => App.theme.toggle(e);
   A.jarvis = (el) => App.jarvis.open(el.querySelector(".orb") || (el.matches(".orb") ? el : null) || el);
   A.more = () => {
-    const sh = App.sheet(`<div class="sheet-list">${MORE.map((k) => { const n = k === "ajustes" ? ["Ajustes", "settings"] : App.nav.find((x) => x[0] === k).slice(1); return `<a href="#${k}" data-close>${icon(n[1])}<span>${n[0]}</span></a>`; }).join("")}</div>`);
+    const sh = App.sheet(`<div class="sheet-list">${moreList().map((k) => { const n = k === "ajustes" ? ["Ajustes", "settings"] : App.nav.find((x) => x[0] === k).slice(1); return `<a href="#${k}" data-close>${icon(n[1])}<span>${n[0]}</span></a>`; }).join("")}</div>`);
     sh.el.addEventListener("click", (e) => { if (e.target.closest("a")) setTimeout(sh.close, 0); });
   };
   A.sendall = async (el) => { el.disabled = true; const t = el.textContent; el.textContent = "Enviando…"; await App.act.sendAll(); el.disabled = false; el.textContent = t; };

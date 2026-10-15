@@ -279,7 +279,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => App.config.id === "lumen" && App.S.brands.length === 3), "carga otro espacio con 3 cuentas");
   ok(!(await p.evaluate(() => /\bKT\b|Kevin|Trudeau|Teacher/.test(document.body.innerText))), "ninguna referencia a KT en el otro espacio");
   await nav(p, "#crear", 300);
-  ok(await p.evaluate(() => document.querySelectorAll(".crear-path").length === 2), "Crear funciona igual en otro espacio (los dos caminos)");
+  ok(await p.evaluate(() => document.querySelectorAll(".crear-path").length === 3), "Crear funciona igual en otro espacio (Grabar, estilo nuevo y video nuevo)");
   await nav(p, "#metricas", 450);
   ok(await p.evaluate(() => document.querySelectorAll(".stat").length === 4), "metricas del otro espacio");
   ok(p.errs.length === 0, "sin errores en el preset Lumen", p.errs.slice(0, 3).join(" || ")); await p.context().close();
@@ -434,7 +434,7 @@ async function open(browser, url, init, viewport, o) {
   for (const r of ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
   // la nube de Crear y de Notas en telefono: compactas (no una hoja de pantalla completa) y con las dos opciones lado a lado
   await nav(p, "#crear", 2400);
-  ok(await p.evaluate(() => { const c = document.querySelector(".crear-cloud").getBoundingClientRect(), a = [...document.querySelectorAll(".crear-cloud .crear-path")].map((e) => e.getBoundingClientRect()); return c.height < innerHeight * 0.6 && a.length === 2 && Math.abs(a[0].top - a[1].top) < 4; }), "en telefono la gota de Crear es compacta y las dos opciones van lado a lado");
+  ok(await p.evaluate(() => { const c = document.querySelector(".crear-cloud").getBoundingClientRect(), a = [...document.querySelectorAll(".crear-cloud .crear-path")].map((e) => e.getBoundingClientRect()); return c.height < innerHeight * 0.6 && a.length === 3 && Math.abs(a[0].top - a[1].top) < 4 && Math.abs(a[1].top - a[2].top) < 4; }), "en telefono la gota de Crear es compacta y las tres opciones van lado a lado");
   await nav(p, "#notas", 2400);
   ok(await p.evaluate(() => { const c = document.querySelector("#ntcloud").getBoundingClientRect(), f = document.querySelector("#ntform").getBoundingClientRect(); return c.left >= -1 && c.right <= innerWidth + 1 && f.left >= c.left && f.right <= c.right && f.height >= 44; }), "en telefono Notas cabe en la pantalla y el campo queda dentro de la nube");
   await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#estudio/ver/" + encodeURIComponent(v.id); }); await wait(p, 1200);
@@ -442,5 +442,12 @@ async function open(browser, url, init, viewport, o) {
   ok(p.errs.length === 0, "sin errores en telefono", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
   await browser.close();
-  console.log(`\n${pass} ok, ${fail} fallan`); if (fail) { console.log(failures.join("\n")); process.exit(1); }
+  console.log(`\n${pass} ok, ${fail} fallan`); if (fail) { console.log(failures.join("\n")); }
+  // pruebas extra por funcion (cada archivo es independiente, ver tools/lib-test.cjs): se corren al final y se suman al resultado
+  let extraFail = 0;
+  for (const f of ["test-empieza.cjs", "test-grabar.cjs", "test-teleprompter.cjs"]) {
+    const fp = path.join(__dirname, f); if (!fs.existsSync(fp)) continue;
+    console.log("\n== " + f + " =="); const r = require("node:child_process").spawnSync(process.execPath, [fp], { stdio: "inherit" }); if (r.status !== 0) extraFail++;
+  }
+  if (fail || extraFail) process.exit(1);
 })();
