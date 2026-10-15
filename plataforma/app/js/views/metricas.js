@@ -52,7 +52,13 @@
           ${best.length ? `<div class="besth"><span class="eyebrow">Mejores horas para publicar</span><div>${best.map(([h, v]) => `<span class="chip">${App.pad(h)}:00 · ${fmt(v)} vistas</span>`).join("")}</div></div>` : ""}
           ${S.brands.length > 1 && UI.scope === "total" ? `<div class="cmp"><span class="eyebrow">Por cuenta · 7 días</span>${S.brands.map((b) => { const e = sel.evoOf(b); return `<div class="cmprow"><i class="dot" style="--c:${esc(b.color || "var(--accent)")}"></i><b>${esc(b.name)}</b><span class="num">${e ? fmt(e.views) : "–"}</span><span class="muted">${e ? (e.net >= 0 ? "+" : "") + e.net + " seg." : ""}</span></div>`; }).join("")}</div>` : ""}</section></div>`;
     },
-    update(kinds) { return !(kinds.has("metrics") || kinds.has("evolution") || kinds.has("schedule") || kinds.has("videos")); },
+    // "home" tambien dispara un nuevo bind (y por lo tanto una nueva revisión de hitos): ahi vive home/trophies, y el baseline
+    // se escribe de forma asincrona -- la primera llamada a bind() puede correr antes de que esa escritura se asiente.
+    update(kinds) { return !(kinds.has("metrics") || kinds.has("evolution") || kinds.has("schedule") || kinds.has("videos") || kinds.has("home")); },
+    // Hitos (reemplaza a la antigua pestaña "Logros", DECISIONES.md #1): sin pantalla propia. Al abrir Métricas (y al abrir la
+    // app en Hoy, ver celebrate.js) se revisa si se cruzo un numero nuevo desde la ultima vez y, si es asi, se celebra con la
+    // misma transicion morph que el resto de la plataforma -- nunca una pantalla ni un panel aparte para "ver los logros".
+    bind() { App.trophies.ensureBaseline(App.trophies.all(App.trophies.cards())); App.celebrate.check(); },
   };
   const A = App.acts;
   A.mscope = (el) => { UI.scope = el.dataset.k; App.store.set("scope", UI.scope); App.render(true); };

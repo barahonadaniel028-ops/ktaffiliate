@@ -1,16 +1,17 @@
-/* Aura · rutas por hash. #hoy #crear #biblioteca[/tipo] #laboratorio[/pestana] #metricas #logros #notas
+/* Aura · rutas por hash. #hoy #crear #biblioteca[/tipo] #laboratorio[/pestana] #metricas #notas
    #estudio[/pestana] (antes "Aprobar": por-aprobar/agendados/rechazados) #estudio/ver/<videoId> #estudio/editor/<videoId> #ajustes
-   "aprobar" ya no es una pantalla propia (DECISIONES.md #2): un hash viejo #aprobar... entra a #estudio... en su lugar (ver LEGACY). */
+   "aprobar" ya no es una pantalla propia (DECISIONES.md #2): un hash viejo #aprobar... entra a #estudio... en su lugar (ver LEGACY).
+   "logros" tampoco (DECISIONES.md #1): los hitos viven dentro de Métricas, con una celebracion puntual al cruzar uno nuevo. */
 (function () {
   "use strict";
   const App = window.App;
   const NAV = [
     ["hoy", "Hoy", "home"], ["crear", "Crear", "plus"], ["biblioteca", "Biblioteca", "book"], ["laboratorio", "Laboratorio", "flask"],
-    ["metricas", "Métricas", "chart"], ["logros", "Logros", "trophy"], ["notas", "Notas", "note"], ["estudio", "Estudio", "film"],
+    ["metricas", "Métricas", "chart"], ["notas", "Notas", "note"], ["estudio", "Estudio", "film"],
   ];
   const ALL = NAV.map((n) => n[0]).concat(["ajustes"]);
   // nombres de pantalla que ya no existen por su cuenta: un hash con ese nombre entra a la pantalla que lo reemplaza.
-  const LEGACY = { aprobar: "estudio" };
+  const LEGACY = { aprobar: "estudio", logros: "metricas" };
   const parse = () => {
     const rawParts = (location.hash || "").replace(/^#\/?/, "").split("/").map(decodeURIComponent).filter(Boolean);
     const parts = LEGACY[rawParts[0]] ? [LEGACY[rawParts[0]], ...rawParts.slice(1)] : rawParts;

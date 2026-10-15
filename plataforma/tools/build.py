@@ -28,7 +28,7 @@ JS = ["core/util", "core/config", "core/state", "core/adapters/util", "core/adap
       "engine/studio-engine", "engine/dna", "engine/pred-data", "engine/pred",
       "domain/select", "domain/actions", "domain/library", "domain/trophies",
       "views/shell", "views/ai", "views/attach", "views/hoy", "views/jarvis", "views/aprobar-list", "views/aprobar-review", "views/crear", "views/crear-estilo", "views/crear-video", "views/biblioteca",
-      "views/laboratorio", "views/metricas", "views/logros", "views/celebrate", "views/notas-ajustes", "views/estudio-core", "views/estudio-panels",
+      "views/laboratorio", "views/metricas", "views/celebrate", "views/notas-ajustes", "views/estudio-core", "views/estudio-panels",
       "dev/fixtures", "dev/demo-video", "boot"]
 
 # video de demostracion embebido: MP4 (Safari y la mayoria) y WebM (navegadores sin H.264). Se elige con canPlayType.

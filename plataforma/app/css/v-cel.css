@@ -28,6 +28,3 @@
 .cel-wrap .veil { background: radial-gradient(60% 50% at 50% 42%, color-mix(in srgb, var(--apricot) 26%, transparent), transparent 70%), var(--veil); }
 @media (max-width: 820px) { .jv.cel { top: 50%; bottom: auto; left: 50%; width: min(440px, calc(100vw - 28px)); height: auto; max-height: 92dvh; border-radius: 38px; transform: translate(-50%, -50%); } .cel-hero { height: 196px; } }
 @media (prefers-reduced-motion: reduce) { .cel-blob, .cel-ring { animation: none !important; } .cel-slide { transition: opacity .2s; transform: none; filter: none; } }
-/* marca de logros nuevos en Hoy */
-.newchip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px 0 9px; border-radius: 13px; background: var(--apricot); color: #3b1606; font: 600 12.5px/1 var(--font); cursor: pointer; animation: newPulse 2.4s ease-in-out infinite; } .newchip .ic { width: 13px; height: 13px; }
-@keyframes newPulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--apricot) 60%, transparent); } 50% { box-shadow: 0 0 0 7px transparent; } }

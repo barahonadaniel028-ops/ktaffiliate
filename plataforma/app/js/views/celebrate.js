@@ -6,17 +6,23 @@
   const done = new Set(), NOCEL = /[?&]nocel\b/.test(location.search); // ?nocel=1 apaga el aviso automatico (para pruebas)
   let cur = null, timer = 0, prevTone = "base";
 
+  // Reconocimiento por el trabajo + una frase motivacional, ademas del dato en si (DECISIONES.md #1: la celebracion tiene que
+  // felicitar, no solo informar). Una de cada una, elegida de forma estable por hito para que no cambie si se vuelve a pintar.
+  const PRAISE = ["¡Buen trabajo!", "¡Así se hace!", "¡Excelente!", "¡Vas muy bien!", "¡Se nota el esfuerzo!"];
+  const MOTIVATE = ["Cada pieza que aprobás suma para la próxima marca.", "Lo que sembraste ya está dando resultado.", "El trabajo constante es el que mueve estos números.", "Seguí así: lo que viene va a ser todavía mejor.", "Las redes crecen con constancia, y la tuya se nota."];
+  const pick = (arr, seed) => arr[Math.abs(String(seed).split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % arr.length];
+
   const slideItem = (it) => {
     const col = T.TIERS[it.tier][1];
     return `<div class="cel-slide" style="--m:${col}"><div class="cel-hero"><i class="cel-blob b1"></i><i class="cel-blob b2"></i><i class="cel-blob b3"></i><i class="cel-ring"></i><i class="cel-ring r2"></i><span class="medal cel-medal" style="--m:${col}">${icon(it.def.icon)}</span></div>
-      <span class="eyebrow">${it.brand ? esc(it.brand) + " · " : ""}Logro nuevo</span>
-      <h2 class="cel-t">${esc(it.def.name)}</h2>
+      <span class="eyebrow">${it.brand ? esc(it.brand) + " · " : ""}Hito nuevo</span>
+      <h2 class="cel-t">${pick(PRAISE, it.id)} Llegaste a ${esc(it.line)}.</h2>
       <span class="cel-tier"><i></i>${esc(T.TIERS[it.tier][0])}</span>
-      <p class="cel-p">Llegaste a ${esc(it.line)}.${it.extra ? ` Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino.` : ""}</p>
+      <p class="cel-p">${it.extra ? `Y ${it.extra === 1 ? "uno más" : it.extra + " más"} en el camino. ` : ""}${pick(MOTIVATE, it.id + "m")}</p>
       <span class="cel-xp" data-xp="${it.xp}">+${it.xp} XP</span></div>`;
   };
   const slideLevel = (lv) => `<div class="cel-slide level" style="--m:#ffcf6e"><div class="cel-hero"><i class="cel-blob b1"></i><i class="cel-blob b2"></i><i class="cel-blob b3"></i><i class="cel-ring"></i><i class="cel-ring r2"></i><div class="lvbadge cel-badge"><b class="num" data-from="${lv.from}" data-to="${lv.to}">${lv.from}</b><small>NIVEL</small></div></div>
-      <span class="eyebrow">Subiste de nivel</span><h2 class="cel-t">Ahora eres nivel ${lv.to}</h2>
+      <span class="eyebrow">Subiste de nivel</span><h2 class="cel-t">${pick(PRAISE, lv.to)} Ahora eres nivel ${lv.to}.</h2>
       <span class="cel-tier"><i></i>${fmt(lv.xp)} XP en total</span>
       <div class="bar big cel-bar" style="--p:${Math.round(Math.min(1, Math.max(0, lv.ratio)) * 100)}%"><i></i></div>
       <p class="cel-p">Faltan ${fmt(lv.left)} XP para el nivel ${lv.to + 1}. Cada hito de tus redes suma.</p></div>`;
@@ -53,7 +59,7 @@
     if (!slides.length) return false;
     const wrap = ensureWrap(), panel = $("#cel", wrap), from = $$(".orb[data-orb]").find((o) => o.offsetParent) || null;
     $("#celslides", wrap).innerHTML = slides.join(""); $("#celdots", wrap).innerHTML = slides.map(() => "<i></i>").join(""); $("#celdots", wrap).hidden = slides.length < 2;
-    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more && !data.level) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} logros más en Logros.`); }
+    if (data.items.length > 5) { const more = $$(".cel-p", wrap).slice(-1)[0]; if (more && !data.level) more.insertAdjacentHTML("beforeend", ` Y ${data.items.length - 5} hitos más en Métricas.`); }
     cur = { data, i: 0, wrap, panel, from, real }; if (real) done.add(data.ids.slice().sort().join("|"));
     const a = App.aura.el(); prevTone = (a && a.dataset.tone) || "base"; App.aura.tone("gold"); App.aura.mood("focus", { x: innerWidth / 2, y: innerHeight * 0.42 });
     await App.morph.open(from, wrap, panel); if (cur) go(0);
@@ -65,12 +71,13 @@
     App.aura.mood(null); App.aura.tone(prevTone);
     await App.morph.close(c.from, c.wrap, c.panel);
   }
-  // se mira al entrar a Hoy o a Logros y cuando llegan datos nuevos estando ahi; en otras pantallas el riel avisa con una marca
+  // se mira al abrir la app (Hoy es la pantalla de entrada) o al entrar a Metricas, donde viven los hitos sin pantalla propia
+  // (DECISIONES.md #1); y cuando llegan datos nuevos estando ahi. En otras pantallas el riel avisa con una marca, sin interrumpir.
   function check() {
     if (NOCEL || cur || App.studioOpen || (App.jarvis && App.jarvis.isOpen())) return;
-    const r = App.route().name; if (r !== "hoy" && r !== "logros") return;
+    const r = App.route().name; if (r !== "hoy" && r !== "metricas") return;
     const f = T.fresh(); if (!f || done.has(f.ids.slice().sort().join("|"))) return;
-    clearTimeout(timer); timer = setTimeout(() => { const n = App.route().name; if (!cur && !App.studioOpen && (n === "hoy" || n === "logros") && !(App.jarvis && App.jarvis.isOpen())) show(); }, 1100);
+    clearTimeout(timer); timer = setTimeout(() => { const n = App.route().name; if (!cur && !App.studioOpen && (n === "hoy" || n === "metricas") && !(App.jarvis && App.jarvis.isOpen())) show(); }, 1100);
   }
   // para probar la animacion (modo demostracion): usa tus logros mas altos y una subida de nivel de mentira, sin marcar nada como visto
   function sample() {

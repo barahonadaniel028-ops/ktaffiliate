@@ -4,10 +4,11 @@
   "use strict";
   const App = window.App, S = App.S, UI = App.ui, sel = App.sel, { $, $$, esc, icon } = App;
   App.views = App.views || {}; App.acts = App.acts || {};
-  const MORE = ["biblioteca", "laboratorio", "metricas", "logros", "notas", "ajustes"];
+  const MORE = ["biblioteca", "laboratorio", "metricas", "notas", "ajustes"];
 
   const SHEEN = ".lg.card, .lg.piece, .lg.tr, .lg.xc, .lg.lib-card, .lg.ref, .lg.seed, .lg.xs, .lg.stat";
-  function counts() { return { estudio: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, logros: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
+  // el conteo de hitos nuevos (antes el badge de "Logros") marca ahora el item de nav de Métricas, donde viven los hitos -- DECISIONES.md #1
+  function counts() { return { estudio: App.sel.allPending().length, notas: sel.unsentCount(), crear: sel.activeRequests().length, metricas: App.trophies ? App.trophies.newIds(App.trophies.all(App.trophies.cards())).length : 0 }; }
   function railHtml() {
     const c = counts(), cur = App.route().name;
     const items = App.nav.map(([k, n, ic]) => `<a class="nv" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`).join("");
@@ -68,7 +69,7 @@
   App.float = (html) => { const f = $("#floating"); if (!f) return null; f.innerHTML = html || ""; return f.firstElementChild; };
 
   // ---------- nube de fondo: tono por seccion y animo (jarvis escuchando, pensando) ----------
-  const TONE = { hoy: "base", crear: "warm", biblioteca: "cool", laboratorio: "vivid", metricas: "cool", logros: "gold", notas: "base", estudio: "warm", ajustes: "base" };
+  const TONE = { hoy: "base", crear: "warm", biblioteca: "cool", laboratorio: "vivid", metricas: "cool", notas: "base", estudio: "warm", ajustes: "base" };
   App.aura = {
     el: () => $(".aura"),
     mood(m, at) { const a = $(".aura"); if (!a) return; if (m) a.dataset.mood = m; else delete a.dataset.mood; if (at) { a.style.setProperty("--gx", ((at.x / innerWidth - 0.5) * 30).toFixed(1) + "vmax"); a.style.setProperty("--gy", ((at.y / innerHeight - 0.5) * 30).toFixed(1) + "vmax"); } },

@@ -32,7 +32,7 @@
     const T = App.trophies, cs = T.cards(), lv = T.level(T.totalXp(cs));
     return JSON.stringify({ ahora: `${l.getUTCDate()} ${App.MONTHS[l.getUTCMonth()]} ${App.pad(l.getUTCHours())}:${App.pad(l.getUTCMinutes())}`, marcas,
       pendientes: sel.todoItems().map((t) => ({ id: t.id, urgencia: t.urgency, titulo: t.title, detalle: t.detail || "" })), notasAbiertas: S.notes.filter((n) => !sel.closedNote(n)).length, cambiosSinEnviar: sel.unsentCount(),
-      pedidosEnCurso: sel.activeRequests().length, biblioteca: App.lib.countByType(), logros: { nivel: lv.level, xp: lv.xp, proximos: T.all(cs).filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 3).map((x) => ({ logro: x.def.name, falta: x.next - x.value })) } });
+      pedidosEnCurso: sel.activeRequests().length, biblioteca: App.lib.countByType(), hitos: { nivel: lv.level, xp: lv.xp, proximos: T.all(cs).filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 3).map((x) => ({ hito: x.def.name, falta: x.next - x.value })) } });
   }
   const RULES = () => `Eres JARVIS, ${App.config.jarvis.persona}.
 Cómo hablas: español claro${App.config.voice === "vos" ? " con voseo" : ""}, frases cortas y directas, sin saludos largos ni relleno. Responde en 1 a 3 frases salvo que pidan detalle. Si hay varios pasos, una lista numerada corta.
@@ -49,14 +49,15 @@ Reglas:
     hits.forEach((v) => { const k = v.brand + "|" + v.piece; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(v); });
     return [...groups.values()];
   }
-  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"];
-  // "aprobar" ya no es una pantalla propia (se fusiono en Estudio, DECISIONES.md #2): un link, un tool call o una frase
-  // vieja que todavia diga "aprobar" sigue entrando, pero a Estudio -- no se rompe ni se recrea la pantalla vieja.
-  const LEGACY_VIEW = { aprobar: "estudio" };
+  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"];
+  // "aprobar" ya no es una pantalla propia (se fusiono en Estudio, DECISIONES.md #2) y "logros" tampoco (DECISIONES.md #1,
+  // los hitos viven en Metricas con celebracion puntual): un link, un tool call o una frase vieja que todavia los nombre
+  // sigue entrando, pero a la pantalla que los reemplaza -- no se rompen ni se recrean las pantallas viejas.
+  const LEGACY_VIEW = { aprobar: "estudio", logros: "metricas" };
   function tools() {
     const stat = (t) => { const s = $("#jvstat"); if (s) s.textContent = t; };
     return [
-      { name: "go_to", description: "Abre una pantalla. view = hoy, crear, biblioteca, laboratorio, metricas, logros, notas, estudio o ajustes ('estudio' es tambien donde se aprueba, agenda o rechaza). Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
+      { name: "go_to", description: "Abre una pantalla. view = hoy, crear, biblioteca, laboratorio, metricas, notas, estudio o ajustes ('estudio' es tambien donde se aprueba, agenda o rechaza; 'metricas' tambien muestra los hitos de redes). Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
         inputSchema: { type: "object", properties: { view: { type: "string" }, brand: { type: "string" } }, required: ["view"] },
         execute: ({ view, brand }) => { const raw = norm(view).replace(/^#/, ""), v = LEGACY_VIEW[raw] || raw; if (!ROUTES.includes(v)) throw new Error("pantalla desconocida: " + view); if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); stat("abriendo…"); setTimeout(() => nav("#" + v), 350); return "ok"; } },
       { name: "propose_approval", description: "Prepara aprobar TODAS las versiones por aprobar de UNA pieza. NO aprueba nada: muestra un botón de confirmación. piece = nombre o parte del nombre; brand opcional.",

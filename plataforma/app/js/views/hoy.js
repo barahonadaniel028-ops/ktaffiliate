@@ -42,12 +42,6 @@
     const li = items.map((t) => { const u = sel.URGENCY[t.urgency] || sel.URGENCY.week; return `<li><i class="dot" style="--c:${t.urgency === "now" ? "var(--down)" : t.urgency === "today" ? "var(--apricot)" : "var(--ink3)"}"></i><div><b>${esc(t.title)}</b>${t.detail ? `<span class="muted">${esc(t.detail)}</span>` : ""}</div><span class="acts">${t.link ? `<a class="btn sm" href="${esc(t.link)}">Ir</a>` : ""}${t.auto ? "" : `<button class="btn sm ghost" data-act="tododone" data-id="${esc(t.id)}">Hecho</button>`}</span></li>`; }).join("");
     return `<div class="card lg span2"><div class="ch">${icon("flag")}${App.say("Para vos", "Para ti")}<span class="sp"></span><span class="faint">${all.length > 3 ? `${all.length - 3} más` : ""}</span></div>${li ? `<ul class="todo">${li}</ul>` : `<div class="mini-empty"><p class="muted">Todo al día. Nada que requiera tu mano ahora.</p></div>`}</div>`;
   }
-  function trophyCard() {
-    const T = App.trophies, cs = T.cards(), all = T.all(cs), lv = T.level(T.totalXp(cs)), nw = T.newIds(all), nwSet = new Set(nw), near = all.filter((x) => x.next != null && x.value > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 5);
-    const shelf = near.map((x) => `<span title="${esc(x.def.name)}"><i class="medal ${x.ids.some((id) => nwSet.has(id)) ? "new" : ""}" style="--m:${x.tier >= 0 ? T.TIERS[x.tier][1] : "#9fb0ac"}">${icon(x.def.icon)}</i><small>${esc(x.def.name.split(" ")[0])}</small></span>`).join("");
-    const tag = nw.length ? `<span class="newchip" role="button" tabindex="0" data-act="celebrate" aria-label="Ver los logros nuevos">${icon("sparkles")}${nw.length} ${plural(nw.length, "nuevo", "nuevos")}</span>` : `<span class="faint">Nivel ${lv.level}</span>`;
-    return `<div class="card lg span2 tcard" role="button" tabindex="0" data-go="logros" aria-label="Logros, nivel ${lv.level}"><div class="ch">${icon("trophy")}Logros<span class="sp"></span>${tag}</div><div class="lvl"><div class="lvl-b"><b class="num">${lv.level}</b><small>nivel</small></div><div style="flex:1;min-width:0"><div class="bar" style="--p:${Math.round(Math.min(1, lv.ratio) * 100)}%"><i></i></div><p class="muted" style="margin-top:8px">${fmt(lv.xp)} XP · faltan ${fmt(lv.to - lv.xp)} para el nivel ${lv.level + 1}</p></div></div><div class="shelf">${shelf}</div></div>`;
-  }
   function labCard() {
     const r = S.expRounds.filter((x) => x.status !== "cerrada").sort((a, b) => String(b.created || "").localeCompare(String(a.created || "")))[0];
     if (!r) return `<a class="card lg" href="#laboratorio" data-go="laboratorio"><div class="ch">${icon("flask")}Laboratorio</div><div class="mini-empty"><p class="muted">Sin ronda abierta. ${App.say("Guardá", "Guarda")} referencias para armar la próxima.</p></div></a>`;
@@ -67,9 +61,9 @@
           <h1 class="h-xl" aria-live="polite">${ph.html}</h1>
           <div class="acts">${prim}${n ? `<a class="btn lg2" href="#crear" data-go="crear">${icon("plus")}Pedir un video</a>` : ""}<a class="btn lg2" href="#estudio" data-go="estudio">${icon("film")}Abrir el Estudio</a></div>
         </section>
-        <section class="cards rise">${trophyCard()}${analyticsCard()}${runwayCard()}${todoCard()}${approveCard()}${labCard()}${requestsCard()}</section></div>`;
+        <section class="cards rise">${analyticsCard()}${runwayCard()}${todoCard()}${approveCard()}${labCard()}${requestsCard()}</section></div>`;
     },
-    bind(root) { App.observeDemos(root); App.celebrate.check(); },
+    bind(root) { App.observeDemos(root); App.trophies.ensureBaseline(App.trophies.all(App.trophies.cards())); App.celebrate.check(); },
   };
   App.acts.tododone = async (el) => { el.disabled = true; await App.act.markTodoDone(el.dataset.id); App.toast("Hecho. Un pendiente menos."); };
 })();

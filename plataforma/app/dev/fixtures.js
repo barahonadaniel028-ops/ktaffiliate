@@ -119,9 +119,11 @@
   D.seed = build;
   // filas de Metricool para el adaptador de demostracion (cuando se pide actualizar)
   D.metricRows = (brand, evo) => { const s = build(App.config.id); const m = evo ? s.evolution : s.metrics; return (m[brand.blogId] || { rows: [] }).rows; };
-  // demo: deja casi todos los logros como vistos para celebrar solo dos nuevos
+  // demo: deja casi todos los hitos como vistos para celebrar solo dos nuevos. Pisa el baseline aunque ya exista uno (p. ej.
+  // el que arma App.trophies.ensureBaseline la primera vez que Hoy o Metricas montan, que puede ganarle la carrera a este
+  // timer de 900ms y dejar todo como "visto" sin nada que celebrar) -- es solo demostracion, nunca corre contra datos reales.
   D.seedTrophies = function () {
-    if (!window.App || !App.trophies || App.S.trophyDoc) return;
+    if (!window.App || !App.trophies) return;
     const T = App.trophies, cs = T.cards(), ids = T.all(cs).flatMap((c) => c.ids); if (!ids.length) return;
     const keep = ids.filter((i) => /^total:(streak|weekFollowers|best):/.test(i)).slice(-2), at = App.stamp();
     App.S.trophyDoc = { baseline: at, level: Math.max(1, T.level(T.totalXp(cs)).level - 1), seen: Object.fromEntries(ids.filter((i) => !keep.includes(i)).map((i) => [i, at])) }; App.data.set("home", "trophies", App.S.trophyDoc); App.emit("home");

@@ -28,9 +28,6 @@
 .todo li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--hair2); font-size: 14px; }
 .todo li:first-child { border-top: 0; } .todo li b { display: block; font-weight: 600; } .todo li span.muted { display: block; font-size: 13px; }
 .todo .acts { display: flex; gap: 6px; }
-.lvl { display: flex; align-items: center; gap: 18px; }
-.lvl-b { width: 64px; height: 64px; border-radius: 22px; display: grid; place-content: center; text-align: center; background: var(--solid); color: var(--on-solid); flex: none; } .lvl-b b { font: 400 28px/1 var(--font); letter-spacing: -.04em; } .lvl-b small { font-size: 10.5px; opacity: .7; }
-.shelf { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; } .shelf span { display: grid; justify-items: center; gap: 6px; font-size: 11.5px; color: var(--ink2); text-align: center; }
 .medal { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 34% 28%, #fff, var(--m) 42%, color-mix(in srgb, var(--m) 55%, #000)); box-shadow: 0 10px 20px -10px var(--m), inset 0 0 0 1px rgba(255,255,255,.5); flex: none; }
 .medal .ic { color: rgba(0,0,0,.55); width: 21px; height: 21px; }
 @media (max-width: 1280px) { .hoy { grid-template-columns: minmax(0, 1fr); } .talk { padding-left: 8px; } .talk h1 { max-width: 20ch; } }
@@ -48,9 +45,7 @@
 .rtiles { display: flex; gap: 6px; margin: 2px 0 4px; } .rtile { position: relative; width: 50px; height: 67px; border-radius: 14px; overflow: hidden; flex: none; box-shadow: 0 8px 18px -10px var(--shadow); } .rtile .xd { position: absolute; left: 0; top: 0; width: 126px; height: 168px; aspect-ratio: auto; transform: scale(.4); transform-origin: 0 0; border-radius: 0; }
 .rtile.v-keep { box-shadow: 0 0 0 2px var(--keep), 0 8px 18px -10px var(--shadow); } .rtile.v-maybe { box-shadow: 0 0 0 2px var(--maybe), 0 8px 18px -10px var(--shadow); } .rtile.v-drop { opacity: .5; }
 
-/* logros y analiticas: lo primero de Hoy */
-.tcard { cursor: pointer; transition: transform .3s var(--ease); } .tcard:hover { transform: translateY(-2px); } .tcard:focus-visible, .newchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.shelf .medal.new { animation: newPulse 2.4s ease-in-out infinite; box-shadow: 0 0 0 3px color-mix(in srgb, var(--apricot) 70%, transparent), 0 10px 20px -10px var(--m); }
+/* analiticas: lo primero de Hoy */
 .an .ch .faint { display: inline-flex; align-items: center; gap: 2px; } .an .ch .faint .ic { width: 13px; height: 13px; }
 .an-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 10px; }
 .an-s { display: grid; align-content: start; gap: 6px; min-width: 0; } .an-n { font-size: 12.5px; color: var(--ink3); }

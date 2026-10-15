@@ -16,7 +16,7 @@ async function nav(p, hash, ms) {
 }
 
 async function open(browser, url, init, viewport, o) {
-  if (!(o && o.cel)) url = url.replace("?", "?nocel=1&"); // el aviso automatico de logros solo se prueba en su seccion
+  if (!(o && o.cel)) url = url.replace("?", "?nocel=1&"); // el aviso automatico de hitos solo se prueba en su seccion
   const ctx = await browser.newContext({ viewport: viewport || { width: 1440, height: 900 } }); if (init) await ctx.addInitScript(init);
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(e.message)); page.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
   page.errs = errs; await page.goto(file + url, { waitUntil: "load" });
@@ -31,7 +31,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => App.S.videos.length > 20), "carga los videos de demostracion");
   ok(await p.evaluate(() => !!document.querySelector(".hoy h1") && document.querySelector(".hoy h1").textContent.length > 20), "Hoy muestra la frase del dia");
   ok(!(await p.evaluate(() => /ventas|comisi[oó]n|afiliad|\$\d/i.test(document.body.innerText))), "Hoy no menciona ventas ni dinero");
-  for (const r of ["crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) {
+  for (const r of ["crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"]) {
     await p.evaluate((h) => { location.hash = "#" + h; }, r); await p.waitForFunction((n) => !!document.querySelector(`.view[data-view="${n}"]`), r, { timeout: 5000 }).catch(() => {}); await wait(p, 250);
     ok(await p.evaluate((n) => !!document.querySelector(`.view[data-view="${n}"]`) && document.querySelector(".view").innerText.length > 40, r), "vista " + r + " dibuja contenido");
   }
@@ -165,15 +165,15 @@ async function open(browser, url, init, viewport, o) {
   await nav(p, "#biblioteca", 400);
   ok(await p.evaluate(() => document.querySelectorAll(".lib-card .xd-rcp").length >= 2), "los estilos del Laboratorio se ven en la Biblioteca");
 
-  console.log("\n== Metricas y Logros ==");
+  console.log("\n== Metricas (sin pantalla de Logros, los hitos viven aca: DECISIONES.md #1) ==");
   await nav(p, "#metricas", 450);
   ok(await p.evaluate(() => document.querySelectorAll(".stat").length === 4 && document.querySelectorAll(".top li").length >= 5), "metricas: tarjetas y mejores reels");
   await p.click('[data-act="mrange"][data-k="7"]'); await wait(p, 400); await p.click('[data-act="mscope"][data-k="kt-en"]'); await wait(p, 400);
   ok(await p.evaluate(() => /KT English/.test(document.querySelector(".vhead .eyebrow").textContent)), "filtra por cuenta");
   await p.click('[data-act="mscope"][data-k="total"]'); await wait(p, 300);
-  await nav(p, "#logros", 750);
-  ok(await p.evaluate(() => document.querySelectorAll(".tr").length >= 6 && !!document.querySelector(".lvlhero")), "logros: nivel y tarjetas");
-  ok(await p.evaluate(() => document.querySelectorAll(".tr.fresh").length >= 1), "hay logros nuevos para celebrar");
+  ok(!(await p.evaluate(() => !!document.querySelector('[data-nav="logros"]'))), "ya no hay un item de nav propio para Logros");
+  await p.evaluate(() => { location.hash = "#logros"; }); await wait(p, 400);
+  ok(await p.evaluate(() => App.route().name === "metricas"), "#logros (hash viejo) redirige a Metricas");
 
   console.log("\n== Estudio: editor completo ==");
   const ed = await p.evaluate(() => App.S.studioVersions.find((x) => x.spec).id);
@@ -329,19 +329,30 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => { const r = Object.values(window.__mock.data.studio_requests || {}).find((x) => x.text === "Usa esta foto de fondo"); return !!r && r.assets && r.assets.length === 1 && /^[0-9a-f]{32}$/.test(r.assets[0].id) && r.model === "claude-opus-5-5"; }), "el pedido del Estudio incluye el archivo adjunto y el modelo");
   ok(p.errs.length === 0, "sin errores con adjuntos", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
-  console.log("\n== Hoy: logros y analiticas, y la celebracion ==");
+  console.log("\n== Hoy y Metricas: hitos sin pantalla propia, y la celebracion (DECISIONES.md #1) ==");
   p = await open(browser, "?demo=1&preset=kt#notas", null, null, { cel: true }); await wait(p, 2400);
-  ok(await p.evaluate(() => !!document.querySelector('.nv[data-nav="logros"] b') && !App.celebrate.isOpen()), "el riel marca los logros nuevos sin interrumpir otra pantalla");
+  ok(await p.evaluate(() => !!document.querySelector('.nv[data-nav="metricas"] b') && !App.celebrate.isOpen()), "el riel marca los hitos nuevos en Métricas sin interrumpir otra pantalla");
   await nav(p, "#hoy", 300);
-  ok(await p.evaluate(() => { const c = document.querySelector(".cards").children; return c[0].classList.contains("tcard") && c[1].classList.contains("an"); }), "Hoy abre con Logros y Analiticas");
-  ok(await p.evaluate(() => document.querySelectorAll(".an-s").length === 4 && document.querySelectorAll(".an-s .spk svg").length >= 3 && !!document.querySelector(".tcard .newchip")), "las cuatro cifras de la semana con su curva y la marca de nuevos");
-  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await p.waitForSelector(".cel-slide[data-on] .cel-t", { timeout: 9000 }).catch(() => {}); await wait(p, 1500);
-  ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && +getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity > 0.9), "al entrar a Hoy se celebra el logro nuevo con la tarjeta de la gota");
+  ok(await p.evaluate(() => !document.querySelector(".tcard") && document.querySelector(".cards").children[0].classList.contains("an")), "Hoy ya no tiene una tarjeta de Logros: la primera es Analiticas");
+  ok(await p.evaluate(() => document.querySelectorAll(".an-s").length === 4 && document.querySelectorAll(".an-s .spk svg").length >= 3), "las cuatro cifras de la semana con su curva");
+  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 8000 }).catch(() => {}); await p.waitForSelector(".cel-slide[data-on] .cel-t", { timeout: 9000 }).catch(() => {}); await wait(p, 2200);
+  ok(await p.evaluate(() => App.celebrate.isOpen() && document.querySelectorAll(".cel-slide").length >= 2 && document.querySelector(".cel-slide[data-on] .cel-t").textContent.length > 3 && +getComputedStyle(document.querySelector(".cel-slide[data-on] .cel-t")).opacity > 0.9), "al entrar a Hoy se celebra el hito nuevo con la tarjeta de la gota");
+  ok(await p.evaluate(() => /¡|Buen trabajo|hace|Excelente|vas muy bien|esfuerzo/i.test(document.querySelector(".cel-slide[data-on] .cel-t").textContent)), "el titulo felicita, no solo informa el numero");
+  ok(await p.evaluate(() => document.querySelector(".cel-slide[data-on] .cel-p").textContent.length > 10), "hay una frase motivacional ademas del dato");
   ok(await p.evaluate(() => document.querySelectorAll(".cel-slide.level").length === 1 && /Nivel|nivel/.test(document.querySelector(".cel-slide.level").textContent)), "tambien celebra la subida de nivel");
   for (let i = 0; i < 6 && (await p.evaluate(() => App.celebrate.isOpen())); i++) { await p.click("#celnext"); await wait(p, 1500); }
   await wait(p, 1200);
-  ok(await p.evaluate(() => !App.celebrate.isOpen() && App.trophies.newIds(App.trophies.all(App.trophies.cards())).length === 0 && !document.querySelector('.nv[data-nav="logros"] b') && !document.querySelector(".tcard .newchip")), "al cerrar queda como visto y desaparecen las marcas");
-  ok(await p.evaluate(() => window.__auraLog.some((x) => (x[0] === "set" || x[0] === "update") && x[1] === "home" && x[2] === "trophies")), "guarda en la base cuales logros ya vio");
+  ok(await p.evaluate(() => App.route().name === "hoy"), "al cerrar vuelve a la pantalla desde la que se abrio");
+  ok(await p.evaluate(() => !App.celebrate.isOpen() && App.trophies.newIds(App.trophies.all(App.trophies.cards())).length === 0 && !document.querySelector('.nv[data-nav="metricas"] b')), "al cerrar queda como visto y desaparece la marca del riel");
+  ok(await p.evaluate(() => window.__auraLog.some((x) => (x[0] === "set" || x[0] === "update") && x[1] === "home" && x[2] === "trophies")), "guarda en la base cuales hitos ya vio");
+  ok(p.errs.length === 0, "sin errores en la celebracion desde Hoy", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
+  // entrar directo a Metricas (sin pasar por Hoy) tambien celebra: ahi es donde viven los hitos ahora, no solo en Hoy
+  p = await open(browser, "?demo=1&preset=kt#metricas", null, null, { cel: true });
+  await p.waitForFunction(() => App.celebrate.isOpen(), null, { timeout: 9000 }).catch(() => {}); await wait(p, 1500);
+  ok(await p.evaluate(() => App.celebrate.isOpen()), "entrar directo a Metricas tambien celebra un hito nuevo");
+  await p.keyboard.press("Escape"); await wait(p, 1200);
+  ok(await p.evaluate(() => !App.celebrate.isOpen() && App.route().name === "metricas"), "Esc la cierra y queda en Metricas");
   await nav(p, "#ajustes", 400); await p.click('[data-act="celebratetest"]'); await wait(p, 2800);
   ok(await p.evaluate(() => App.celebrate.isOpen()), "Ajustes permite probar la animacion en modo demostracion");
   await p.keyboard.press("Escape"); await wait(p, 1500);
@@ -354,7 +365,7 @@ async function open(browser, url, init, viewport, o) {
   ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Hoy no tiene scroll horizontal");
   // el contenedor principal recorta el desborde (overflow-x: clip), asi que ademas del scroll se revisa que nada visible se salga de la pantalla
   const spill = () => document.querySelector("#main") && [...document.querySelectorAll("#main *")].filter((e) => { const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || r.right <= innerWidth + 2) return false; for (let a = e.parentElement; a && a.id !== "main"; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return false; } return getComputedStyle(e).position !== "fixed"; }).slice(0, 3).map((e) => e.tagName.toLowerCase() + "." + String(e.className).split(" ").slice(0, 2).join(".")).join(" | ");
-  for (const r of ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "logros", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
+  for (const r of ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
   await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#estudio/ver/" + encodeURIComponent(v.id); }); await wait(p, 1200);
   ok(await p.evaluate(() => { const b = document.querySelector("#rvdecide").getBoundingClientRect(); return b.bottom <= innerHeight && b.top > 300; }), "la capsula de decision queda visible sobre la barra");
   ok(p.errs.length === 0, "sin errores en telefono", p.errs.slice(0, 3).join(" || ")); await p.context().close();
