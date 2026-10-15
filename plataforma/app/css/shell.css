@@ -106,6 +106,8 @@ body.in-editor .jv-fab { right: 22px; bottom: 300px; }
 #aura-root .grain { transition: opacity .5s var(--ease), visibility 0s; }
 #aura-root.mo-v .grain { opacity: 0; visibility: hidden; transition: opacity .2s var(--ease), visibility 0s .2s; }
 .jv-wrap.in .veil { opacity: 1; }
+/* al cerrar el velo se va con la sustancia que se junta, no de golpe: si la pantalla de colores aparece antes, el cuerpo se ve como una sabana blanca encima */
+.jv-wrap.open:not(.in) .veil { transition: opacity .42s cubic-bezier(.45,0,.55,1) .08s; }
 .jv { position: absolute; left: 50%; top: 11vh; width: min(720px, calc(100vw - 32px)); max-height: 78vh; border-radius: 40px; padding: 0; display: flex; flex-direction: column; overflow: hidden; opacity: 0; transform: translateX(-50%); box-shadow: inset 0 1px 0 var(--edge), 0 60px 120px -40px var(--shadow), 0 0 0 1px var(--edge2); }
 .jv .inner { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 /* el contenido sube escalonado cuando el cuerpo liquido le deja lugar: --jv-d lo pone motion.js (open) sobre el mismo reloj que el derrame */

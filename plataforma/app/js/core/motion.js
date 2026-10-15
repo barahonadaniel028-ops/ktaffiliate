@@ -126,7 +126,7 @@
     // transparentarla, por el umbral de alfa)
     const op = [[0, 1]];
     if (delay && o.fadeIn) op.splice(0, 1, [0, 0], [delay - o.fadeIn, 0], [delay, 1]);
-    if (o.spread) op.push([plan.touch + 30, 1], [plan.touch + 150, 0]);
+    if (o.spread) op.push([plan.touch, 1], [plan.touch + 80, 0]);
     const opEnd = Math.max(plan.end, op[op.length - 1][0]);
     goo.animate(keysAt(opEnd, op, "opacity"), { duration: opEnd, fill: "both" });
     if (o.onLand) setTimeout(() => { if (!(o.stale && o.stale())) o.onLand(); }, plan.touch);
@@ -213,7 +213,7 @@
     r0 = r0 || 20;
     // dos resortes desfasados: primero se abre a lo ancho (sigue al aplaste del aterrizaje), despues baja; con rebote, que es el liquido
     const D = ms, N = Math.max(18, Math.min(48, Math.round(D / 14)));
-    const sx = springFn(D, splash ? 0.78 : 0.6, 0.76, 0), sy = springFn(D, splash ? 0.8 : 0.68, 0.84, 0.05);
+    const sx = springFn(D, splash ? 0.78 : 0.6, 0.76, 0), sy = springFn(D, splash ? 0.8 : 0.66, 0.82, 0.03);
     const S = [], P = [], cx0 = rect0.w / 2, cy0 = rect0.h / 2, plx = at.x - rect0.x, ply = at.y - rect0.y;
     for (let i = 0; i <= N; i++) {
       const t = (i / N) * D, u = i / N, ax = sx(t), ay = sy(t);
@@ -232,7 +232,7 @@
     // la tinta del orbe: la gota de color queda un instante (la del vuelo se funde encima) y se diluye en el cuerpo
     const glow = mkInk(B.g, lx, ly, r0, GLOW_BG), ink = mkInk(B.g, lx, ly, r0, ORB_BG), gk = Math.max(2, (0.5 * Math.min(rect0.w, rect0.h, innerHeight)) / r0);
     glow.animate([{ transform: "scale(1)", opacity: 0.9 }, { transform: `scale(${gk.toFixed(2)})`, opacity: 0 }], { duration: D * 0.7, delay, easing: OUT, fill: "both" });
-    ink.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(2.5)", opacity: 0 }], { duration: Math.min(320, D * 0.5), delay, easing: "cubic-bezier(.2,.6,.35,1)", fill: "both" });
+    ink.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(1.45)", opacity: 0 }], { duration: Math.min(240, D * 0.4), delay, easing: "cubic-bezier(.2,.6,.35,1)", fill: "both" }); // se funde, no crece como otra bola
     // el cuerpo aparece cuando la gota toca y se desvanece cuando el panel ya esta debajo; el contenido llega mientras la forma se asienta
     // (no despues: un panel en blanco quieto entre la forma y el contenido se lee como un corte)
     const total = delay + D, peak = splash ? o.peak || 0.72 : 1, fA = splash ? 0.3 : 0.4, fB = splash ? 0.96 : 0.8;
@@ -286,7 +286,7 @@
     const gA = B.g.animate(keysAt(total, pts, "opacity"), { duration: total, fill: "both" });
     // el target se apaga DEBAJO del cuerpo (que ya lo tapa): el estado final queda inline, sin fill forwards (ver resetJv)
     target.style.opacity = "0";
-    if (fade && vis > 0.02) target.animate([{ opacity: vis }, { opacity: vis, offset: 0.55 }, { opacity: 0 }], { duration: fade });
+    if (fade && vis > 0.02) target.animate([{ opacity: vis }, { opacity: vis, offset: 0.92 }, { opacity: 0 }], { duration: fade }); // se apaga recien cuando el cuerpo ya lo tapa entero (si no, un cuadro "fantasma" translucido)
     if (o.handoff) setTimeout(() => B.g.remove(), total + 60);
     else { if (parked) { clearTimeout(parked.tm); parked.g.remove(); } const p = { g: B.g, at, r: rE }; p.tm = setTimeout(() => { if (parked === p) parked = null; B.g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }); setTimeout(() => B.g.remove(), 220); }, end + 900); parked = p; }
     return plan(settled(gA), end);
@@ -359,9 +359,10 @@
     const land = () => { if (landed || !live(t)) return; landed = true; wrap.classList.remove("in"); if (o.onLand) o.onLand(); };
     if (App.reduceMotion()) { await wilt(panel, null, 0, { cover: vis }); if (!live(t)) return; land(); resetJv(panel); wrap.classList.remove("open"); lite("jv", false); return; }
     const r = rectOf(panel), from = { x: r.x + r.w / 2, y: r.y + Math.min(r.h * 0.42, 150) };
-    const W = wilt(panel, from, 300, { r: 26, handoff: true, cover: vis });
-    const F = flight(from, to, { size: 52, endSize: 104, ms: o.ms || 540, delay: Math.max(0, W.end - 40), fadeIn: 110, keep: true, spread: true, stale: () => !live(t), onLand: land });
-    const B = bloom(null, to, o.bloomMs || 700, { delay: F.touch, rect: o.rect || { x: 0, y: 0, w: innerWidth, h: innerHeight }, splash: true, r0: 52, radius: 44 });
+    const W = wilt(panel, from, 280, { r: 26, handoff: true, cover: vis });
+    // un salto corto es rapido: la duracion sigue a la distancia (el mismo vuelo, no un vuelo lento de pocos pixeles)
+    const F = flight(from, to, { size: 52, endSize: 104, ms: o.ms || Math.max(380, Math.min(620, 300 + Math.hypot(to.x - from.x, to.y - from.y) * 0.5)), delay: Math.max(0, W.end - 40), fadeIn: 110, keep: true, spread: true, stale: () => !live(t), onLand: land });
+    const B = bloom(null, to, o.bloomMs || 640, { delay: F.touch, rect: o.rect || { x: 0, y: 0, w: innerWidth, h: innerHeight }, splash: true, r0: 52, radius: 44 });
     await B; if (!live(t)) return;
     land(); resetJv(panel); wrap.classList.remove("open");
     setTimeout(() => { if (live(t)) lite("jv", false); }, 120);
