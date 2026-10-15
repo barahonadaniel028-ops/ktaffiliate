@@ -25,7 +25,8 @@ npm install                                   # solo trae playwright-core, para 
 1. `DECISIONES.md` — historial de cada pedido de Daniel, con sus palabras, qué estado tiene y **qué NO recrear** (la pestaña Logros, la pestaña Aprobar, el Crear de dos modos, la bandeja de Notas…). Entradas 1-10 = primera ronda, 11-16 = segunda.
 2. `MASTER-PROMPT.md` — la especificación completa y al día (el "qué es Aura").
 3. `ENTREGA-A-CLAUDE.md` y `CONTRATO-DE-DATOS.md` — cómo se conecta a datos reales (base del artefacto, Metricool).
-4. `MASTER-PLAN.md` — el plan por fases de la v1 (ojo: menciona cosas que ya se eliminaron; manda `DECISIONES.md`).
+4. `PASAR-A-WEB.md` — cómo llevar Aura a un sitio web real fuera de claude.ai (qué ya funciona, qué hay que construir en el backend y en qué orden).
+5. `MASTER-PLAN.md` — el plan por fases de la v1 (ojo: menciona cosas que ya se eliminaron; manda `DECISIONES.md`).
 
 ## Armar, probar y ver
 
