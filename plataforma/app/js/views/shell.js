@@ -16,10 +16,46 @@
   function topHtml() {
     const b = sel.brand(), night = App.theme.effective() === "night", cs = S.claudeState;
     const claude = cs === "available" ? ["available", "Claude conectado"] : S.mode === "demo" ? ["demo", "Demo"] : ["off", cs === "no_session" ? "Claude sin sesión" : "Sin aviso a Claude"];
-    return `<div class="ws lg"><span class="mono">${esc(App.config.short)}</span><label class="sr" for="brandsel">Cuenta</label><select id="brandsel" data-change="brand">${S.brands.map((x) => `<option value="${esc(x.id)}" ${x.id === b.id ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></div>
+    return `<div class="ws lg"><span class="mono">${esc(App.config.short)}</span>${brandBtnHtml(b)}</div>
       <button class="ask lg" type="button" data-act="jarvis" aria-label="Hablar con Jarvis"><span class="orb" data-orb></span><span class="ph">${esc(App.say("Preguntale a Jarvis o andá a…", "Pregunta a Jarvis o ve a…"))}</span><kbd>⌘K</kbd></button>
       <div class="r"><span class="cdot" data-s="${claude[0]}" title="${esc(claude[1])}">${esc(claude[1])}</span><button class="iconbtn" type="button" data-act="theme" aria-label="${night ? "Cambiar a día" : "Cambiar a noche"}">${icon(night ? "sun" : "moon")}</button><span class="av" title="${esc(App.config.owner)}">${esc(App.config.owner.slice(0, 1))}</span></div>`;
   }
+
+  // ---------- selector de cuenta: menu propio (mismo lenguaje que el selector de modelo de App.ai: boton + menu flotante con los mismos
+  // tokens/vidrio/sombras), no el <select> nativo (ese mostraba el estilo del sistema operativo al abrirse -- DECISIONES.md #6). ----------
+  function brandBtnHtml(b) {
+    return `<button class="brandbtn" type="button" id="brandbtn" data-act="brandmenu" aria-haspopup="menu" aria-expanded="false" aria-label="Cuenta: ${esc(b.name)}" title="Cambiar de cuenta"><i class="bdot" style="--c:${esc(b.color || "var(--accent)")}" aria-hidden="true"></i><span class="bname">${esc(b.name)}</span>${icon("chevdown")}</button>`;
+  }
+  let brandMenu = null, brandOff = [];
+  function closeBrandMenu() {
+    if (!brandMenu) return; const m = brandMenu, btn = $("#brandbtn"); brandMenu = null; brandOff.forEach((f) => f()); brandOff = [];
+    if (btn) { btn.setAttribute("aria-expanded", "false"); try { btn.focus({ preventScroll: true }); } catch (e) { /* sin foco */ } }
+    if (App.reduceMotion() || !m.animate) { m.remove(); return; }
+    m.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.94)" }], { duration: 140, easing: "ease-in", fill: "forwards" }).finished.then(() => m.remove(), () => m.remove());
+  }
+  function openBrandMenu(btn) {
+    if (brandMenu) { closeBrandMenu(); return; }
+    const cur = sel.brand(), el = document.createElement("div");
+    el.className = "brandmenu lg solid-glass"; el.setAttribute("role", "menu"); el.setAttribute("aria-label", "Cuenta");
+    el.innerHTML = S.brands.map((x) => `<button type="button" role="menuitemradio" class="bm-i" aria-checked="${x.id === cur.id}" data-id="${esc(x.id)}"><i class="bdot" style="--c:${esc(x.color || "var(--accent)")}" aria-hidden="true"></i><span>${esc(x.name)}</span>${icon("check")}</button>`).join("");
+    (document.querySelector(".aura-app") || document.body).appendChild(el);
+    const r = btn.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, below = innerHeight - r.bottom, up = r.top > below && below < h + 14;
+    const left = Math.max(10, Math.min(innerWidth - w - 10, r.left)), top = up ? Math.max(10, r.top - h - 10) : Math.min(innerHeight - h - 10, r.bottom + 10);
+    el.style.left = left + "px"; el.style.top = top + "px"; el.style.transformOrigin = `${Math.round(r.left + r.width / 2 - left)}px ${up ? h : 0}px`;
+    brandMenu = el; btn.setAttribute("aria-expanded", "true");
+    const on = el.querySelector('[aria-checked="true"]'); if (on) on.focus({ preventScroll: true });
+    el.addEventListener("click", (e) => { const b = e.target.closest("[data-id]"); if (!b) return; if (b.dataset.id !== cur.id) sel.setBrand(b.dataset.id); closeBrandMenu(); });
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { e.stopPropagation(); closeBrandMenu(); return; }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") { const items = $$(".bm-i", el), i = items.indexOf(document.activeElement); if (i >= 0) { e.preventDefault(); items[(i + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus(); } }
+    });
+    const out = (e) => { if (brandMenu && !brandMenu.contains(e.target) && !btn.contains(e.target)) closeBrandMenu(); };
+    setTimeout(() => document.addEventListener("pointerdown", out, true), 0); brandOff.push(() => document.removeEventListener("pointerdown", out, true));
+    const esc2 = (e) => { if (e.key === "Escape" && brandMenu) { e.stopPropagation(); closeBrandMenu(); } };
+    document.addEventListener("keydown", esc2, true); brandOff.push(() => document.removeEventListener("keydown", esc2, true));
+    window.addEventListener("resize", closeBrandMenu, { once: true });
+  }
+  App.acts.brandmenu = (el) => openBrandMenu(el);
   function tabHtml() {
     const c = counts(), cur = App.route().name, tb = (k, n, ic) => `<a class="tb" href="#${k}" data-nav="${k}" ${cur === k ? 'aria-current="page"' : ""}>${icon(ic)}<span>${n}</span>${c[k] ? `<b>${c[k]}</b>` : ""}</a>`;
     return `${tb("hoy", "Hoy", "home")}${tb("estudio", "Estudio", "film")}<button class="orb" type="button" data-orb data-act="jarvis" aria-label="Hablar con Jarvis"></button>${tb("crear", "Crear", "plus")}<button class="tb" type="button" data-act="more" ${MORE.includes(cur) ? 'aria-current="page"' : ""}>${icon("more")}<span>Más</span></button>`;
@@ -109,7 +145,7 @@
     document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[role=button][data-act], [role=radio][data-act], [role=button][data-go]")) { e.preventDefault(); e.target.click(); } });
     document.addEventListener("change", (e) => {
       const t = e.target.closest("[data-change]"); if (!t) return;
-      if (t.dataset.change === "brand") sel.setBrand(t.value); else if (App.acts[t.dataset.change]) App.acts[t.dataset.change](t, e);
+      if (App.acts[t.dataset.change]) App.acts[t.dataset.change](t, e);
     });
     document.addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); App.jarvis.toggle(); return; }
