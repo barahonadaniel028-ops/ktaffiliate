@@ -549,6 +549,7 @@ body:has(#jvwrap.open) .jv-fab { opacity: 0; pointer-events: none; transition: o
 .ver .rk { position: absolute; left: 8px; bottom: 8px; min-width: 34px; height: 26px; padding: 0 9px; border-radius: 13px; display: grid; place-items: center; background: rgba(255,255,255,.92); color: var(--c); font: 700 13px/1 var(--font); }
 .ver .vn { position: absolute; right: 8px; bottom: 8px; height: 22px; padding: 0 8px; border-radius: 11px; background: rgba(13,27,29,.75); color: #fff; font: 600 11.5px/22px var(--font); }
 .ver .pick { position: absolute; z-index: 2; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,255,255,.85); color: transparent; box-shadow: 0 4px 10px -4px rgba(0,0,0,.4); transition: background .2s, color .2s, transform .2s var(--ease); }
+.ver .pick::after { content: ""; position: absolute; inset: -9px; } /* zona de toque de 46 px sin agrandar el circulo */
 .ver .pick:hover { transform: scale(1.1); } .ver .pick[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); }
 .ver .pick .ic { width: 16px; height: 16px; stroke-width: 2.6; }
 .ver.on .vlink { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -643,7 +644,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
    flotante/modal (.jv ahi es position:absolute dentro de #jvwrap) para que viva normal dentro de la columna
    de contenido. Todo lo nuevo (caminos, categorias de material, galeria de estilos) vive acá. */
 .crear-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
-.crear-cloud.jv { position: relative; left: auto; top: auto; transform: none; opacity: 1; width: 100%; max-width: 760px; max-height: none; overflow: visible; isolation: isolate; border-radius: 52px 60px 48px 56px / 56px 48px 60px 52px;
+.crear-cloud.jv { position: relative; left: auto; top: auto; bottom: auto; height: auto; transform: none; opacity: 1; width: 100%; max-width: 760px; max-height: none; overflow: visible; isolation: isolate; border-radius: 52px 60px 48px 56px / 56px 48px 60px 52px;
   box-shadow: inset 0 1px 0 var(--edge), 0 40px 90px -36px var(--shadow), 0 0 0 1px var(--edge2); animation: crFloat 11s ease-in-out infinite, crShape 17s ease-in-out infinite; }
 .crear-cloud .inner { position: relative; z-index: 1; padding-bottom: 6px; }
 .crear-cloud.jv:hover, .crear-cloud.jv:focus-within { animation-play-state: paused, running; } /* el cuerpo se queda quieto cuando vas a tocar algo; el contorno sigue vivo */
@@ -676,7 +677,7 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .crear-cloud.hero .jh { flex-direction: column; align-items: center; text-align: center; gap: 10px; padding-top: 34px; }
 .crear-cloud.hero .jh .orb { width: 92px; height: 92px; box-shadow: inset 0 -12px 24px rgba(13,60,62,.32), inset 0 6px 16px rgba(255,255,255,.5), 0 22px 40px -14px rgba(15,107,108,.55); }
 .crear-cloud.hero .jh .sp { display: none; } .crear-cloud.hero .jh .nm small { display: none; }
-.crear-cloud.hero .log { justify-items: center; padding-bottom: 6px; }
+.crear-cloud.hero .log { justify-items: center; padding-bottom: 6px; min-height: 0; }
 .crear-cloud.hero .log .msg.ai { max-width: 100%; background: none; box-shadow: none; padding: 0 8px; text-align: center; font-size: clamp(28px, 4.6vw, 40px); font-weight: 300; line-height: 1.15; letter-spacing: -.025em; }
 .crear-cloud.hero .cbody { padding-top: 10px; }
 @media (prefers-reduced-motion: reduce) { .crear-cloud.jv, .crear-cloud.jv.hero, .crliq i, .crear-cloud.arr-in .inner > * { animation: none !important; } }
@@ -697,6 +698,15 @@ body.in-review .sendbar { bottom: 112px; } body.in-review .sendlist { bottom: 16
 .crear-path .ic { width: 26px; height: 26px; color: var(--accent); }
 .crear-path b { font-weight: 600; font-size: 15.5px; } .crear-path span { font-size: 13px; color: var(--ink2); line-height: 1.35; }
 @media (max-width: 640px) { .crear-paths, .crear-paths.v3 { grid-template-columns: minmax(0, 1fr); } }
+/* en el telefono la gota de la raiz se queda compacta: las dos opciones lado a lado, sin la descripcion (el titulo basta) */
+@media (max-width: 640px) {
+  .crear-cloud.hero .jh { padding-top: 26px; } .crear-cloud.hero .jh .orb { width: 76px; height: 76px; }
+  .crear-cloud.hero .cbody { padding: 4px 22px 44px; }
+  .crear-cloud.hero .crear-paths { flex-wrap: nowrap; gap: 8px; }
+  .crear-cloud.hero .crear-path { flex: 1 1 0; min-width: 0; padding: 14px 12px; border-radius: 22px; }
+  .crear-cloud.hero .crear-path span { display: none; }
+  .crear-cloud.hero .crear-path b { font-size: 14px; }
+}
 
 /* ---- formatos aparte (Long form / Long form a short form), arriba de la biblioteca de estilos ---- */
 .crfmt { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink2); }

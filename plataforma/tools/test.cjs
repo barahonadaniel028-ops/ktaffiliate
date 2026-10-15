@@ -1,6 +1,6 @@
 // Pruebas de interaccion de Aura (Playwright). Verifica aprobar, notas, subir archivos, Estudio, Jarvis, tema, rutas y el adaptador "claude" con un simulador.
 // Uso: NODE_PATH=$(npm root -g) node plataforma/tools/test.cjs   (antes: python3 plataforma/tools/build.py --local <vendor>)
-const { chromium } = require("playwright");
+let chromium; try { ({ chromium } = require("playwright")); } catch (e) { ({ chromium } = require("playwright-core")); } // sirve con `playwright` global o con el playwright-core de package.json
 const path = require("node:path"), fs = require("node:fs");
 const root = path.resolve(__dirname, ".."), file = "file://" + path.join(root, "dist", "index.local.html");
 const mockSrc = fs.readFileSync(path.join(root, "app", "js", "core", "adapters", "simulador.js"), "utf8");
@@ -422,6 +422,11 @@ async function open(browser, url, init, viewport, o) {
   // el contenedor principal recorta el desborde (overflow-x: clip), asi que ademas del scroll se revisa que nada visible se salga de la pantalla
   const spill = () => document.querySelector("#main") && [...document.querySelectorAll("#main *")].filter((e) => { const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || r.right <= innerWidth + 2) return false; for (let a = e.parentElement; a && a.id !== "main"; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if (o === "auto" || o === "scroll" || o === "hidden" || o === "clip") return false; } return getComputedStyle(e).position !== "fixed"; }).slice(0, 3).map((e) => e.tagName.toLowerCase() + "." + String(e.className).split(" ").slice(0, 2).join(".")).join(" | ");
   for (const r of ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"]) { await nav(p, "#" + r, 500); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), r + " sin scroll horizontal", String(await p.evaluate(() => document.documentElement.scrollWidth))); const sp = await p.evaluate(spill); ok(!sp, r + " no se sale de la pantalla", sp); }
+  // la nube de Crear y de Notas en telefono: compactas (no una hoja de pantalla completa) y con las dos opciones lado a lado
+  await nav(p, "#crear", 2400);
+  ok(await p.evaluate(() => { const c = document.querySelector(".crear-cloud").getBoundingClientRect(), a = [...document.querySelectorAll(".crear-cloud .crear-path")].map((e) => e.getBoundingClientRect()); return c.height < innerHeight * 0.6 && a.length === 2 && Math.abs(a[0].top - a[1].top) < 4; }), "en telefono la gota de Crear es compacta y las dos opciones van lado a lado");
+  await nav(p, "#notas", 2400);
+  ok(await p.evaluate(() => { const c = document.querySelector("#ntcloud").getBoundingClientRect(), f = document.querySelector("#ntform").getBoundingClientRect(); return c.left >= -1 && c.right <= innerWidth + 1 && f.left >= c.left && f.right <= c.right && f.height >= 44; }), "en telefono Notas cabe en la pantalla y el campo queda dentro de la nube");
   await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#estudio/ver/" + encodeURIComponent(v.id); }); await wait(p, 1200);
   ok(await p.evaluate(() => { const b = document.querySelector("#rvdecide").getBoundingClientRect(); return b.bottom <= innerHeight && b.top > 300; }), "la capsula de decision queda visible sobre la barra");
   ok(p.errs.length === 0, "sin errores en telefono", p.errs.slice(0, 3).join(" || ")); await p.context().close();

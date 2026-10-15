@@ -10,6 +10,7 @@
 .ver .rk { position: absolute; left: 8px; bottom: 8px; min-width: 34px; height: 26px; padding: 0 9px; border-radius: 13px; display: grid; place-items: center; background: rgba(255,255,255,.92); color: var(--c); font: 700 13px/1 var(--font); }
 .ver .vn { position: absolute; right: 8px; bottom: 8px; height: 22px; padding: 0 8px; border-radius: 11px; background: rgba(13,27,29,.75); color: #fff; font: 600 11.5px/22px var(--font); }
 .ver .pick { position: absolute; z-index: 2; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,255,255,.85); color: transparent; box-shadow: 0 4px 10px -4px rgba(0,0,0,.4); transition: background .2s, color .2s, transform .2s var(--ease); }
+.ver .pick::after { content: ""; position: absolute; inset: -9px; } /* zona de toque de 46 px sin agrandar el circulo */
 .ver .pick:hover { transform: scale(1.1); } .ver .pick[aria-pressed="true"] { background: var(--solid); color: var(--on-solid); }
 .ver .pick .ic { width: 16px; height: 16px; stroke-width: 2.6; }
 .ver.on .vlink { outline: 3px solid var(--accent); outline-offset: 2px; }
