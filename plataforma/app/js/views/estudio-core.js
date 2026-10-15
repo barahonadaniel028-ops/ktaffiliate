@@ -39,9 +39,20 @@
   // Click en una version -> vista general (App.reviewView, de aprobar-review.js): predictor, subtitulos, Jarvis opina, aprobar/rechazar/agendar.
   // Desde ahi, "Abrir en editor" -> #estudio/editor/<id> abre el editor completo (ST.open, mas abajo). El editor nunca es la pantalla de entrada.
   const GENERAL = new Set(["ver", "editor"]); // sub-rutas que muestran la vista general (App.reviewView) debajo (el editor se abre encima, superpuesto)
+  // "Probar en el Estudio" desde Biblioteca guardaba App.ui.libTry pero nada lo leia: el boton no hacia nada mas que mandar
+  // al listado general, perdiendo que estilo se queria probar (DECISIONES.md #7, bug real en Biblioteca). Ahora el listado
+  // avisa que se esta probando y donde encontrarlo en el editor (la herramienta que corresponde a su tipo).
+  const LIB_TOOL = { estilos: "Estilos", transiciones: "Transiciones", textos: "Texto", fondos: "Fondos", subtitulos: "Subtítulos", sonidos: "Sonido" };
+  function libTryBanner() {
+    const id = App.ui.libTry; if (!id) return "";
+    const it = App.lib.catalog().find((x) => x.id === id); if (!it) { App.ui.libTry = null; return ""; }
+    const tool = LIB_TOOL[it.type];
+    return `<div class="card lg" style="margin-bottom:18px"><div class="ch">${icon("sparkles")}Probando «${esc(it.name)}»<span class="sp"></span><button class="iconbtn sm ghost" type="button" data-act="libtrydismiss" aria-label="Cancelar">${icon("x")}</button></div><p class="muted">${App.say("Elegí una pieza, abrila con", "Elige una pieza, ábrela con")} «Abrir en editor»${tool ? ` ${App.say("y buscalo", "y búscalo")} en la herramienta ${tool}` : ""}.</p></div>`;
+  }
+  App.acts.libtrydismiss = () => { App.ui.libTry = null; App.render(true); };
   App.views.estudio = {
     title: "Estudio", wide: true,
-    render(r) { return GENERAL.has(r.args[0]) ? App.reviewView.render(r) : (App.reviewView.teardown(), App.listView.render(r)); },
+    render(r) { if (GENERAL.has(r.args[0])) { App.ui.libTry = null; return App.reviewView.render(r); } App.reviewView.teardown(); return libTryBanner() + App.listView.render(r); },
     bind(root, r) { return GENERAL.has(r.args[0]) ? App.reviewView.bind(root, r) : App.listView.bind(root, r); },
     routeChanged(r) { return App.reviewView.routeChanged(r); },
     update(kinds) { return GENERAL.has(App.route().args[0]) ? App.reviewView.update(kinds) : false; },
