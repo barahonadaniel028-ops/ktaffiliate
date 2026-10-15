@@ -2,6 +2,7 @@
 Uso:
   python3 plataforma/tools/build.py                 -> dist/index.html (autonomo, CDN) y dist/artifact.html (fragmento para artefacto)
   python3 plataforma/tools/build.py --local VENDOR   -> dist/index.html con fuentes y GSAP locales (pruebas sin internet)
+  python3 plataforma/tools/build.py --demo           -> ademas dist/preview.html: fragmento de artefacto que arranca siempre en modo demostracion (vista previa privada)
 El bloque oscuro de tokens.css (entre @DARK y @END) se repite bajo tres selectores: sistema oscuro, data-theme del anfitrion y data-aura="night"."""
 import base64, re, sys
 from pathlib import Path
@@ -76,6 +77,13 @@ def fragment(fonts, gsap):
 
 # artefacto (fragmento)
 (dist / "artifact.html").write_text(fragment(FONTS_CDN, GSAP_CDN))
+
+# vista previa: mismo fragmento, siempre con datos de demostracion y con el fondo de body tomado de un token (contrato de paginas)
+if "--demo" in sys.argv:
+    prev = fragment(FONTS_CDN, GSAP_CDN)
+    prev = prev.replace("<style>\n", "<style>\nbody { background: var(--base); color: var(--ink); }\n", 1)
+    prev = prev.replace("<script>\n", "<script>window.AURA_FORCE_DEMO = true;</script>\n<script>\n", 1)
+    (dist / "preview.html").write_text(prev)
 
 # pagina autonoma
 if local:
