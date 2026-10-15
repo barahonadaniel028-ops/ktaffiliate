@@ -139,30 +139,32 @@
     es: ["los primeros pasos", "los errores de principiante", "las herramientas básicas", "los hábitos que funcionan", "el proceso completo", "las preguntas frecuentes", "los resultados reales", "las reglas simples"],
     en: ["the first steps", "beginner mistakes", "the basic tools", "habits that work", "the whole process", "common questions", "real results", "simple rules"],
   };
+  // Los temas propios de la cuenta (sus piezas + los comodines de su espacio) van primero y casi siempre alcanzan; los genéricos ("los primeros pasos") solo
+  // completan cuando ya se agotó lo propio, porque combinados con algunas plantillas dan títulos flojos.
   function topicsOf(ctx) {
-    const mine = ctx.piezas.map((p) => low1(p)), extra = (EXTRA[ctx.id] || []).concat(GENERIC[ctx.lang]);
-    const seen = new Set(), out = [];
-    mine.concat(extra).forEach((t) => { const k = norm(t); if (t && !seen.has(k)) { seen.add(k); out.push(t); } });
-    return out.slice(0, 16);
+    const seen = new Set(), own = [], gen = [], add = (list, t) => { const k = norm(t); if (t && !seen.has(k)) { seen.add(k); list.push(t); } };
+    ctx.piezas.map(low1).concat(EXTRA[ctx.id] || []).forEach((t) => add(own, t)); GENERIC[ctx.lang].forEach((t) => add(gen, t));
+    return { own: own.slice(0, 14), gen };
   }
   // Exactamente `n` ideas, siempre las mismas para la misma ronda y distintas en cada ronda (la semilla incluye la ronda y se evita lo ya mostrado).
   function localIdeas(ctx, n, round, avoid) {
     const lang = ctx.lang === "en" ? "en" : "es", tpls = TPL[lang].filter((t) => !t.b || ctx.mejor), T = topicsOf(ctx), rnd = seeded(App.hash(ctx.id + "#" + (round || 0)));
     const avoided = new Set((avoid || []).map(norm));
-    const pairs = []; tpls.forEach((tp) => (tp.b ? [ctx.mejor] : T).forEach((t) => pairs.push([tp, t])));
+    const pairs = []; tpls.forEach((tp) => (tp.b ? [[ctx.mejor, false]] : T.own.map((t) => [t, false]).concat(T.gen.map((t) => [t, true]))).forEach(([t, g]) => pairs.push([tp, t, g])));
     const mk = (tp, t) => {
       const num = [3, 5, 7][Math.floor(rnd() * 3)], c = tp.c || tp[0], tt = tp.t || tp[1], hh = tp.h || tp[2], fill = (s) => s.replace(/\{t\}/g, t).replace(/\{b\}/g, t).replace(/\{n\}/g, num);
       const why = c === "parte2" ? WHY.parte2 + (ctx.mejor ? ` («${ctx.mejor}»)` : "") : WHY[c] + (ctx.predictor ? PRED_NOTE : "");
       return { cat: c, topic: t, titulo: cap1(fill(tt)), gancho: fill(hh), por_que: why };
     };
     const order = shuffle(pairs, rnd), out = [], titles = new Set();
-    // varias pasadas con límites cada vez más flojos por tema y por categoría: primero variedad, y si no alcanza, completa
-    const passes = [[2, 2], [3, 3], [5, 5], [99, 99]];
+    // varias pasadas con límites cada vez más flojos por tema y por categoría: primero variedad con lo propio, y si no alcanza, se suman los temas genéricos y se completa
+    const passes = [[2, 2, false], [3, 3, false], [5, 5, false], [3, 4, true], [99, 99, true]];
     for (const skipAvoided of [true, false]) {
-      for (const [maxT, maxC] of passes) {
+      for (const [maxT, maxC, allowG] of passes) {
         const byT = {}, byC = {}; out.forEach((i) => { byT[i.topic] = (byT[i.topic] || 0) + 1; byC[i.cat] = (byC[i.cat] || 0) + 1; });
-        for (const [tp, t] of order) {
+        for (const [tp, t, g] of order) {
           if (out.length >= n) break;
+          if (g && !allowG) continue;
           const it = mk(tp, t), k = norm(it.titulo);
           if (titles.has(k) || (skipAvoided && avoided.has(k)) || (byT[it.topic] || 0) >= maxT || (byC[it.cat] || 0) >= maxC) continue;
           titles.add(k); byT[it.topic] = (byT[it.topic] || 0) + 1; byC[it.cat] = (byC[it.cat] || 0) + 1; out.push(it);
@@ -226,6 +228,13 @@
     s.palabras = nWords(s.texto); s.segundos = secondsOf(s.palabras);
     return s;
   }
+  // agrupa frases en bloques de lectura: como mucho 2 frases y ~26 palabras por bloque, para que cada uno se lea de un tirón frente a la cámara
+  function groupBeats(list) {
+    const beats = []; let cur = "", n = 0;
+    list.forEach((s) => { if (cur && (nWords(cur + " " + s) > 26 || n >= 2)) { beats.push(cur); cur = ""; n = 0; } cur = cur ? cur + " " + s : s; n++; });
+    if (cur) beats.push(cur);
+    return beats;
+  }
   function localScript(idea, raw, lang) {
     lang = lang === "en" ? "en" : "es";
     const all = sentences(raw, lang), ideaHook = idea && idea.gancho ? String(idea.gancho) : "";
@@ -234,9 +243,7 @@
     if (bi >= 0 && bs >= 3) { const t = trimHook(all.splice(bi, 1)[0]); hook = t.hook; rest = t.rest; }
     else if (ideaHook) { hook = ideaHook; fromIdea = true; }
     else if (all.length) { const t = trimHook(all.shift()); hook = t.hook; rest = t.rest; }
-    const body = (rest ? [rest] : []).concat(all), beats = []; let cur = "", n = 0;
-    body.forEach((s) => { if (cur && (nWords(cur + " " + s) > 26 || n >= 2)) { beats.push(cur); cur = ""; n = 0; } cur = cur ? cur + " " + s : s; n++; });
-    if (cur) beats.push(cur);
+    const beats = groupBeats((rest ? [rest] : []).concat(all));
     const titulo = idea && idea.titulo ? String(idea.titulo) : cap1(words(hook).slice(0, 7).join(" "));
     const sc = { titulo, hook, beats, cierre: last || CTA_DEFAULT[lang], cierreSugerido: !last, hookDeLaIdea: fromIdea, thin: nWords(raw) < 25 };
     return finishScript(sc);
@@ -256,7 +263,7 @@
     let note = "";
     const firstSentence = (b) => sentences(b, lang)[0] || b;
     if (/\b(corto|breve|resum|acort|menos largo|short|trim|brief)/.test(q)) {
-      if (out.beats.length > 1) { const keep = Math.max(1, Math.ceil(out.beats.length * 0.6)); out.beats = out.beats.slice(0, keep).map(firstSentence); }
+      if (out.beats.length > 1) { const keep = Math.max(1, Math.round(out.beats.length * 0.6)); out.beats = out.beats.slice(0, keep).map(firstSentence); }
       else if (out.beats.length === 1) out.beats = [firstSentence(out.beats[0])];
       note = "Lo acorté a lo esencial";
     } else if (/\b(directo|relleno|al grano|punch|conciso|filler|tight)/.test(q)) {
@@ -264,10 +271,11 @@
       out.beats = out.beats.map(strip).filter((b) => nWords(b) >= 2); out.hook = strip(out.hook) || out.hook;
       note = "Saqué el relleno";
     } else if (/\b(gancho|hook|arranque|inicio|empiez|empezar|abrir)/.test(q)) {
-      const pool = out.beats.map((b) => sentences(b, lang)).flat().filter((s) => s !== out.hook), alt = pool.map((s, i) => [s, hookScore(s, i + 1)]).sort((a, b) => b[1] - a[1])[0];
-      if (alt && alt[0]) {
-        const t = trimHook(alt[0]); out.beats = [out.hook].concat(out.beats.map((b) => b.split(/\s+/).join(" ")).filter((b) => b !== alt[0]).map((b) => b.replace(alt[0], "").trim()).filter((b) => nWords(b) >= 2));
-        out.hook = t.hook; note = "Probé otro gancho con algo que dijiste";
+      // otro gancho: se busca, entre las frases del desarrollo, la que mejor abre; el gancho de antes pasa a ser la primera frase del desarrollo
+      const pool = out.beats.map((b) => sentences(b, lang)).flat(), ranked = pool.map((s, i) => [i, hookScore(s, i + 1)]).filter(([i]) => pool[i] !== out.hook).sort((a, b) => b[1] - a[1]);
+      if (ranked.length && ranked[0][1] > -3) {
+        const pick = pool[ranked[0][0]], t = trimHook(pick), rest = pool.filter((_, i) => i !== ranked[0][0]);
+        out.beats = groupBeats([out.hook].concat(t.rest ? [t.rest] : [], rest)); out.hook = t.hook; note = "Probé otro gancho con algo que dijiste";
       }
     } else if (/\b(cierre|cta|final|llamado|call to action|ending)/.test(q)) {
       const alts = CTA_ALT[lang].filter((c) => c !== out.cierre), pick = alts[App.hash(out.cierre + out.hook) % alts.length];
@@ -432,7 +440,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   // =====================================================================================================================================
   // 4) ESTADO Y PASOS (la conversación)
   // =====================================================================================================================================
-  const fresh = () => ({ step: "ask", hist: [], trail: [], mode: "", busy: "", err: "", note: "",
+  const fresh = () => ({ step: "ask", hist: [], trail: [], mode: "", busy: "", err: "", note: "", req: 0, brand: "",
     ideas: [], seen: [], round: 0, pick: null, ownText: "", raw: "", rawFor: "", script: null, approved: false, revOpen: false, revText: "", editing: false, editText: "",
     mineText: "", cmp: [], cmpSel: -1, topic: "", qs: [], qRound: 0, secs: SECS_DEFAULT, listening: false, micDenied: false, result: null, lastTP: null, lang: "" });
   UI.crear.grabar = UI.crear.grabar || fresh();
@@ -450,7 +458,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     script: () => Y("Este es tu guion. Revisalo: ¿lo aprobás?", "Este es tu guion. Revísalo: ¿lo apruebas?"),
     ready: () => Y("Guion aprobado. Cuando quieras, grabamos con el teleprompter.", "Guion aprobado. Cuando quieras, grabamos con el teleprompter."),
     done: (st) => (st.result && st.result.recorded ? "Listo, quedó grabado. ¿Qué hacemos con eso?" : "Terminaste. ¿Qué sigue?"),
-    mine: () => Y("Contame tus ideas, todas juntas. Una por línea, o dictalas y separalas diciendo «siguiente idea».", "Cuéntame tus ideas, todas juntas. Una por línea, o dícialas y sepáralas diciendo «siguiente idea»."),
+    mine: () => Y("Contame tus ideas, todas juntas. Una por línea, o dictalas y separalas diciendo «siguiente idea».", "Cuéntame tus ideas, todas juntas. Una por línea, o díctalas y sepáralas diciendo «siguiente idea»."),
     compare: (st) => Y(`Armé ${st.cmp.length} ${st.cmp.length === 1 ? "guion" : "guiones"}. Elegí el que querés grabar.`, `Armé ${st.cmp.length} ${st.cmp.length === 1 ? "guion" : "guiones"}. Elige el que quieres grabar.`),
     topic: () => "¿Sobre qué tema es la entrevista?",
     questions: (st) => Y(`Estas son las preguntas que se me ocurren sobre «${st.topic}». Editalas, borralas, reordenalas o sumá las tuyas.`, `Estas son las preguntas que se me ocurren sobre «${st.topic}». Edítalas, bórralas, reordénalas o suma las tuyas.`),
@@ -485,7 +493,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   function ideaRow(it, i, st) {
     const on = st.pick && st.pick.id === it.id;
-    return `<li><button type="button" class="gr-idea${on ? " on" : ""}" role="radio" aria-checked="${!!on}" data-act="grpick" data-id="${esc(it.id)}" style="--i:${Math.min(i, 12)}"><span class="n">${i + 1}</span><span class="t"><b>${esc(it.titulo)}${it.own ? ` <span class="chip">Tuya</span>` : ""}</b>${it.gancho ? `<em>“${esc(it.gancho)}”</em>` : ""}${it.por_que ? `<small>${esc(it.por_que)}</small>` : ""}</span><span class="mk" aria-hidden="true">${icon("check")}</span></button></li>`;
+    return `<li role="none"><button type="button" class="gr-idea${on ? " on" : ""}" role="radio" aria-checked="${!!on}" data-act="grpick" data-id="${esc(it.id)}" style="--i:${Math.min(i, 12)}"><span class="n">${i + 1}</span><span class="t"><b>${esc(it.titulo)}${it.own ? ` <span class="chip">Tuya</span>` : ""}</b>${it.gancho ? `<em>“${esc(it.gancho)}”</em>` : ""}${it.por_que ? `<small>${esc(it.por_que)}</small>` : ""}</span><span class="mk" aria-hidden="true">${icon("check")}</span></button></li>`;
   }
   function ideasView(st) {
     if (st.busy) return thinking(st);
@@ -539,7 +547,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   function compareView(st) {
     if (st.busy) return thinking(st);
     const sel0 = st.cmpSel;
-    return `${noteHtml(st)}<ul class="gr-cmps" role="radiogroup" aria-label="Guiones">${st.cmp.map((c, i) => `<li><button type="button" class="gr-cmp${sel0 === i ? " on" : ""}" role="radio" aria-checked="${sel0 === i}" data-act="grcmp" data-i="${i}" style="--i:${Math.min(i, 8)}"><span class="n">${i + 1}</span><span class="t"><b>${esc(c.script.titulo)}</b><em>“${esc(c.script.hook)}”</em><small>≈ ${esc(clock(c.script.segundos))} · ${c.script.beats.length} ${c.script.beats.length === 1 ? "bloque" : "bloques"}${c.script.thin ? " · idea corta" : ""}</small></span><span class="mk" aria-hidden="true">${icon("check")}</span></button></li>`).join("")}</ul>
+    return `${noteHtml(st)}<ul class="gr-cmps" role="radiogroup" aria-label="Guiones">${st.cmp.map((c, i) => `<li role="none"><button type="button" class="gr-cmp${sel0 === i ? " on" : ""}" role="radio" aria-checked="${sel0 === i}" data-act="grcmp" data-i="${i}" style="--i:${Math.min(i, 8)}"><span class="n">${i + 1}</span><span class="t"><b>${esc(c.script.titulo)}</b><em>“${esc(c.script.hook)}”</em><small>≈ ${esc(clock(c.script.segundos))} · ${c.script.beats.length} ${c.script.beats.length === 1 ? "bloque" : "bloques"}${c.script.thin ? " · idea corta" : ""}</small></span><span class="mk" aria-hidden="true">${icon("check")}</span></button></li>`).join("")}</ul>
       ${acts([{ act: "grcmpgo", id: "grcmpgo", label: "Revisar este guion", icon: "check", pri: true, disabled: sel0 < 0 }, { act: "grcmpmore", id: "grcmpmore", label: "Contar más sobre esta", icon: "mic", ghost: true, disabled: sel0 < 0 }])}`;
   }
   function topicView(st) {
@@ -573,7 +581,10 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     }
   }
   function render() {
-    const st = ST(); sanitize(st);
+    let st = ST(); const bid = sel.brand().id;
+    // las ideas, los guiones y el idioma se armaron para la cuenta de ese momento: si se cambia de cuenta a mitad de camino se empieza de nuevo, sin mezclar
+    if (st.brand && st.brand !== bid && st.step !== "ask" && st.step !== "done") { cancelPending(); micStop(); UI.crear.grabar = st = fresh(); }
+    st.brand = bid; sanitize(st);
     const step = VIEWS[st.step] ? st.step : "ask", view = VIEWS[step];
     const busy = !!st.busy || st.listening, prompt = (PROMPT[step] || PROMPT.ask)(st);
     return App.crear.cloud({ status: st.busy ? "pensando…" : STATUS[step] || "grabar", back: true, busy, trail: st.trail.slice(-4).concat([ai(prompt)]), body: `<div class="gr" data-step="${step}"${st.busy ? ' data-busy="1"' : ""}>${view(st)}</div>` });
@@ -609,10 +620,9 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   const busyEnter = (kind) => (st) => move(() => { st.busy = kind; st.err = ""; });
   const metaOf = (data) => (data && data.meta) || { ai: false, note: "" };
-  Object.defineProperty(fresh, "req", { value: 0 });
 
   // ---------- micrófono: Web Speech API como el de Jarvis, con respaldo a escribir ----------
-  let rec = null, micWant = false, micBase = "", micFinal = "", micAt = 0, micTarget = "", micState = null;
+  let rec = null, micWant = false, micBase = "", micFinal = "", micAt = 0, micTarget = "", micState = null, micGot = false, micIdle = 0;
   const joinSp = (a, b) => (a && b ? a + (/\s$/.test(a) ? "" : " ") + b : a || b || "");
   function paintMic() {
     const st = micState || ST(), b = $("#grmic"), l = $("#grmicl"), o = $(".crear-cloud .jh .orb");
@@ -637,16 +647,18 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const ta = $("#" + target);
     try {
       const r = new Ctor(); r.lang = (st.lang || langOfBrand()) === "en" ? "en-US" : "es-ES"; r.interimResults = true; r.continuous = true;
-      micState = st; micTarget = target; micBase = ta ? ta.value : (target === "grmine" ? st.mineText : st.raw); micFinal = ""; micWant = true; micAt = Date.now();
+      micState = st; micTarget = target; micBase = ta ? ta.value : (target === "grmine" ? st.mineText : st.raw); micFinal = ""; micWant = true; micAt = Date.now(); micGot = false; micIdle = 0;
       r.onresult = (ev) => {
-        let interim = "";
+        micGot = true; micIdle = 0; let interim = "";
         for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) micFinal = joinSp(micFinal, t.trim()); else interim += t; }
         paintTranscript(interim);
       };
       r.onerror = (ev) => { if (/not-allowed|service-not-allowed|audio-capture/.test(ev.error)) { micWant = false; st.micDenied = true; } };
       r.onend = () => {
-        // Chrome corta el dictado continuo solo tras unos segundos de silencio: si la persona sigue queriendo hablar se reabre (una vez por corte, y nunca en bucle)
-        if (micWant && Date.now() - micAt > 1200 && rec === r) { try { micAt = Date.now(); r.start(); return; } catch (e) { /* no se pudo reabrir */ } }
+        // Chrome corta el dictado continuo solo tras unos segundos de silencio: si la persona sigue queriendo hablar se reabre (una vez por corte);
+        // tras 3 cortes seguidos sin oír nada se deja de escuchar (se fue a tomar agua) en vez de reabrir para siempre
+        if (!micGot) micIdle++; micGot = false;
+        if (micWant && Date.now() - micAt > 1200 && rec === r && micIdle < 3) { try { micAt = Date.now(); r.start(); return; } catch (e) { /* no se pudo reabrir */ } }
         const denied = st.micDenied; rec = null; micWant = false; st.listening = false; paintMic();
         if (denied && ST() === st && hereNow()) App.render(true); // sin permiso: la pantalla cambia a "escribilo acá"
       };
@@ -755,7 +767,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const st = ST(), target = st.mode === "entrevista" ? "topic" : st.mode === "tengo" ? "compare" : "ideas";
     rewindTo(target, (s) => { s.result = null; s.script = s.mode === "nuevo" ? null : s.script; s.approved = false; s.pick = s.mode === "nuevo" ? null : s.pick; if (s.mode === "entrevista") { s.qs = []; s.topic = ""; } if (s.mode === "nuevo") { s.raw = ""; s.rawFor = ""; } });
   };
-  A.grfinish = () => { App.crear.advanceNav("crear"); App.crear.advanceStep; setTimeout(() => { UI.crear.grabar = fresh(); }, 600); };
+  A.grfinish = () => { App.crear.advanceNav("crear"); }; // al salir de Grabar desde "listo", el handler de ruta (abajo) deja el estado limpio para la proxima vez
   A.grdl = async () => {
     const r = ST().result, f = r && r.recorded; if (!f) return;
     const ext = /mp4/.test(f.type || "") ? "mp4" : "webm", name = f.name || `grabacion-${slug(r.title)}-${App.dayKey(new Date())}.${ext}`;
@@ -833,8 +845,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   A.grsecs = (el) => { const st = ST(), c = $("#grcust"); st.secs = +el.dataset.s; if (c) c.value = ""; paintSecs(); };
   A.grstartint = () => {
     const st = ST(), a = interviewArgs(st); if (!a.questions.length) { go("questions"); return; }
-    go("done", null, (s) => { void s; }).then; // (no se usa: el paso "done" lo agrega finishTP al terminar)
-    openTP(a);
+    openTP(a); // el paso "listo" lo agrega finishTP cuando el teleprompter avisa que termino
   };
   A.grrestart = () => { cancelPending(); micStop(); App.crear.advanceStep(() => { UI.crear.grabar = fresh(); }); };
 
