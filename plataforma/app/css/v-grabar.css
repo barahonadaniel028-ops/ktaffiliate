@@ -1,1 +1,138 @@
-/* Aura · v-grabar (esqueleto, ver DECISIONES.md #18 y #19) */
+/* Aura · Grabar (DECISIONES.md #19): el acompañante para grabar, dentro de la misma nube de Crear (.crear-cloud, ver v-crear.css).
+   Aquí solo vive lo propio de Grabar: opciones, lista de ideas, el micrófono, el guion, las preguntas de la entrevista y los segundos por pregunta.
+   Todo el movimiento continuo es transform/opacity (se compone en la GPU, no repinta); con "reducir movimiento" no hay ninguno. */
+.crear-cloud:has(.gr) .cbody { padding-bottom: 28px; }
+/* la conversación de Grabar es corta y deja sitio a lo importante: lo ya dicho se ve chico y atenuado, solo la pregunta de ahora va grande */
+.crear-cloud:has(.gr) .log { min-height: 0; gap: 8px; padding-bottom: 10px; }
+.crear-cloud:has(.gr) .log .msg:not(:last-child) { padding: 8px 14px; font-size: 14.5px; line-height: 1.35; opacity: .8; }
+.gr { display: grid; gap: 16px; min-width: 0; }
+.gr > * { min-width: 0; }
+.gr input, .gr textarea { font-size: 16px; } /* 16px: Safari en iPhone hace zoom al enfocar un campo más chico */
+
+/* ---- acciones: la principal en tinta, el resto en voz baja ---- */
+.gr-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.gr-acts .btn { min-height: 48px; }
+.gr-acts .btn.pri { padding: 0 26px; }
+.gr-acts .btn:not(.pri) { padding: 0 20px; }
+
+/* ---- avisos chicos (sin IA conectada, ayuda) ---- */
+.gr-hint, .gr-note { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; line-height: 1.45; color: var(--ink2); }
+.gr-hint .ic, .gr-note .ic { width: 16px; height: 16px; margin-top: 2px; color: var(--ink3); }
+.gr-note { padding: 10px 14px; border-radius: 16px; background: var(--accent-soft); color: var(--ink); }
+
+/* ---- "Pensando…": la IA está trabajando (o se saltó) ---- */
+.gr-think { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 26px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
+.gr-think b { display: block; font: 600 16px/1.2 var(--font); letter-spacing: -.01em; }
+.gr-think small { display: block; margin-top: 3px; font-size: 13.5px; color: var(--ink2); }
+.gr-think .typing { flex: none; }
+
+/* ---- primera pregunta: tres caminos (mismo lenguaje que la raíz de Crear: .crear-path) ---- */
+.gr-opt { min-height: 44px; }
+.gr-opts { margin-top: 2px; }
+
+/* ---- lista de ideas y de guiones: tarjetas que se eligen con un toque ---- */
+.gr-own { display: flex; align-items: center; gap: 8px; }
+.gr-own input { flex: 1; min-width: 0; height: 48px; padding: 0 20px; border: 0; border-radius: 24px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair); transition: box-shadow .2s; }
+.gr-own input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--accent); }
+.gr-own .btn { flex: none; min-height: 48px; }
+.gr-count { font-size: 13px; color: var(--ink2); margin-bottom: -6px; }
+.gr-ideas, .gr-cmps { display: grid; gap: 10px; max-height: min(46vh, 420px); overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px 26px 4px; margin: 0 -8px 0 -4px; scrollbar-width: thin; scrollbar-color: var(--hair) transparent;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 26px), transparent); mask-image: linear-gradient(#000 calc(100% - 26px), transparent); } /* el desvanecido de abajo avisa que hay más para bajar */
+.gr-idea, .gr-cmp { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr) 28px; gap: 14px; align-items: start; width: 100%; text-align: left; padding: 14px 16px; border-radius: 24px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2);
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease), background .3s var(--ease); }
+.gr[data-enter] .gr-idea, .gr[data-enter] .gr-cmp { animation: grIn .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes grIn { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+.gr-idea:hover, .gr-cmp:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--hair), 0 18px 32px -22px var(--shadow); }
+.gr-idea:active, .gr-cmp:active { transform: scale(.992); }
+.gr-idea.on, .gr-cmp.on { background: var(--glass-a); box-shadow: inset 0 0 0 2px var(--accent), 0 20px 36px -22px var(--shadow); }
+.gr-idea .n, .gr-cmp .n, .gr-q .n { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 13px 15px 12px 16px / 15px 12px 16px 13px; background: var(--accent-soft); color: var(--accent); font: 600 14px/1 var(--font); font-variant-numeric: tabular-nums; transition: background .3s var(--ease), color .3s var(--ease); }
+.gr-idea.on .n, .gr-cmp.on .n { background: var(--solid); color: var(--on-solid); }
+.gr-idea .t, .gr-cmp .t { display: grid; gap: 4px; min-width: 0; }
+.gr-idea .t b, .gr-cmp .t b { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font: 600 15.5px/1.3 var(--font); letter-spacing: -.01em; }
+.gr-idea .t em, .gr-cmp .t em { font-style: normal; font-size: 14.5px; line-height: 1.4; color: var(--ink2); }
+.gr-idea .t small, .gr-cmp .t small { font-size: 12.5px; line-height: 1.4; color: var(--ink3); }
+.gr-idea .mk, .gr-cmp .mk { width: 26px; height: 26px; margin-top: 5px; border-radius: 50%; display: grid; place-items: center; background: var(--solid); color: var(--on-solid); opacity: 0; transform: scale(.5); transition: opacity .2s, transform .45s var(--spring); }
+.gr-idea .mk .ic, .gr-cmp .mk .ic { width: 15px; height: 15px; stroke-width: 2.6; }
+.gr-idea.on .mk, .gr-cmp.on .mk { opacity: 1; transform: scale(1); }
+
+/* ---- desarrollar: la idea elegida, el micrófono y lo que se va diciendo ---- */
+.gr-idea-pill { display: grid; gap: 4px; padding: 12px 18px; border-radius: 20px; background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.gr-idea-pill b { font: 600 15px/1.3 var(--font); } .gr-idea-pill em { font-style: normal; font-size: 14px; color: var(--ink2); }
+.gr-mic-wrap { display: grid; justify-items: center; gap: 10px; padding: 6px 0 0; }
+/* el micrófono es una gota (nunca un círculo perfecto) que respira; al escuchar late más rápido y suelta ondas. Solo transform/opacity */
+.gr-mic { position: relative; width: 88px; height: 88px; display: grid; place-items: center; color: #0b2a2b; border-radius: 56% 44% 52% 48% / 48% 54% 46% 52%; isolation: isolate;
+  background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 26%), radial-gradient(circle at 70% 75%, rgba(255,173,133,.95), rgba(255,173,133,0) 48%), radial-gradient(circle at 25% 70%, rgba(169,230,211,.95), rgba(169,230,211,0) 52%), linear-gradient(150deg, #6fd1c0, #ffd0a8 60%, #f7a6bd);
+  box-shadow: inset 0 -10px 22px rgba(13,60,62,.28), inset 0 6px 14px rgba(255,255,255,.55), 0 22px 40px -16px rgba(15,107,108,.55), 0 0 0 1px rgba(255,255,255,.55);
+  animation: grBlob 7s ease-in-out infinite; will-change: transform; transition: filter .3s; }
+.gr-mic .ic { width: 32px; height: 32px; stroke-width: 1.9; position: relative; z-index: 1; }
+.gr-mic:hover { filter: saturate(1.2) brightness(1.04); }
+.gr-mic::before, .gr-mic::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; border: 2px solid var(--accent); opacity: 0; }
+.gr-mic.on { animation: grBlob 1.9s ease-in-out infinite; }
+.gr-mic.on::before { animation: grRing 2.1s ease-out infinite; } .gr-mic.on::after { animation: grRing 2.1s ease-out 1.05s infinite; }
+@keyframes grBlob { 0%, 100% { transform: scale(1, 1) rotate(0deg); } 30% { transform: scale(1.05, .965) rotate(-4deg); } 65% { transform: scale(.97, 1.045) rotate(3deg); } }
+@keyframes grRing { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.75, 1.6); opacity: 0; } }
+.gr-mic-l { font-size: 14px; color: var(--ink2); }
+#grraw { min-height: 168px; } #grmine { min-height: 150px; } #gredit { min-height: 260px; }
+
+/* ---- el guion: gancho, desarrollo en bloques cortos y cierre ---- */
+.gr-script { display: grid; border-radius: 28px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); overflow: hidden; }
+.gr-script header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; padding: 18px 22px 14px; }
+.gr-script h3 { font: 600 18px/1.25 var(--font-d); letter-spacing: -.02em; min-width: 0; text-wrap: balance; }
+.gr-meta { display: flex; flex-wrap: wrap; gap: 6px; } .gr-meta .chip .ic { width: 14px; height: 14px; }
+.gr-script section { display: grid; gap: 8px; padding: 14px 22px 16px; border-top: 1px solid var(--hair2); }
+.gr[data-enter] .gr-script section { animation: enterUp .7s var(--ease) both; } .gr[data-enter] .gr-script section:nth-of-type(2) { animation-delay: .08s; } .gr[data-enter] .gr-script section:nth-of-type(3) { animation-delay: .16s; }
+.gr-lab { font: 600 11.5px/1 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); }
+.gr-hook { font: 600 clamp(20px, 3.4vw, 26px)/1.25 var(--font-d); letter-spacing: -.025em; text-wrap: balance; }
+.gr-beats { counter-reset: beat; display: grid; gap: 12px; }
+.gr-beats li { counter-increment: beat; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; font-size: 16px; line-height: 1.5; }
+.gr-beats li::before { content: counter(beat); width: 26px; height: 26px; margin-top: 1px; display: grid; place-items: center; border-radius: 9px 10px 8px 11px / 10px 8px 11px 9px; background: var(--accent-soft); color: var(--accent); font: 600 12.5px/1 var(--font); }
+.gr-script section > p:not(.gr-hook) { font-size: 16px; line-height: 1.5; color: var(--ink2); }
+.gr-rev { display: grid; gap: 10px; padding: 14px; border-radius: 22px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
+.gr-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.gr-quick .chip, .gr-sugs .chip { height: 38px; padding: 0 16px; border-radius: 19px; font-size: 13.5px; cursor: pointer; transition: background .2s, color .2s, transform .2s var(--ease); }
+.gr-quick .chip:hover, .gr-sugs .chip:hover { background: var(--solid); color: var(--on-solid); } .gr-quick .chip:active, .gr-sugs .chip:active { transform: scale(.96); }
+.gr-edit { gap: 8px; }
+
+/* ---- listo para grabar / terminado ---- */
+.gr-ready { display: grid; justify-items: start; gap: 6px; padding: 18px 22px; border-radius: 28px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
+.gr-ready b { font: 600 18px/1.25 var(--font-d); letter-spacing: -.02em; } .gr-ready small { font-size: 13.5px; color: var(--ink2); }
+.gr-ready .gr-hook { font-size: 20px; margin-top: 6px; }
+.gr-done { display: flex; flex-wrap: wrap; gap: 8px; } .gr-done .chip { height: 32px; font-size: 13.5px; } .gr-done .chip .ic { width: 15px; height: 15px; }
+
+/* ---- entrevista: tema, preguntas editables y segundos por pregunta ---- */
+.gr-sugs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; } .gr-sugs .gr-lab { flex: 1 0 100%; }
+.gr-qs { display: grid; gap: 10px; }
+.gr-q { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 8px 12px; align-items: start; padding: 10px 10px 10px 14px; border-radius: 24px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
+.gr[data-enter] .gr-q { animation: grIn .6s var(--ease) both; animation-delay: calc(var(--i, 0) * 50ms); }
+.gr-q .n { margin-top: 10px; }
+.gr-qi { width: 100%; min-height: 58px; padding: 12px 14px; border: 0; border-radius: 16px; background: transparent; resize: none; line-height: 1.45; field-sizing: content; transition: background .2s, box-shadow .2s; }
+.gr-qi:hover { background: var(--glass-b); } .gr-qi:focus { outline: none; background: var(--glass-a); box-shadow: inset 0 0 0 2px var(--accent); }
+.gr-qb { display: flex; gap: 4px; } .gr-qb .iconbtn { width: 44px; height: 44px; } .gr-qb .iconbtn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+.gr-secs { display: flex; flex-wrap: wrap; gap: 8px; }
+.gr-sec.chip { height: 46px; padding: 0 22px; border-radius: 23px; font-size: 15.5px; color: var(--ink); background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair); cursor: pointer; font-variant-numeric: tabular-nums; transition: background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease), box-shadow .25s var(--ease); }
+.gr-sec.chip:hover { transform: translateY(-1px); }
+.gr-sec.chip.on { background: var(--solid); color: var(--on-solid); box-shadow: 0 14px 26px -12px var(--shadow); }
+.gr-cust { max-width: 280px; }
+.gr-sum { padding: 12px 18px; border-radius: 18px; background: var(--accent-soft); font: 500 15px/1.4 var(--font); font-variant-numeric: tabular-nums; }
+
+/* ---- teléfono: la nube se queda compacta (solo la última respuesta y la pregunta), todo a una columna y botones de 48 px ---- */
+@media (max-width: 640px) {
+  .crear-cloud:has(.gr) .log .msg:not(:nth-last-child(-n+2)) { display: none; }
+  .crear-cloud:has(.gr) .cbody { padding: 0 18px 24px; }
+  .gr-acts { flex-direction: column; align-items: stretch; } .gr-acts .btn { width: 100%; min-height: 50px; }
+  .gr-opt { grid-template-columns: 28px minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: center; padding: 14px 16px; }
+  .gr-opt .ic { grid-row: 1 / span 2; } .gr-opt b, .gr-opt span { grid-column: 2; }
+  .gr-ideas, .gr-cmps { max-height: min(50vh, 420px); }
+  .gr-idea, .gr-cmp { grid-template-columns: 32px minmax(0, 1fr) 24px; gap: 12px; padding: 14px; }
+  .gr-idea .n, .gr-cmp .n { width: 32px; height: 32px; }
+  .gr-script header, .gr-script section { padding-left: 18px; padding-right: 18px; }
+  .gr-q { grid-template-columns: 32px minmax(0, 1fr); padding: 10px 12px 10px 12px; } .gr-q .n { width: 32px; height: 32px; }
+  .gr-qb { grid-column: 2; justify-content: flex-end; }
+  .gr-own .btn .ic { display: none; }
+  .gr-sec.chip { flex: 1 0 28%; justify-content: center; }
+  .gr-cust { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gr-mic, .gr-mic::before, .gr-mic::after, .gr[data-enter] .gr-idea, .gr[data-enter] .gr-cmp, .gr[data-enter] .gr-script section, .gr[data-enter] .gr-q { animation: none !important; }
+  .gr-mic.on { box-shadow: inset 0 -10px 22px rgba(13,60,62,.28), 0 0 0 4px var(--accent), 0 22px 40px -16px rgba(15,107,108,.55); } /* sin ondas: la señal de "escuchando" es el aro fijo */
+}

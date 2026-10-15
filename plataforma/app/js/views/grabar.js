@@ -263,8 +263,10 @@
     let note = "";
     const firstSentence = (b) => sentences(b, lang)[0] || b;
     if (/\b(corto|breve|resum|acort|menos largo|short|trim|brief)/.test(q)) {
-      if (out.beats.length > 1) { const keep = Math.max(1, Math.round(out.beats.length * 0.6)); out.beats = out.beats.slice(0, keep).map(firstSentence); }
-      else if (out.beats.length === 1) out.beats = [firstSentence(out.beats[0])];
+      // se conservan el primer y el último bloque (abren y rematan la idea) y se sacan primero los del medio más largos; después, solo la primera frase de cada bloque
+      let bs = out.beats.slice(); const keep = Math.max(1, Math.round(bs.length * 0.6));
+      while (bs.length > keep) { let k = 1; for (let i = 2; i < bs.length - 1; i++) if (nWords(bs[i]) > nWords(bs[k])) k = i; bs.splice(k, 1); }
+      out.beats = bs.map(firstSentence).filter(Boolean);
       note = "Lo acorté a lo esencial";
     } else if (/\b(directo|relleno|al grano|punch|conciso|filler|tight)/.test(q)) {
       const strip = (s) => tidy(s.replace(HEDGE[lang], " "), lang);
@@ -440,7 +442,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   // =====================================================================================================================================
   // 4) ESTADO Y PASOS (la conversación)
   // =====================================================================================================================================
-  const fresh = () => ({ step: "ask", hist: [], trail: [], mode: "", busy: "", err: "", note: "", req: 0, brand: "",
+  const fresh = () => ({ step: "ask", hist: [], trail: [], mode: "", busy: "", err: "", note: "", req: 0, brand: "", enterAt: 0,
     ideas: [], seen: [], round: 0, pick: null, ownText: "", raw: "", rawFor: "", script: null, approved: false, revOpen: false, revText: "", editing: false, editText: "",
     mineText: "", cmp: [], cmpSel: -1, topic: "", qs: [], qRound: 0, secs: SECS_DEFAULT, listening: false, micDenied: false, result: null, lastTP: null, lang: "" });
   UI.crear.grabar = UI.crear.grabar || fresh();
@@ -488,8 +490,11 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
 
   // ---------- pasos ----------
   function askView(st) {
-    return acts([{ act: "grstart", data: { v: "si" }, label: Y("Sí, ya tengo ideas", "Sí, ya tengo ideas"), icon: "check", pri: true }, { act: "grstart", data: { v: "no" }, label: "Todavía no", icon: "x" }, { act: "grstart", data: { v: "ent" }, label: "Quiero hacer una entrevista", icon: "mic" }])
-      + `<p class="gr-hint">${icon("camera")}<span>${esc(Y("Te acompaño de punta a punta: ideas, guion y teleprompter para grabar.", "Te acompaño de principio a fin: ideas, guion y teleprompter para grabar."))}</span></p>`;
+    const opt = (v, ic, t, d) => `<button type="button" class="crear-path gr-opt" data-act="grstart" data-v="${v}">${icon(ic)}<b>${esc(t)}</b><span>${esc(d)}</span></button>`;
+    return `<div class="crear-paths v3 gr-opts" role="group" aria-label="${esc(PROMPT.ask())}">
+      ${opt("si", "check", "Sí, ya tengo ideas", Y("Contámelas y te armo un guion de cada una.", "Cuéntamelas y te armo un guion de cada una."))}
+      ${opt("no", "sparkles", "Todavía no", `Te propongo ${N_IDEAS} ideas para tu cuenta.`)}
+      ${opt("ent", "mic", "Quiero hacer una entrevista", "Armamos las preguntas y el teleprompter las pasa de a una.")}</div>`;
   }
   function ideaRow(it, i, st) {
     const on = st.pick && st.pick.id === it.id;
@@ -500,7 +505,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     return `${noteHtml(st)}<form class="gr-own" id="grownform" autocomplete="off"><input type="text" id="grown" maxlength="140" placeholder="${esc(Y("O escribí tu propia idea…", "O escribe tu propia idea…"))}" aria-label="Tu propia idea" value="${esc(st.ownText)}"><button type="submit" class="btn sm" aria-label="Agregar idea">${icon("plus")}Agregar</button></form>
       <p class="gr-count"><span id="grcount">${st.ideas.length}</span> ideas · ${esc(Y("tocá una para elegirla", "toca una para elegirla"))}</p>
       <ul class="gr-ideas" role="radiogroup" aria-label="Ideas para grabar">${st.ideas.map((it, i) => ideaRow(it, i, st)).join("")}</ul>
-      ${acts([{ act: "grdev", id: "grdevbtn", label: st.pick ? `Desarrollar «${st.pick.titulo.length > 28 ? st.pick.titulo.slice(0, 27) + "…" : st.pick.titulo}»` : "Elegí una idea para desarrollarla", icon: "wand", pri: true, disabled: !st.pick }, { act: "grmore", label: `Dame otras ${N_IDEAS}`, icon: "refresh", ghost: true }])}`;
+      ${acts([{ act: "grdev", id: "grdevbtn", label: st.pick ? "Desarrollar esta idea" : Y("Elegí una idea para desarrollarla", "Elige una idea para desarrollarla"), icon: "wand", pri: true, disabled: !st.pick }, { act: "grmore", label: `Dame otras ${N_IDEAS}`, icon: "refresh", ghost: true }])}`;
   }
   function developView(st) {
     const p = st.pick;
@@ -510,7 +515,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   function scriptCard(sc) {
     return `<article class="gr-script" aria-label="Guion"><header><h3>${esc(sc.titulo)}</h3><div class="gr-meta"><span class="chip">${icon("clock")}≈ ${esc(clock(sc.segundos))}</span><span class="chip">${sc.palabras} palabras</span>${sc.thin ? `<span class="chip warn">Idea corta</span>` : ""}</div></header>
-      <section><span class="gr-lab">Gancho · primeros 3 segundos</span><p class="gr-hook">${esc(sc.hook)}</p></section>
+      <section><span class="gr-lab">Gancho · primeros 3 segundos</span><p class="gr-hook"><span class="mark">${esc(sc.hook)}</span></p></section>
       <section><span class="gr-lab">Desarrollo</span><ol class="gr-beats">${sc.beats.map((b) => `<li>${esc(b)}</li>`).join("")}</ol></section>
       <section><span class="gr-lab">Cierre${sc.cierreSugerido ? " · sugerido" : ""}</span><p>${esc(sc.cierre)}</p></section></article>`;
   }
@@ -526,7 +531,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   function readyView(st) {
     const sc = st.script;
-    return `${sc ? `<div class="gr-ready"><span class="chip good">${icon("check")}Aprobado</span><b>${esc(sc.titulo)}</b><small>≈ ${esc(clock(sc.segundos))} · ${sc.palabras} palabras</small><p class="gr-hook">${esc(sc.hook)}</p></div>` : ""}
+    return `${sc ? `<div class="gr-ready"><span class="chip good">${icon("check")}Aprobado</span><b>${esc(sc.titulo)}</b><small>≈ ${esc(clock(sc.segundos))} · ${sc.palabras} palabras</small><p class="gr-hook"><span class="mark">${esc(sc.hook)}</span></p></div>` : ""}
       <p class="gr-hint">${icon("info")}<span>${esc(Y("Se abre el teleprompter a pantalla completa. Si tu navegador te lo permite, también te graba con la cámara.", "Se abre el teleprompter a pantalla completa. Si tu navegador lo permite, también te graba con la cámara."))}</span></p>
       ${acts([{ act: "grrec", label: "Grabar ahora", icon: "camera", pri: true }, { act: "grbackscript", label: "Volver al guion", icon: "chevleft", ghost: true }])}`;
   }
@@ -587,13 +592,15 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     st.brand = bid; sanitize(st);
     const step = VIEWS[st.step] ? st.step : "ask", view = VIEWS[step];
     const busy = !!st.busy || st.listening, prompt = (PROMPT[step] || PROMPT.ask)(st);
-    return App.crear.cloud({ status: st.busy ? "pensando…" : STATUS[step] || "grabar", back: true, busy, trail: st.trail.slice(-4).concat([ai(prompt)]), body: `<div class="gr" data-step="${step}"${st.busy ? ' data-busy="1"' : ""}>${view(st)}</div>` });
+    return App.crear.cloud({ status: st.busy ? "pensando…" : STATUS[step] || "grabar", back: true, busy, trail: st.trail.slice(-2).concat([ai(prompt)]), body: `<div class="gr" data-step="${step}"${st.busy ? ' data-busy="1"' : ""}${Date.now() - st.enterAt < 1100 ? " data-enter" : ""}>${view(st)}</div>` });
   }
 
   // =====================================================================================================================================
   // 5) MOVIMIENTO ENTRE PASOS, "PENSANDO…" Y MICRÓFONO
   // =====================================================================================================================================
-  const move = (mutate) => new Promise((res) => App.crear.advanceStep(() => { mutate(); res(); })); // la misma gota que el resto de Crear; resuelve cuando el paso nuevo ya está dibujado
+  // la misma gota que el resto de Crear; resuelve cuando el paso nuevo ya está dibujado. enterAt: durante ~1 s los elementos de la lista suben escalonados (data-enter);
+  // un repintado posterior (agregar una idea, editar una pregunta) ya no los vuelve a animar
+  const move = (mutate) => new Promise((res) => App.crear.advanceStep(() => { mutate(); ST().enterAt = Date.now(); res(); }));
   function go(step, say, mutate) {
     const st = ST(); micStop();
     return move(() => { st.hist.push({ step: st.step, trail: st.trail.length }); if (say) st.trail.push(...say); st.step = step; st.err = ""; st.busy = ""; if (mutate) mutate(st); });
@@ -718,7 +725,9 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const st = ST(), it = st.ideas.find((i) => i.id === el.dataset.id); if (!it) return;
     st.pick = it;
     $$(".gr-idea").forEach((b) => { const on = b.dataset.id === it.id; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
-    const go0 = $("#grdevbtn"); if (go0) { go0.disabled = false; const t = it.titulo.length > 28 ? it.titulo.slice(0, 27) + "…" : it.titulo; go0.lastChild.textContent = `Desarrollar «${t}»`; }
+    const go0 = $("#grdevbtn"); if (go0) { go0.disabled = false; go0.lastChild.textContent = "Desarrollar esta idea"; }
+    // en pantallas chicas la lista ocupa casi todo: si el botón que se acaba de habilitar quedó fuera de la vista, se lo trae
+    if (go0) { const r = go0.getBoundingClientRect(); if (r.bottom > innerHeight - 90) go0.scrollIntoView({ block: "center", behavior: App.reduceMotion() ? "auto" : "smooth" }); }
   };
   function addOwn() {
     const st = ST(), inp = $("#grown"), t = (inp ? inp.value : st.ownText).trim(); if (!t) { if (inp) inp.focus(); return; }
@@ -860,6 +869,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   function bind(root) {
     const st = ST(), log = $(".crear-cloud .log", root); if (log) log.scrollTop = log.scrollHeight;
+    if (st.step === "done" && st.result && !st.result.sparked) { st.result.sparked = true; setTimeout(() => { const o = $(".crear-cloud .jh .orb"); if (o) App.morph.sparkles(o, 8); }, 500); } // un destello al terminar: es un logro
     const on = (sel0, ev, fn) => { const el = $(sel0, root); if (el) el.addEventListener(ev, fn); return el; };
     on("#grraw", "input", (e) => { st.raw = e.target.value; if (rec && micTarget === "grraw") { micBase = e.target.value; micFinal = ""; } });
     on("#grmine", "input", (e) => { st.mineText = e.target.value; if (rec && micTarget === "grmine") { micBase = e.target.value; micFinal = ""; } });
