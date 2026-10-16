@@ -254,7 +254,7 @@
   function splitIdeas(text) {
     const t = String(text || "").replace(/\r/g, "").replace(/\b(?:siguiente idea|otra idea|next idea|idea siguiente)\b[:,.]?/gi, "\n");
     const lines = t.split(/\n+/).map((l) => l.replace(/^\s*(?:[-•*·]|\d+\s*[.)\-:])\s*/, "").trim()).filter((l) => nWords(l) >= 2);
-    return lines.map((l) => { const first = l.split(/(?<![\d])[.!?…:]\s|\s[-–—]\s/)[0] || l; return { titulo: cap1(words(first).slice(0, 10).join(" ").replace(/[.,;:]+$/, "")), text: l }; });
+    return lines.map((l) => { const first = l.split(/(?<![\d])[.!?…:]\s|\s[-–—]\s/)[0] || l; return { titulo: cap1(first.trim().split(/\s+/).slice(0, 10).join(" ").replace(/[.,;:\s]+$/, "")), text: l }; });
   }
 
   // ---------- retoques simples sin IA ("más corto", "más directo", "otro gancho", "otro cierre") ----------
@@ -570,7 +570,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   function compareView(st) {
     if (st.busy) return thinking(st);
     const sel0 = st.cmpSel;
-    return `${noteHtml(st)}<ul class="gr-cmps" role="radiogroup" aria-label="Guiones">${st.cmp.map((c, i) => `<li role="none"><button type="button" class="gr-cmp${sel0 === i ? " on" : ""}" role="radio" aria-checked="${sel0 === i}" data-act="grcmp" data-i="${i}" style="--i:${Math.min(i, 8)}"><span class="n">${i + 1}</span><span class="t"><b>${esc(c.script.titulo)}</b><em>“${esc(c.script.hook)}”</em><small>≈ ${esc(clock(c.script.segundos))} · ${c.script.beats.length} ${c.script.beats.length === 1 ? "bloque" : "bloques"}${c.script.thin ? " · idea corta" : ""}</small></span><span class="mk" aria-hidden="true">${icon("check")}</span></button></li>`).join("")}</ul>
+    return `${noteHtml(st)}<ul class="gr-cmps" role="radiogroup" aria-label="Guiones">${st.cmp.map((c, i) => `<li role="none"><button type="button" class="gr-cmp${sel0 === i ? " on" : ""}" role="radio" aria-checked="${sel0 === i}" data-act="grcmp" data-i="${i}" style="--i:${Math.min(i, 8)}"><span class="n">${i + 1}</span><span class="t"><b>${esc(c.script.titulo)}</b><em>“${esc(c.script.hook)}”</em><small>≈ ${esc(clock(c.script.segundos))} · ${c.script.beats.length ? c.script.beats.length + (c.script.beats.length === 1 ? " bloque" : " bloques") : "sin desarrollo todavía"}${c.script.thin ? " · idea corta" : ""}</small></span><span class="mk" aria-hidden="true">${icon("check")}</span></button></li>`).join("")}</ul>
       ${acts([{ act: "grcmpgo", id: "grcmpgo", label: "Revisar este guion", icon: "check", pri: true, disabled: sel0 < 0 }, { act: "grcmpmore", id: "grcmpmore", label: "Contar más sobre esta", icon: "mic", ghost: true, disabled: sel0 < 0 }])}`;
   }
   function topicView(st) {
@@ -703,12 +703,16 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     try { const p = App.onboarding && App.onboarding.markDone && App.onboarding.markDone("grabar"); if (p && p.catch) p.catch(() => {}); } catch (e) { /* el progreso se guarda cuando se pueda */ }
     try { window.dispatchEvent(new CustomEvent("aura:grabado", { detail })); } catch (e) { /* sin CustomEvent */ }
   }
+  // El teleprompter real avisa `completed` (llegó al final o tocó «Terminar»); el esqueleto no lo manda. Sin el dato se cuenta como terminada;
+  // con `completed: false` (cerró a mitad) o `cancelled: true` no se marca el logro ni se festeja: la persona no grabó de verdad.
   function finishTP(st, res, args) {
     res = res && typeof res === "object" ? res : {};
-    const rec0 = res.recorded || null, detail = { mode: res.mode || args.mode, durationMs: +res.durationMs || 0, recorded: !!rec0 };
-    st.result = { recorded: rec0, durationMs: detail.durationMs, mode: detail.mode, title: args.title };
-    if (res.cancelled !== true) markDone(detail); // "terminar o cerrar" llegan igual: solo se descarta si el teleprompter avisa que se canceló
+    const rec0 = res.recorded || null, completed = res.cancelled !== true && res.completed !== false, detail = { mode: res.mode || args.mode, durationMs: +res.durationMs || 0, recorded: !!rec0, completed };
+    if (completed) markDone(detail);
     if (ST() !== st || !hereNow()) return; // se fue a otra pantalla mientras grababa: el logro ya quedó marcado, no hay nada que dibujar
+    // cerró antes de terminar y sin archivo: no hay nada que ofrecer, se queda donde estaba (y, si ya tenía un resultado de antes, ese se conserva)
+    if (!completed && !rec0) { toast("Cerraste el teleprompter antes de terminar. Cuando quieras, probamos de nuevo."); return; }
+    st.result = { recorded: rec0, durationMs: detail.durationMs, mode: detail.mode, title: args.title };
     if (st.step === "done") { App.render(true); return; }
     go("done", [ai((PROMPT[st.step] || PROMPT.ask)(st)), me(st.mode === "entrevista" ? "Empezar la entrevista." : "Grabar ahora.")]);
   }
