@@ -29,7 +29,7 @@
     const s = App.store.get("tp", {}) || {}, num = (v, d, a, b) => (Number.isFinite(+v) && +v >= a && +v <= b ? +v : d);
     return {
       wpm: snap(num(s.wpm, WPM.def, WPM.min, WPM.max), WPM.step), sec: snap(num(s.sec, SEC.def, SEC.min, SEC.max), SEC.step), fsS: num(s.fsS, 0, FS.min, FS.max), fsQ: num(s.fsQ, 0, FS.min, 120),
-      w: num(s.w, 78, 40, 100), mirror: !!s.mirror, cam: s.cam !== false, camView: ["bg", "corner", "off"].includes(s.camView) ? s.camView : "bg", camO: num(s.camO, 45, 10, 90),
+      w: num(s.w, phoneW() ? 100 : 78, 40, 100), mirror: !!s.mirror, cam: s.cam !== false, camView: ["bg", "corner", "off"].includes(s.camView) ? s.camView : "bg", camO: num(s.camO, 45, 10, 90),
     };
   };
 

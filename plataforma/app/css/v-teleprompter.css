@@ -37,9 +37,10 @@
 /* degradados arriba y abajo: lo ya leido se apaga y lo que viene aparece de a poco; no se anima nada, solo tapan */
 .tp-fade { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; }
 .tp-fade.t { top: 0; height: calc(var(--gy) - var(--lh) * .62); background: linear-gradient(var(--tp-bg), rgba(5,9,10,.86) 40%, transparent); }
-.tp-fade.b { bottom: 0; height: 36%; background: linear-gradient(transparent, rgba(5,9,10,.82) 62%, var(--tp-bg)); }
+.tp-fade.b { bottom: 0; height: calc(12% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.84) 52%, var(--tp-bg) 78%); }
+.tp[data-phase="ready"] .tp-fade.b { height: calc(30% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.9) 40%, var(--tp-bg) 66%); }
 .tp[data-camview="bg"][data-cam="on"] .tp-fade.t { background: linear-gradient(rgba(5,9,10,.92), rgba(5,9,10,.55) 45%, transparent); }
-.tp[data-camview="bg"][data-cam="on"] .tp-fade.b { background: linear-gradient(transparent, rgba(5,9,10,.7) 60%, rgba(5,9,10,.94)); }
+.tp[data-camview="bg"][data-cam="on"] .tp-fade.b { background: linear-gradient(transparent, rgba(5,9,10,.7) 55%, rgba(5,9,10,.94) 80%); }
 /* la guia: una banda de luz suave en la linea que se esta leyendo, con dos marcas en los bordes */
 .tp-guide { position: absolute; left: 0; right: 0; z-index: 3; top: calc(var(--gy) - var(--lh) / 2); height: var(--lh); pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.075) 14%, rgba(255,255,255,.075) 86%, transparent); }
@@ -99,6 +100,7 @@
 .tp-b:disabled { opacity: .32; cursor: not-allowed; transform: none; }
 .tp-pw { position: relative; flex: none; }
 .tp-play { position: relative; width: 86px; height: 80px; display: grid; place-items: center; color: #3b1606; transition: transform .2s var(--ease); }
+.tp .tp-play:focus-visible { outline: none; } .tp .tp-play:focus-visible .tp-blob { outline: 3px solid #fff; outline-offset: 3px; }
 .tp-play:active { transform: scale(.94); } .tp-play:disabled { opacity: .4; cursor: not-allowed; }
 .tp-blob { position: absolute; inset: 0; border-radius: 54% 46% 52% 48% / 48% 54% 46% 52%; background: linear-gradient(150deg, #ffd2b4, var(--apricot) 52%, #ff946c); box-shadow: 0 18px 36px -12px rgba(255,140,90,.7), inset 0 1px 0 rgba(255,255,255,.65); animation: tpBlob 9s ease-in-out infinite; will-change: transform; }
 @keyframes tpBlob { 0%, 100% { transform: rotate(0deg) scale(1, 1); } 33% { transform: rotate(-5deg) scale(1.045, .965); } 66% { transform: rotate(4deg) scale(.975, 1.04); } } /* solo transform: el contorno "respira" sin repintar */
@@ -134,7 +136,7 @@
 .tp-ccancel { position: absolute; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 46px; padding: 0 22px; border-radius: 23px 21px 24px 20px; font: 500 15px/1 var(--font); color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 88%, transparent); box-shadow: inset 0 0 0 1px var(--hair); }
 
 /* ---- ajustes (hoja sobre el dock) ---- */
-.tp-set { position: absolute; z-index: 9; right: max(14px, env(safe-area-inset-right)); bottom: calc(176px + env(safe-area-inset-bottom)); width: min(390px, calc(100% - 28px)); max-height: min(66dvh, 600px); overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 8px 18px 10px; border-radius: 32px 28px 34px 29px; color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 95%, transparent); box-shadow: inset 0 0 0 1px var(--hair), 0 40px 80px -24px rgba(0,0,0,.75); transform-origin: 90% 100%; animation: tpPop .4s var(--spring) both; scrollbar-width: thin; }
+.tp-set { position: absolute; z-index: 9; right: max(14px, env(safe-area-inset-right)); bottom: calc(176px + env(safe-area-inset-bottom)); width: min(390px, calc(100% - 28px)); max-height: min(66dvh, 600px); overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 8px 18px 10px; border-radius: 32px 28px 34px 29px; color: var(--ink); background: var(--glass-solid); box-shadow: inset 0 0 0 1px var(--hair), 0 40px 80px -24px rgba(0,0,0,.75); transform-origin: 90% 100%; animation: tpPop .4s var(--spring) both; scrollbar-width: thin; }
 @keyframes tpPop { from { opacity: 0; transform: translateY(14px) scale(.96); } }
 .tp-sh { display: flex; align-items: center; justify-content: space-between; min-height: 40px; font: 600 15px/1 var(--font); }
 .tp-f { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--hair2); }
@@ -155,7 +157,7 @@
 .tp-end { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); background: rgba(5,9,10,.8); animation: tpFade .5s var(--ease) both; touch-action: pan-y; }
 @keyframes tpFade { from { opacity: 0; } }
 .tp-endc { position: relative; width: min(470px, 100%); max-height: 100%; overflow: auto; padding: 32px 24px 22px; text-align: center; display: grid; gap: 14px; justify-items: center; color: var(--ink); border-radius: 54px 60px 56px 62px / 60px 52px 62px 54px;
-  background: radial-gradient(110% 90% at 28% 8%, var(--glass-a), transparent 72%), color-mix(in srgb, var(--glass-solid) 95%, transparent); box-shadow: inset 0 1px 0 var(--edge), inset 0 0 0 1px var(--hair2), 0 60px 110px -50px rgba(0,0,0,.9); animation: tpEnd 12s ease-in-out infinite; }
+  background: radial-gradient(110% 90% at 28% 8%, var(--glass-a), transparent 72%), var(--glass-solid); box-shadow: inset 0 1px 0 var(--edge), inset 0 0 0 1px var(--hair2), 0 60px 110px -50px rgba(0,0,0,.9); animation: tpEnd 12s ease-in-out infinite; }
 @keyframes tpEnd { 0%, 100% { transform: scale(1, 1) rotate(0deg); } 35% { transform: scale(1.01, .992) rotate(-.25deg); } 68% { transform: scale(.992, 1.008) rotate(.2deg); } }
 .tp-endc .orb { width: 52px; height: 52px; }
 .tp-endc h2 { font: 600 clamp(28px, 7vw, 36px)/1.1 var(--font-d); letter-spacing: -.03em; }
@@ -169,14 +171,13 @@
 
 /* ---- pregunta de confirmacion ---- */
 .tp-dlg { position: absolute; inset: 0; z-index: 12; display: grid; place-items: center; padding: 20px; background: rgba(5,9,10,.66); animation: tpFade .25s ease both; }
-.tp-dlgc { width: min(400px, 100%); padding: 24px 22px 18px; display: grid; gap: 8px; border-radius: 34px 30px 36px 31px; color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 96%, transparent); box-shadow: inset 0 0 0 1px var(--hair), 0 50px 90px -30px rgba(0,0,0,.85); animation: tpPop .4s var(--spring) both; }
+.tp-dlgc { width: min(400px, 100%); padding: 24px 22px 18px; display: grid; gap: 8px; border-radius: 34px 30px 36px 31px; color: var(--ink); background: var(--glass-solid); box-shadow: inset 0 0 0 1px var(--hair), 0 50px 90px -30px rgba(0,0,0,.85); animation: tpPop .4s var(--spring) both; }
 .tp-dlgc h2 { font: 600 20px/1.2 var(--font-d); letter-spacing: -.02em; } .tp-dlgc p { font: 400 14.5px/1.45 var(--font); color: var(--ink2); }
 .tp-dlga { display: grid; gap: 8px; padding-top: 10px; } .tp-dlga .btn { width: 100%; }
 
 /* ---- teléfono ---- */
 @media (max-width: 640px) {
   .tp-set { left: 14px; right: 14px; width: auto; transform-origin: 50% 100%; }
-  .tp-fade.b { height: 32%; }
   .tp-qt { font-size: var(--fsq, 36px); }
   .tp-ring { width: 84px; height: 84px; } .tp-secs { font-size: 28px; }
   .tp-iv { padding-left: 18px; padding-right: 18px; }
