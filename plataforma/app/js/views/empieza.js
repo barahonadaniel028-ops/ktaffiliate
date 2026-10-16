@@ -63,18 +63,35 @@
     afterChrome(() => $$('[data-nav="empieza"] .ic').forEach((ic) => { if (ic.animate) ic.animate([{ transform: "scale(1)" }, { transform: "scale(1.5) rotate(-8deg)" }, { transform: "scale(.94)" }, { transform: "scale(1)" }], { duration: 800, easing: App.morph.spring }); }));
   }
 
+  // Con la base real (adaptador de claude.ai) los datos llegan DESPUES de conectar: antes del primer snapshot de `home` no se sabe que pasos ya estaban
+  // hechos, y guardar entonces un documento armado "desde cero" pisaria el progreso de la base (otro dispositivo, otra persona del espacio). Por eso las marcas
+  // automaticas esperan ese primer snapshot (con un tope, por si la base nunca contesta: ahi queda solo el respaldo local) y, al llegar, lo que solo
+  // estaba en el respaldo local sube a la base (reconcile).
+  const homeReady = () => !!(S.ready && S.ready.home);
+  let homeQ = [], homeTimer = 0, reconciled = false;
+  function afterHome(fn) { if (homeReady()) { fn(); return; } homeQ.push(fn); if (!homeTimer) homeTimer = setTimeout(flushHome, 3500); }
+  function flushHome() { clearTimeout(homeTimer); homeTimer = 0; const q = homeQ; homeQ = []; q.forEach((f) => { try { f(); } catch (e) { /* una marca que falla no frena las demas */ } }); }
+  function reconcile() {
+    if (reconciled || !homeReady()) return; reconciled = true;
+    const a = S.onboardDoc, m = doc(), have = (a && a.steps) || {};
+    if (!Object.keys(m.steps).some((id) => !have[id]) && (!m.resetAt || (a && a.resetAt === m.resetAt))) return;
+    try { if (App.adapter() && App.adapter().canWrite && App.adapter().canWrite()) App.data.set("home", "onboarding", m); } catch (e) { /* queda el respaldo local */ }
+  }
+
   let justDone = new Set(); // pasos que se acaban de completar por la persona (para animar la tarjeta; lo que llega de la base solo cambia de estado)
   async function save(next) {
     const wasPending = pending(), before = railRects();
     S.onboardDoc = next; App.store.set("onboard", next);
     App.emit("home"); // el riel/barra se reordenan, Hoy cambia su tarjeta y esta pantalla se actualiza
     if (wasPending !== pending()) afterChrome(() => flip(before));
-    try { if (App.adapter() && App.adapter().canWrite && App.adapter().canWrite()) await App.data.set("home", "onboarding", next); } catch (e) { /* el respaldo local ya quedo */ }
+    // sin el primer snapshot de `home` no se escribe en la base (se pisaria lo que ya habia): queda el respaldo local y reconcile() lo sube despues
+    try { if (homeReady() && App.adapter() && App.adapter().canWrite && App.adapter().canWrite()) await App.data.set("home", "onboarding", next); } catch (e) { /* el respaldo local ya quedo */ }
   }
   // `o.toast`: true = avisa siempre (lo marco la persona a mano: el aviso trae "Deshacer"); si no, avisa solo cuando no esta mirando esta pantalla
   // (alli ya se ve el paso girar y brillar). El aviso espera a que no haya Jarvis/editor abiertos para no taparlos.
   async function markDone(id, o) {
     if (!stepOf(id) || isDone(id)) return false;
+    if (!homeReady()) return new Promise((res) => afterHome(() => res(markDone(id, o)))); // se vuelve a llamar con la base ya cargada
     const finishing = wouldFinish(id), d = doc(), toast = !!(o && o.toast);
     justDone.add(id);
     const p = save({ ...d, steps: { ...d.steps, [id]: App.stamp() } });
@@ -143,10 +160,18 @@
   }
   window.addEventListener("aura:grabado", () => markDone("grabar"));
 
+  // visitar una pantalla cuenta despues de un momento: marcar en el mismo cuadro del cambio de ruta repintaba la pantalla (por el "home" que emite el guardado) y
+  // le cortaba la animacion de entrada justo la primera vez que se la ve
+  let visitT = 0;
+  function visited() {
+    clearTimeout(visitT); const r = App.route().name, id = r === "biblioteca" || r === "laboratorio" ? "estilo" : r === "metricas" ? "metricas" : null;
+    if (id && !isDone(id)) visitT = setTimeout(() => { if (App.route().name === r) markDone(id); }, 450);
+  }
   function detect(ks) {
     if (!S.ready) return;
+    if (ks.has("home") && homeReady()) { if (homeQ.length) flushHome(); reconcile(); if (fin && pending()) closeFinale(); } // se deshizo un paso con el festejo en pantalla
     hookJarvis(); hookTeleprompter();
-    if (ks.has("route")) { const r = App.route().name; if (r === "biblioteca" || r === "laboratorio") markDone("estilo"); else if (r === "metricas") markDone("metricas"); }
+    if (ks.has("route")) visited();
     if (S.ready.requests) { if (!reqBase) reqBase = new Set(S.requests.map((r) => r.id)); if (ks.has("requests") || ks.has("connected")) checkRequests(); }
     checkVideos(ks.has("videos"));
     if (ks.has("grabado")) markDone("grabar");
@@ -162,9 +187,11 @@
     if (P.done === 1) return "¡Buen comienzo! Sigamos con el siguiente.";
     return `Vas muy bien. Te ${plural(left, "falta", "faltan")} ${left} ${plural(left, "paso", "pasos")}.`;
   };
-  const cta = (s, cls, again) => {
-    const inner = `${icon(s.icon)}<span class="c-go">${esc(s.cta)}</span>${again ? `<span class="c-again">${icon("arrow")}Volver a verlo</span>` : ""}`;
-    return s.act ? `<button class="btn ${cls}" type="button" data-act="${s.act}">${inner}</button>` : `<a class="btn ${cls}" href="${s.href}">${inner}</a>`;
+  // nombre accesible con el paso al que pertenece (hay seis botones iguales en la lista); contiene el texto visible ("label in name")
+  const ctaLabel = (s, done) => `${done ? "Volver a verlo" : s.cta}: ${s.title}`;
+  const cta = (s, cls, again, done) => {
+    const inner = `${icon(s.icon)}<span class="c-go">${esc(s.cta)}</span>${again ? `<span class="c-again">${icon("arrow")}Volver a verlo</span>` : ""}`, lb = again ? ` aria-label="${esc(ctaLabel(s, done))}"` : "";
+    return s.act ? `<button class="btn ${cls}" type="button" data-act="${s.act}"${lb}>${inner}</button>` : `<a class="btn ${cls}" href="${s.href}"${lb}>${inner}</a>`;
   };
   function nextBlock() {
     const nx = nextStep(), P = progress();
@@ -186,7 +213,7 @@
     return `<li class="es-li" data-step="${s.id}" data-state="${st}" ${st === "next" ? 'aria-current="step"' : ""}><span class="es-badge" aria-hidden="true"><b class="n">${i + 1}</b>${icon("check")}</span>
       <div class="es-card card lg"><div class="es-top"><h2 class="es-t">${esc(s.title)}</h2><span class="chip es-tag es-tag-next">Siguiente</span><span class="chip good es-tag es-tag-done">${icon("check")}Hecho</span></div>
         <p class="es-d">${esc(s.desc)}</p>
-        <div class="es-acts">${cta(s, "es-cta" + (st === "next" ? " pri" : st === "done" ? " ghost" : ""), true)}<button class="es-quiet es-skip" type="button" data-act="esmark" data-id="${s.id}">Ya lo hice</button></div></div></li>`;
+        <div class="es-acts">${cta(s, "es-cta" + (st === "next" ? " pri" : st === "done" ? " ghost" : ""), true, st === "done")}<button class="es-quiet es-skip" type="button" data-act="esmark" data-id="${s.id}" aria-label="${esc("Ya lo hice: " + s.title)}">Ya lo hice</button></div></div></li>`;
   }
 
   // pone la pantalla al dia SIN repintarla (asi los giros, el anillo y los destellos no se cortan): estados de las tarjetas, anillo, textos y el paso siguiente
@@ -198,7 +225,7 @@
       const li = $(`.es-li[data-step="${s.id}"]`, es); if (!li) return;
       const st = isDone(s.id) ? "done" : nx && nx.id === s.id ? "next" : "todo", was = li.dataset.state; if (was === st) return;
       li.dataset.state = st; if (st === "next") li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
-      const c = $(".es-cta", li); if (c) { c.classList.toggle("pri", st === "next"); c.classList.toggle("ghost", st === "done"); }
+      const c = $(".es-cta", li); if (c) { c.classList.toggle("pri", st === "next"); c.classList.toggle("ghost", st === "done"); c.setAttribute("aria-label", ctaLabel(s, st === "done")); }
       if (st === "done" && justDone.has(s.id)) { justDone.delete(s.id); whenFree(() => celebrateStep(li)); }
     });
     const rv = $(".ring-val", es); if (rv) rv.style.strokeDasharray = ringArgs(P.done / P.total);
@@ -275,7 +302,10 @@
     const burst = () => { if (!fin || fin.wrap !== wrap) return; App.morph.confetti(wrap, 110); App.morph.sparkles(hero, 10); };
     if (App.morph.arrive(panel, { ms: 820, endSize: 140 })) { const t0 = Date.now(), iv = setInterval(() => { if (!panel.classList.contains("arr-pre") || Date.now() - t0 > 3200) { clearInterval(iv); burst(); } }, 60); } else burst();
     btn.focus({ preventScroll: true });
-    fin.key = (e) => { if (e.key === "Escape") { e.stopPropagation(); closeFinale(); } else if (e.key === "Tab") { e.preventDefault(); btn.focus({ preventScroll: true }); } };
+    fin.key = (e) => {
+      if (e.key === "Escape") { e.stopPropagation(); closeFinale(); } else if (e.key === "Tab") { e.preventDefault(); btn.focus({ preventScroll: true }); }
+      else if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === "k") { e.preventDefault(); e.stopPropagation(); } // Jarvis no se abre por debajo del festejo
+    };
     document.addEventListener("keydown", fin.key, true);
   }
   function closeFinale() {

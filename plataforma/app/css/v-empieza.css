@@ -146,6 +146,7 @@
   .es-badge .n { font-size: 15px; }
   .hoy > .es-hoy { gap: 12px; min-height: 72px; padding: 10px 10px 10px 12px; border-radius: 36px; }
   .es-hoy .es-hoy-go.btn { padding: 0 14px; }
+  .es-hoy-t span { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; font-size: 13.5px; } /* en el telefono el paso que sigue se lee entero (dos lineas), no "Conoc…" */
   .es-fin { padding: 10px 20px 24px; border-radius: 46px 54px 48px 56px / 56px 46px 54px 48px; }
   .es-fin-hero { height: 168px; } .es-fin-t { font-size: 25px; }
 }

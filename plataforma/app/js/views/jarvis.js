@@ -11,7 +11,7 @@
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
   const COMMANDS = () => [
-    ...App.nav.map(([k, n, ic]) => ({ id: "go:" + k, label: "Ir a " + n, icon: ic, run: () => nav("#" + k), kw: n })),
+    ...App.navOrder().map(([k, n, ic]) => ({ id: "go:" + k, label: "Ir a " + n, icon: ic, run: () => nav("#" + k), kw: n })),
     { id: "go:ajustes", label: "Ir a Ajustes", icon: "settings", run: () => nav("#ajustes"), kw: "ajustes configuracion" },
     { id: "act:approve", label: App.say("Empezar a aprobar", "Empezar a aprobar"), icon: "check", run: () => nav("#estudio"), kw: "aprobar decidir videos pendientes estudio" },
     { id: "act:new", label: "Pedir un video nuevo", icon: "plus", run: () => nav("#crear"), kw: "crear nuevo pedir video subir" },
@@ -49,15 +49,15 @@ Reglas:
     hits.forEach((v) => { const k = v.brand + "|" + v.piece; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(v); });
     return [...groups.values()];
   }
-  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"];
+  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes", "empieza"];
   // "aprobar" ya no es una pantalla propia (se fusiono en Estudio, DECISIONES.md #2) y "logros" tampoco (DECISIONES.md #1,
   // los hitos viven en Metricas con celebracion puntual): un link, un tool call o una frase vieja que todavia los nombre
   // sigue entrando, pero a la pantalla que los reemplaza -- no se rompen ni se recrean las pantallas viejas.
-  const LEGACY_VIEW = { aprobar: "estudio", logros: "metricas" };
+  const LEGACY_VIEW = { aprobar: "estudio", logros: "metricas", "primeros pasos": "empieza" };
   function tools() {
     const stat = (t) => { const s = $("#jvstat"); if (s) s.textContent = t; };
     return [
-      { name: "go_to", description: "Abre una pantalla. view = hoy, crear, biblioteca, laboratorio, metricas, notas, estudio o ajustes ('estudio' es tambien donde se aprueba, agenda o rechaza; 'metricas' tambien muestra los hitos de redes). Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
+      { name: "go_to", description: "Abre una pantalla. view = hoy, crear, biblioteca, laboratorio, metricas, notas, estudio, ajustes o empieza ('empieza' = «Empieza aquí», los primeros pasos; 'estudio' es tambien donde se aprueba, agenda o rechaza; 'metricas' tambien muestra los hitos de redes). Opcional brand (id de cuenta) para elegir la cuenta. Devuelve 'ok'.",
         inputSchema: { type: "object", properties: { view: { type: "string" }, brand: { type: "string" } }, required: ["view"] },
         execute: ({ view, brand }) => { const raw = norm(view).replace(/^#/, ""), v = LEGACY_VIEW[raw] || raw; if (!ROUTES.includes(v)) throw new Error("pantalla desconocida: " + view); if (brand && S.brands.some((b) => b.id === brand)) sel.setBrand(brand); stat("abriendo…"); setTimeout(() => nav("#" + v), 350); return "ok"; } },
       { name: "propose_approval", description: "Prepara aprobar TODAS las versiones por aprobar de UNA pieza. NO aprueba nada: muestra un botón de confirmación. piece = nombre o parte del nombre; brand opcional.",

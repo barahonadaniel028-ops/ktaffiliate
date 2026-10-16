@@ -35,7 +35,11 @@
     if (!wantDemo && window.claude && window.claude.use) { try { ok = await App.connect(App.adapters.claude()); } catch (e) { ok = false; } }
     if (!ok) { await App.connect(App.adapters.demo(window.AuraDemo ? window.AuraDemo.seed(App.config.id) : {})); }
     // la primera vez que se abre el portal lo primero que se ve es "Empieza aquí", hasta completar todos los pasos (DECISIONES.md #18)
-    if ((!location.hash || location.hash === "#") && App.onboarding && App.onboarding.pending()) App.go("empieza", { replace: true });
+    // (con la base real los datos llegan despues de conectar: se espera el primer `home`, hasta 1,5 s, para no mandar a "Empieza aquí" a quien ya lo termino)
+    if (!location.hash || location.hash === "#") {
+      for (let t = 0; !S.ready.home && t < 30; t++) await new Promise((r) => setTimeout(r, 50));
+      if (App.onboarding && App.onboarding.pending()) App.go("empieza", { replace: true });
+    }
     App.emit("route");
     // carga inicial de Metricool (en demo trae filas de ejemplo)
     setTimeout(() => { App.act.maybeLoadMetrics(); if (S.mode === "demo" && window.AuraDemo) setTimeout(() => window.AuraDemo.seedTrophies(), 900); }, 300);

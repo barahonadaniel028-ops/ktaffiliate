@@ -42,8 +42,8 @@
   // No es un modelo de lenguaje: es un conjunto chico de reglas fieles al RULES() de jarvis.js (ir a una pantalla, proponer aprobar una pieza,
   // responder con datos reales del resumen, o pasarle la tarea a Claude). Alcanza para probar de punta a punta que sample()+tools funciona
   // contra el contrato (ejecuta herramientas reales: go_to navega, propose_approval muestra la tarjeta de confirmacion real).
-  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes"];
-  const LEGACY_VIEW = { aprobar: "estudio", logros: "metricas" }; // "aprobar" y "logros" ya no son pantallas propias (DECISIONES.md #1 y #2); mismo alias que jarvis.js
+  const ROUTES = ["hoy", "crear", "biblioteca", "laboratorio", "metricas", "notas", "estudio", "ajustes", "empieza"];
+  const LEGACY_VIEW = { aprobar: "estudio", logros: "metricas", "primeros pasos": "empieza" }; // "aprobar" y "logros" ya no son pantallas propias (DECISIONES.md #1 y #2); mismo alias que jarvis.js
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   function briefOf(messages) {
     try {

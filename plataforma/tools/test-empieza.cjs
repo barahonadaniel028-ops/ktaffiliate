@@ -214,6 +214,40 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
   ok(await p.evaluate(() => App.onboarding.pending() === false) && r[r.length - 2] === "empieza", "lo que llega de la base (otro dispositivo) se respeta y reordena el menú", r.join(","));
   ok(p.errs.length === 0, "sin errores con la base simulada", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
+  console.log("\n== Base real lenta: el progreso de la base no se pisa (revisión) ==");
+  // la base real entrega `home` DESPUES de conectar; aca se atrasa su primer snapshot para reproducirlo
+  const slowHome = (ms) => `;(() => { const u = window.claude.use; window.claude.use = async function (n) { const r = await u.call(this, n); if (n !== "db" || !r) return r; const col = r.collection.bind(r); return Object.assign(Object.create(r), { collection: (c) => { const x = col(c); return c !== "home" ? x : Object.assign(Object.create(x), { onSnapshot: (f, e) => x.onSnapshot((snap) => setTimeout(() => f(snap), ${ms}), e) }); } }); }; })();`;
+  const seed = (n) => `;window.__mock.data.home = Object.assign(window.__mock.data.home || {}, { onboarding: { steps: ${JSON.stringify(Object.fromEntries(IDS.slice(0, n).map((i) => [i, "2026-10-01T00:00:00.000Z"])))} } });`;
+  p = await openWith(b, "?preset=kt#metricas", { init: mockSrc + seed(5) + slowHome(900) }); await wait(p, 3500);
+  const steps = await p.evaluate(() => (window.__mock.data.home.onboarding || {}).steps || {});
+  ok(IDS.every((i) => steps[i]), "entrar directo a #metricas antes de que llegue `home` NO borra los 5 pasos que ya estaban en la base (y suma el de Métricas)", Object.keys(steps).join(","));
+  ok(await p.evaluate(() => App.onboarding.progress().done === 6), "...y el progreso final es 6 de 6");
+  await p.context().close();
+  p = await openWith(b, "?preset=kt", { init: mockSrc + seed(6) + slowHome(700) }); await wait(p, 2500);
+  ok(await hash(p) !== "#empieza" && await p.evaluate(() => App.onboarding.pending() === false), "quien ya terminó los 6 pasos (guardado solo en la base) y abre sin hash NO cae en Empieza aquí", await hash(p));
+  await p.context().close();
+  p = await openWith(b, "?preset=kt", { init: mockSrc + seed(2) + slowHome(700) }); await wait(p, 2500);
+  ok(await hash(p) === "#empieza" && await p.evaluate(() => App.onboarding.progress().done === 2), "quien lleva 2 pasos en la base sí cae en Empieza aquí, con 2 de 6");
+  await p.context().close();
+
+  console.log("\n== Celebración: deshacer cierra, Ctrl+K no abre Jarvis debajo, Jarvis conoce la pantalla ==");
+  p = await openWith(b, "?demo=1&preset=kt#hoy"); await wait(p, 1500);
+  await markAll(p, ["metricas"]); await nav(p, "#empieza", 900);
+  await p.evaluate(() => App.onboarding.markDone("metricas", { quiet: true }));
+  ok(await p.waitForFunction(() => !!document.querySelector("#esfin .es-fin"), null, { timeout: 9000 }).then(() => true, () => false), "(preparación) aparece la celebración");
+  await p.keyboard.press("Control+k"); await wait(p, 700);
+  ok(await p.evaluate(() => !App.jarvis.isOpen() && !!document.querySelector("#esfin")), "con la celebración abierta, Ctrl+K no abre Jarvis por debajo");
+  await p.evaluate(() => App.onboarding.unmark("jarvis")); await wait(p, 900);
+  ok(await p.evaluate(() => !document.querySelector("#esfin") && App.onboarding.pending() === true), "si se deshace un paso con la celebración en pantalla, la celebración se cierra");
+  await p.context().close();
+  p = await openWith(b, "?demo=1&preset=kt#hoy"); await wait(p, 1200);
+  await p.evaluate(() => App.jarvis.open()); await wait(p, 1200);
+  await p.fill("#jvbox", "llevame a empieza aqui"); await p.keyboard.press("Enter"); await p.waitForFunction(() => App.route().name === "empieza", null, { timeout: 5000 }).catch(() => {});
+  ok(await hash(p) === "#empieza", "Jarvis entiende «llévame a empieza aquí»", await hash(p));
+  ok(await p.evaluate(() => { App.jarvis.isOpen() && App.jarvis.close && App.jarvis.close(); return App.navOrder()[0][0] === "empieza"; }), "(menú) Empieza aquí sigue primero mientras falten pasos");
+  ok(await p.evaluate(() => [...document.querySelectorAll(".es-skip")].every((e) => /^Ya lo hice: /.test(e.getAttribute("aria-label"))) && [...document.querySelectorAll(".es-cta")].every((e) => (e.getAttribute("aria-label") || "").includes(": "))), "cada «Ya lo hice» y cada botón del paso llevan el nombre del paso para lectores de pantalla");
+  await p.context().close();
+
   console.log("\n== Teléfono (390×844) ==");
   p = await openWith(b, "?demo=1&preset=kt", { viewport: { width: 390, height: 844 }, isMobile: true });
   ok(await hash(p) === "#empieza", "en el teléfono también se abre en Empieza aquí");

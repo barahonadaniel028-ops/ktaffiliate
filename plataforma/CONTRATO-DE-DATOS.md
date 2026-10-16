@@ -31,7 +31,7 @@ Marcas usadas abajo: **(Aura)** = campo o documento que Aura agrega y que el lad
 | `schedule` | id de cuenta | `slots{ "YYYY-MM-DDTHH:MM": … }` (lo agendado por Claude en Metricool) |
 | `rounds` | id de cuenta | estado de ronda de revisión por cuenta (legado, se conserva) |
 | `system` | `status` | `teachersFree, teachersNote, brands{<id>:{introsFree,introsNote}}, rules[], skills[], updated` |
-| `home` | `todo` · `done` · `trophies` | `todo.items[{id,urgency (now·today·week),title,detail,link,auto}]` · `done{<id>:fecha}` · `trophies{baseline, seen{<id>:fecha}}` **(Aura)** `trophies.level` (último nivel celebrado) |
+| `home` | `todo` · `done` · `trophies` · `onboarding` | `todo.items[{id,urgency (now·today·week),title,detail,link,auto}]` · `done{<id>:fecha}` · `trophies{baseline, seen{<id>:fecha}}` **(Aura)** `trophies.level` (último nivel celebrado) · **(Aura)** `onboarding{steps{<id>:fecha}, resetAt?}` = el progreso de «Empieza aquí» (ids `jarvis · estilo · grabar · pedido · revisar · metricas`; un solo documento por espacio de trabajo; `resetAt` = «Volver a ver los pasos»: lo anterior a esa marca no vale) |
 | `diag` | `<ts>_<k>` | bitácora silenciosa: `step, info, at, ua` |
 
 ### `requests` (lo que Claude lee), por tipo de documento
