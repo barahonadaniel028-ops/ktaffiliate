@@ -16,7 +16,7 @@ Marcas usadas abajo: **(Aura)** = campo o documento que Aura agrega y que el lad
 | `videos` | `<brand>_<pieza>_v<n>` | `brand, piece, pieceName, version, hook, caps[[palabra, cuadroIni, cuadroFin]], capFps, src, poster, tone, status (pending·maybe·approved·rejected), date, scheduled, order, round, duration, tags[], fx, decidedAt, inMetricool, published, review, replaces, feedback, feedbackDirty, feedbackSent, wordStyles{}, wordStylesDirty, wordStylesSent` |
 | `notes` | auto o `n<k>` | `video, brand, piece, round, t, tc, text, tags[], status (open·fixed·resolved), sent, sentAt, by, created, scope (video·group·selection·brand·general·style), title, ids[], reply` |
 | `requests` | ver abajo | pedidos y avisos que Claude debe leer |
-| `refs` | auto | `kind (link·file), url, assetId, name, note, status (nueva·enviada·analizada), sent, sentAt, by, created, analysis{resumen,texto,transiciones,animaciones,ritmo,colores,comoRecrear[]}, styleId` · **(Aura)** `dna{v,kind,duration,cuts[],cpm,motion,lum,contrast,sat,warmth,palette[{hex,w}],axes{ritmo,movimiento,contraste,color,luz,energia},audio,thumbs[]}`, `recipe{v,name,font,size,accent,text,keyAccent,glow,anim,beat,trans,bg,hero,subs,card,palette[],energy}` |
+| `refs` | auto | `kind (link·file)` · **(Aura)** `kind:"idea"` (idea escrita, sin archivo ni link: usa `name` y `note`), url, assetId, name, note, status (nueva·enviada·analizada), sent, sentAt, by, created, analysis{resumen,texto,transiciones,animaciones,ritmo,colores,comoRecrear[]}, styleId` · **(Aura)** `dna{v,kind,duration,cuts[],cpm,motion,lum,contrast,sat,warmth,palette[{hex,w}],axes{ritmo,movimiento,contraste,color,luz,energia},audio,thumbs[]}`, `recipe{v,name,font,size,accent,text,keyAccent,glow,anim,beat,trans,bg,hero,subs,card,palette[],energy}` |
 | `exp_styles` | auto o `lab_<id>` | `name, description, status (prueba·aprobado·descartado), decidedAt, kind (estilo·transicion·texto·fondo·subtitulos·sonido), demo, when` · **(Aura)** `recipe{…igual que refs.recipe}, from{ref|seed}, source:"laboratorio", created, demo:"r-<id>"` |
 | `exp_rounds` | `rd<k>` | `name, status, created, overall, overallDirty, sentOverall` |
 | `exp_cards` | `c<k>` | `round, order, demo, label, desc, styleId, verdict (keep·maybe·drop), note, dirty, sentVerdict, sentNote` |
@@ -31,7 +31,7 @@ Marcas usadas abajo: **(Aura)** = campo o documento que Aura agrega y que el lad
 | `schedule` | id de cuenta | `slots{ "YYYY-MM-DDTHH:MM": … }` (lo agendado por Claude en Metricool) |
 | `rounds` | id de cuenta | estado de ronda de revisión por cuenta (legado, se conserva) |
 | `system` | `status` | `teachersFree, teachersNote, brands{<id>:{introsFree,introsNote}}, rules[], skills[], updated` |
-| `home` | `todo` · `done` · `trophies` | `todo.items[{id,urgency (now·today·week),title,detail,link,auto}]` · `done{<id>:fecha}` · `trophies{baseline, seen{<id>:fecha}}` **(Aura)** `trophies.level` (último nivel celebrado) |
+| `home` | `todo` · `done` · `trophies` · `onboarding` | `todo.items[{id,urgency (now·today·week),title,detail,link,auto}]` · `done{<id>:fecha}` · `trophies{baseline, seen{<id>:fecha}}` **(Aura)** `trophies.level` (último nivel celebrado), `trophies.baseline` · **(Aura)** `onboarding{steps{<paso>:fecha}, resetAt?}` (progreso de "Empieza aquí"; pasos: Jarvis, estilos, grabar, pedido, revisar, métricas; un solo documento por espacio; Claude no lo necesita) |
 | `diag` | `<ts>_<k>` | bitácora silenciosa: `step, info, at, ua` |
 
 ### `requests` (lo que Claude lee), por tipo de documento
@@ -43,6 +43,8 @@ Marcas usadas abajo: **(Aura)** = campo o documento que Aura agrega y que el lad
 | `changes_<ts>` | Enviar cambios | `kind:"changes_batch", at, by, status:"pendiente", count, notes[ids], videos[{id,brand,feedback,tags}], refs[ids], roundCards[{id,label,verdict,note,styleId}], captionEdits[{brand,piece,ids,wordStyles}]` |
 | `jarvis_<ts>` | Jarvis → pasarle algo a Claude | **(Aura)** `kind:"jarvis", text, at, by, status:"pendiente", model, effort, assets[{id,name,size,type,kind}]` |
 | `recreate_<ts>` | Laboratorio → "Pedirle a Claude" | **(Aura)** `kind:"recreate_style", recipe{…}, ref (id de refs), note, at, by, status:"pedido", steps[], model, effort, assets[]`. Claude arma el estilo completo y lo deja en `exp_styles` con `status:"prueba"` |
+| `style_<ts>` | Crear → "Un estilo nuevo" | **(Aura)** `kind:"new_style", at, by, status (pedido·producción·listo·…), steps[], refs[ids de refs], notes, model, effort`. Claude lee cada referencia (video, link o idea) y su `note` (qué le gustó a la persona), arma un estilo en `exp_styles` con `status:"prueba"` y su demo, y pone `status:"listo"` + `reply` |
+| `experiencia_<ts>` | Notas ("¿Cómo puedo mejorar tu experiencia aquí?") | **(Aura)** `kind:"experience", text, at, by, status:"pendiente"`. Es una idea o queja sobre la plataforma; Claude la anota, responde corto si hace falta y la considera en los próximos cambios |
 
 ## Lo que la interfaz espera de Claude (lado producción)
 
@@ -53,7 +55,8 @@ Marcas usadas abajo: **(Aura)** = campo o documento que Aura agrega y que el lad
 5. **Estudio.** `studio_requests/<id>` con `videoId` y `kind`; Claude escribe `steps` (uno por uno: `pendiente → haciendo → hecho|error`), `status:"listo"` y `reply`, y puede actualizar `studio_versions/<id>` (la UI avisa si cambió mientras se editaba: `rev`).
 6. **Métricas.** La UI llama `mcp.callTool("metricool","getAnalyticsDataByMetrics",{brandId,from,to,metrics})` y guarda copia en `metrics/<blogId>` y `evolution/<blogId>`.
 7. **Modelo e intensidad (Aura).** Cada pedido lleva `model` (`claude-sonnet-5-5` por defecto, o `claude-opus-5-5`, `claude-fable-5-1`, `claude-haiku-5-5`) y `effort` (`low·medium·high`). Para Jarvis dentro de la página se aplica de verdad (opción `model`/`effort` de `sample`). Para producción lo decide la sesión que lee el pedido: **debe respetarlo** al elegir con qué modelo trabaja.
-8. **Archivos adjuntos (Aura).** `assets[].id` es el id de la capacidad `assets` (se sirve en `/_blob/<id>`); máximo 19 MB por archivo; tipos: video, imagen, PDF, csv, md, json, txt, srt, vtt.
+8. **Estilos y comentarios nuevos (Aura).** `requests/style_<ts>` pide construir un estilo en Laboratorio a partir de `refs`; `requests/experiencia_<ts>` es retroalimentación sobre la plataforma. Ninguno agenda ni publica nada.
+9. **Archivos adjuntos (Aura).** `assets[].id` es el id de la capacidad `assets` (se sirve en `/_blob/<id>`); máximo 19 MB por archivo; tipos: video, imagen, PDF, csv, md, json, txt, srt, vtt.
 
 ## Capacidades que declara el artefacto
 

@@ -36,7 +36,7 @@ plataforma/
   app/js/views/                  una por pantalla + jarvis.js, ai.js (modelo e intensidad), attach.js (adjuntos), celebrate.js
   app/dev/                       datos de demostración y video de ejemplo
   app/assets/AstonScript.ttf     la fuente Aston Script del Portal (ya va embebida en el build)
-  tools/                         build.py, test.cjs (148 pruebas), shoot.cjs (capturas)
+  tools/                         build.py, test.cjs (200 pruebas), test-empieza.cjs (101), shoot.cjs (capturas)
   dist/artifact.html             el artefacto ya compilado (CDN de GSAP y Google Fonts), listo para publicar
   capturas/                      pantallas clave de la interfaz actual (escritorio día/noche y teléfono)
 respaldo/
@@ -86,20 +86,16 @@ Hasta este paso el artefacto nuevo **no lo mira ninguna sesión de Claude**: lo 
 
 Cuando Daniel dé el visto bueno: apunta la sesión de producción al artefacto nuevo (que lea `requests/*` y `studio_requests/*` de **esa** base y esté suscrita a sus comentarios) y enséñale los campos nuevos opcionales: `model`/`effort` en cada pedido (**debe respetarlos** al elegir con qué modelo trabaja), `assets[]` en `requests/jarvis_*`, `requests/recreate_*` (Laboratorio) y `studio_requests`, y `refs.dna`/`refs.recipe` y `exp_styles.recipe` (Laboratorio). El resto del contrato no cambia.
 
-### 4.6 Lo que Daniel pidió y falta (en este orden, dentro del clon)
+### 4.6 Estado de la interfaz en este zip (rama `claude/brave-bardeen-9jz94n`, commit `a5a4a25`)
 
-La versión del zip ya tiene hechos: selector de **modelo e intensidad** (Sonnet 5.5 por defecto) en Jarvis, Estudio, Laboratorio, Crear y Ajustes; **adjuntar videos y archivos** en esos chats; **Hoy** con logros y analíticas arriba y una **celebración** al ganar logros nuevos; **Laboratorio** artístico (ADN de referencias y recreación en vivo); morph líquido consistente; orbe flotante; Estudio que no se traba; simulador completo. Además, la otra computadora de Daniel ya resolvió y **no hay que rehacer**:
+Hecho y probado (200 pruebas en `tools/test.cjs` + 101 en `tools/test-empieza.cjs`, todas contra el simulador): selector de **modelo e intensidad** (Sonnet 5.5 por defecto) y **adjuntar videos y archivos** en Jarvis, Estudio, Laboratorio, Crear y Ajustes; **Aprobar dentro de Estudio** (`#estudio` listado, `#estudio/ver/<id>` vista general, `#estudio/editor/<id>` editor; `#aprobar...` redirige); **menú propio de cuentas**; **predictor** simplificado ("¿Por qué este score?"); **descargas** vía capacidad `downloads`; **Laboratorio** artístico (ADN de referencias, recreación en vivo, estilos con receta); **Crear conversacional** sobre la nube de Jarvis (`DECISIONES.md` §10 y §16): tres caminos, "estilo nuevo" (`requests/style_<ts>`), "video nuevo" (`requests/new_<ts>`) y "grabar"; **Logros ya no es pestaña**: los hitos viven al final de **Métricas** con una celebración puntual con confeti (`DECISIONES.md` §1 y §11; `likes` y `guardados` son hitos); **Notas** como nube que pregunta "¿Cómo puedo mejorar tu experiencia aquí?" (`requests/experiencia_<ts>`, §12); panel de revisión mínimo (§13); editor que cambia de versión sin salir (§14); **Jarvis líquido** (§15 y §17); **Empieza aquí** (§18, primeros pasos; progreso en `home/onboarding`); morph líquido, orbe flotante y simulador completo.
 
-- **Aprobar dentro de Estudio** (`DECISIONES.md` §2): ya no hay "Aprobar" en el menú. Rutas: `#estudio` (listado: por aprobar / agendados / rechazados), `#estudio/ver/<id>` (vista general: la revisión), `#estudio/editor/<id>` (editor). Un `#aprobar...` viejo entra a `#estudio...`.
-- **Selector de cuentas** con menú propio, con el mismo vidrio que el selector de modelo (§6).
-- **Predictor** simplificado: solo el círculo del puntaje y "¿Por qué este score?" cerrado, con 1 a 3 categorías; la fórmula no se tocó (§9).
-- **Descargas** (Exportar, SRT, JSON): el código ya usa la capacidad `downloads`. Lo que falta es **declararla al publicar** (`downloads: true`) y comprobar de verdad que Exportar y SRT guardan el archivo; sin esa declaración no hacen nada.
+**Lo que NO está terminado en este zip** (no lo des por hecho):
 
-Lo que **sigue pendiente**, en este orden y dentro del clon:
-
-1. **Logros**: sin pestaña propia ni niveles/XP para visitar (`DECISIONES.md` §1; Daniel además pidió que **Hoy** muestre logros y analíticas apenas se entra). Hoy muestra analíticas y hitos al entrar, y al cruzar un hito aparece la celebración con el mismo morph (confeti, felicitación y frase motivacional). El código del zip todavía conserva la pantalla Logros en el menú y la celebración con medallas: adáptalo a esto.
-2. **Biblioteca**: revisar los bugs que Daniel reportó sin detalle (§7); si no son evidentes en el código, pídele capturas.
-3. **Crear conversacional** sobre la nube de Jarvis (§10): reemplaza el formulario de Crear completo; conserva el selector de modelo por pedido (Sonnet 5.5 por defecto).
+1. **Grabar y el teleprompter** son solo esqueleto: `app/js/views/grabar.js` y `app/js/views/teleprompter.js` muestran "Grabar: en construcción" y no hacen nada más (`DECISIONES.md` menciona un #19 que **no está escrito en el repositorio**; ese trabajo estaba en curso en la otra computadora de Daniel). El contrato de `App.teleprompter.open({mode, title, text|questions, onDone})` está en el encabezado de ese archivo. Pregúntale a Daniel qué hay en su otra computadora antes de construirlo de nuevo.
+2. **Biblioteca**: los bugs que Daniel reportó sin detalle (§7) siguen sin investigar a fondo; si no son evidentes en el código, pídele capturas.
+3. **Descargas**: el código ya usa `downloads`, pero hay que **declararla al publicar** (`downloads: true`) y comprobar de verdad que Exportar y SRT guardan el archivo.
+4. El zip es una instantánea: Daniel puede seguir empujando commits a esa rama desde otra computadora. Antes de clonar, revisa `git log` de la rama en `barahonadaniel028-ops/ktaffiliate` por si hay algo más nuevo.
 
 ### 4.7 Volver atrás
 
@@ -114,11 +110,13 @@ Lo que **sigue pendiente**, en este orden y dentro del clon:
 | **Estudio (antes Aprobar)** | `#estudio`: Por aprobar / Agendados / Rechazados; piezas con versiones v1–v4 y puntaje; elegir varias y aprobar/rechazar en lote con **Deshacer**; revisión: notas por segundo, zona segura, estilos por palabra en subtítulos (a todas las versiones), etiquetas de problema, predictor, atajos A/Q/R, siguiente/anterior; de la vista general se pasa al editor con "Abrir en editor" |
 | **Aprobar = agendar** | `videos/<id>` pasa a `approved` + `decidedAt`; se reescribe `requests/schedule_<cuenta>` completo (`schedule[]` y `remove[]`); un solo aviso; rechazar un agendado queda "por quitar" |
 | **Notas / Enviar cambios** | Bandeja de lo no enviado con Deshacer por elemento; **Enviar cambios** escribe un solo `requests/changes_<ts>`, marca todo enviado y avisa una vez |
-| **Crear** | Pedir con Claude y Subir videos; formatos, versiones, música, estilo, fecha; intros y teachers libres (`system/status`); subida con progreso (19 MB máx.) y links; cola de pedidos con pasos y cancelar |
+| **Crear** | Flujo conversacional sobre la nube de Jarvis, tres caminos: estilo nuevo (`requests/style_<ts>`, referencias en `refs`), video nuevo (`requests/new_<ts>`: estilos a elegir o combinar, formato, versiones, música, fecha; intros y teachers libres de `system/status`; subida con progreso, 19 MB máx., y links) y grabar (esqueleto); cola de pedidos con pasos y cancelar |
 | **Biblioteca** | Estilos, transiciones, textos, fondos, subtítulos, sonidos y referencias; "Usar en un video nuevo" |
 | **Laboratorio** | Ronda (Me gusta / Quizás / No + nota + comentario general), referencias (subir/links), estilos en prueba → aprobados pasan a la Biblioteca |
 | **Métricas** | `mcp.callTool("metricool","getAnalyticsDataByMetrics",…)`; copia en `metrics/<blogId>` y `evolution/<blogId>`; total/cuenta, 7/30/90 días, mejores reels, ritmo de publicación, mejor hora; "dato guardado hace…" sin conexión |
-| **Hitos/logros** | Solo redes; se guarda cuáles ya vio (`home/trophies`) |
+| **Hitos (en Métricas)** | Solo redes; sin pestaña propia; se guarda cuáles ya vio (`home/trophies`); celebración puntual con confeti |
+| **Empieza aquí** | Seis pasos que van primero en el menú hasta completarlos; progreso en `home/onboarding` (por espacio de trabajo) |
+| **Notas (experiencia)** | Cada mensaje escribe `requests/experiencia_<ts>` y avisa a Claude al momento |
 | **Estudio** | Abrir el spec de un video; editar texto/fondos/imágenes/transiciones/subtítulos/sonido; deshacer/rehacer; guardado automático en `studio_versions` con `rev`; aviso si Claude cambió la versión mientras editabas; reglas de calidad con arreglo; versiones v1–v4; pedidos a Claude con pasos en vivo; exportar (formatos y calidad), SRT y JSON |
 | **Jarvis** | ⌘K; conversación con herramientas (`go_to`, `propose_approval` siempre con confirmación, `mark_todo_done`, `open_studio`, `new_request`, `leave_feedback`, `ask_claude`); voz; modo local sin `sample` |
 | **Ajustes** | Tema auto/día/noche, zona segura, subtítulos en todas las versiones, voz, modelo e intensidad, cuentas, conexión, modo demostración, exportar JSON |
@@ -126,7 +124,7 @@ Lo que **sigue pendiente**, en este orden y dentro del clon:
 
 ## 6. Lo que NUNCA se probó contra lo real
 
-Todo se verificó contra el **simulador** y la **demostración** (148 pruebas, `tools/test.cjs`), no contra tu base, tu Metricool ni tus sesiones de Claude. Sin comprobar contra lo real: la forma exacta de cada documento que escribe el Portal, el comportamiento de `comments.sendToClaude`, las respuestas reales de Metricool, el rendimiento fluido en un teléfono real (en el sandbox solo hay render por software), los permisos reales de `assets`/`downloads` y que `sample` acepte `model`/`effort`/imágenes en tu cuenta (si no puede usar el modelo pedido, responde el nivel equivalente y Jarvis lo avisa).
+Todo se verificó contra el **simulador** y la **demostración** (200 + 101 pruebas, `tools/test.cjs` y `tools/test-empieza.cjs`), no contra tu base, tu Metricool ni tus sesiones de Claude. Sin comprobar contra lo real: la forma exacta de cada documento que escribe el Portal, el comportamiento de `comments.sendToClaude`, las respuestas reales de Metricool, el rendimiento fluido en un teléfono real (en el sandbox solo hay render por software), los permisos reales de `assets`/`downloads` y que `sample` acepte `model`/`effort`/imágenes en tu cuenta (si no puede usar el modelo pedido, responde el nivel equivalente y Jarvis lo avisa).
 
 ## 7. Cómo construir y probar
 
@@ -134,10 +132,11 @@ Todo se verificó contra el **simulador** y la **demostración** (148 pruebas, `
 python3 plataforma/tools/build.py                        # -> dist/artifact.html (CDN) y dist/index.html
 python3 plataforma/tools/build.py --local <vendor>       # sin internet (fuentes y GSAP locales) -> dist/index.local.html
 cd plataforma && npm install                             # playwright-core para las pruebas
-NODE_PATH=$(npm root -g) node tools/test.cjs             # 148 pruebas (necesita Chromium)
+NODE_PATH=$(npm root -g) node tools/test.cjs             # 200 pruebas (necesita Chromium)
+NODE_PATH=$(npm root -g) node tools/test-empieza.cjs      # 101 pruebas de "Empieza aquí"
 node tools/shoot.cjs --all --out capturas/_tmp           # capturas de todas las pantallas
 ```
-`?demo=1` abre la plataforma con datos de ejemplo; `?preset=lumen` cambia de espacio; `?nocel=1` apaga el aviso automático de logros (para pruebas).
+`?demo=1` abre la plataforma con datos de ejemplo; `?preset=lumen` cambia de espacio; `?nocel=1` apaga el aviso automático de hitos (para pruebas).
 
 ## 8. Al terminar, entrégale a Daniel
 
