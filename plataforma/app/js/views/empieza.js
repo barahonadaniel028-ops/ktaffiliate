@@ -257,7 +257,7 @@
   // el festejo espera un momento: en la propia pantalla, a que se vea girar el ultimo paso; y en Hoy/Metricas, a que pase (o no) el aviso de hitos de celebrate.js (1,1 s), para no apilarse
   function finale() { const r = App.route().name; setTimeout(() => whenFree(showFinale), r === "empieza" ? 900 : r === "hoy" || r === "metricas" ? 1700 : 300); }
   function showFinale() {
-    if (fin) return;
+    if (fin || pending()) return; // si en el medio se deshizo un paso (el "Deshacer" del aviso anterior) ya no hay nada que festejar
     const root = $("#aura-root") || document.body, k = App.hash(owner || "") % PRAISE.length, prevFocus = document.activeElement, a = App.aura.el(), prevTone = (a && a.dataset.tone) || "base";
     const wrap = document.createElement("div"); wrap.className = "es-fin-wrap"; wrap.id = "esfin";
     wrap.innerHTML = `<div class="es-fin-veil" data-act="esfinclose"></div><section class="es-fin lg solid-glass" role="dialog" aria-modal="true" aria-labelledby="esfint">

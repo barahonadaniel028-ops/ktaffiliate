@@ -2,7 +2,14 @@
 // menu, persistencia, telefono, movimiento reducido y conexion con la base. Independiente: `node tools/test-empieza.cjs` (necesita dist/index.local.html,
 // ver tools/lib-test.cjs). Cada bloque abre su propio contexto del navegador (el almacenamiento local es por contexto: asi se prueba la persistencia).
 const fs = require("node:fs"), path = require("node:path");
-const T = require("./lib-test.cjs"), { launch, nav, ok, wait, done, file } = T;
+const T = require("./lib-test.cjs"), { launch, ok, wait, done, file } = T;
+// navega por hash y espera a que la vista nueva este dibujada (el navegador de pruebas no tiene GPU y va lento; el nav de lib-test solo espera un tiempo fijo)
+async function nav(p, h, ms) {
+  const name = h.replace(/^#/, "").split("/")[0];
+  await p.evaluate((x) => { location.hash = x.startsWith("#") ? x : "#" + x; }, h);
+  await p.waitForFunction((n) => { const v = document.querySelector("#main > .view"); return v && v.dataset.view === n && v.style.opacity !== "0"; }, name, { timeout: 8000 }).catch(() => {});
+  await wait(p, ms || 400);
+}
 const mockSrc = fs.readFileSync(path.join(T.root, "app", "js", "core", "adapters", "simulador.js"), "utf8");
 const IDS = ["jarvis", "estilo", "grabar", "pedido", "revisar", "metricas"];
 // lo que flota sin parar hace que Playwright espere "a que se quede quieto" antes de cada clic: aca se congela (los clics igual se hacen con la pantalla viva)
@@ -71,7 +78,7 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
   ok(await hash(p) === "#biblioteca" && await waitDone(p, "estilo", 4000), "ir a la Biblioteca completa «Mirá tus estilos»");
   ok(await p.waitForFunction(() => [...document.querySelectorAll(".toast")].some((t) => /Paso listo/.test(t.textContent) && /2 de 6/.test(t.textContent) && /Deshacer/.test(t.textContent)), null, { timeout: 4000 }).then(() => true, () => false), "estando en otra pantalla avisa «¡Paso listo!» (2 de 6) con Deshacer");
   ok(await p.evaluate(() => { const a = document.querySelector('#rail [data-nav="empieza"]'); return !!a && !!a.querySelector(".ic"); }) && (await rail(p))[0] === "empieza", "el menú sigue con Empieza aquí primero");
-  await p.evaluate(() => { location.hash = "#empieza"; }); await wait(p, 1200); await p.addStyleTag({ content: FREEZE });
+  await nav(p, "#empieza", 800); await p.addStyleTag({ content: FREEZE });
   ok(await p.evaluate(() => document.querySelector('.es-li[data-step="estilo"]').dataset.state === "done" && document.querySelector('.es-li[data-state="next"]').dataset.step === "grabar" && document.querySelector('[data-es="done"]').textContent === "2"), "al volver, el paso 2 está hecho, 2 de 6 y el siguiente es Grabar");
 
   // «Ya lo hice» manual, con Deshacer
@@ -114,11 +121,11 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
   console.log("\n== Después de terminar: sigue a mano, sin callejón ==");
   await nav(p, "#hoy", 1200);
   ok(await p.evaluate(() => !document.querySelector(".hoy .es-hoy")), "Hoy ya no muestra la tarjeta");
-  await p.click('#rail [data-nav="empieza"]'); await wait(p, 1200); await p.addStyleTag({ content: FREEZE });
+  await p.click('#rail [data-nav="empieza"]'); await p.waitForSelector(".es .es-li", { timeout: 6000 }).catch(() => {}); await wait(p, 900); await p.addStyleTag({ content: FREEZE });
   ok(await hash(p) === "#empieza" && await p.evaluate(() => document.querySelectorAll('.es-li[data-state="done"]').length === 6 && document.querySelector('[data-es="done"]').textContent === "6"), "se puede volver a entrar: los 6 pasos aparecen hechos");
   ok(await p.evaluate(() => !!document.querySelector('[data-act="esreset"]') && /Volver a ver los pasos/.test(document.querySelector('[data-act="esreset"]').textContent) && /Ir a Hoy/.test(document.querySelector(".es-next").textContent)), "ofrece «Ir a Hoy» y «Volver a ver los pasos»");
   ok(await p.evaluate(() => [...document.querySelectorAll(".es-li")].every((li) => /Volver a verlo/.test(li.querySelector(".es-cta").textContent))), "cada paso hecho ofrece «Volver a verlo»");
-  await p.click('[data-act="esreset"]'); await wait(p, 1500);
+  await p.click('[data-act="esreset"]'); await p.waitForFunction(() => App.onboarding.progress().done === 0, null, { timeout: 5000 }).catch(() => {}); await wait(p, 1500);
   r = await rail(p);
   ok(await p.evaluate(() => App.onboarding.progress().done === 0 && App.onboarding.pending()) && r[0] === "empieza", "«Volver a ver los pasos» reinicia y Empieza aquí vuelve al primer lugar", r.join(","));
   ok(await p.evaluate(() => document.querySelectorAll('.es-li[data-state="done"]').length === 0 && document.querySelector('.es-li[data-state="next"]').dataset.step === "jarvis" && document.querySelector('[data-es="done"]').textContent === "0"), "la pantalla vuelve a 0 de 6 con el paso 1 resaltado");
