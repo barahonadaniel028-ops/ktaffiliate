@@ -1,1 +1,196 @@
-/* Aura · v-teleprompter (esqueleto, ver DECISIONES.md #18 y #19) */
+/* Aura · teleprompter propio (DECISIONES.md #20).
+   El area de lectura es SIEMPRE oscura, con letra marfil: es de uso en escena (se lee a un brazo de distancia y la camara no debe ver un reflejo
+   claro). Solo los controles siguen el tema dia/noche. Todo lo que se mueve de forma continua es transform/opacity: el texto va en UNA capa
+   (.tp-track) con un unico translateY, sin backdrop-filter debajo (con texto pasando por detras se recalcularia en cada cuadro). */
+.tp { --tp-bg: #05090a; --tp-ink: #f4f0e6; --gy: 34%; --lh: 65px; --fs: 46px; --tpw: 78; --cam-o: .45;
+  position: fixed; inset: 0; z-index: 480; overflow: hidden; color: var(--tp-ink); font-family: var(--font); letter-spacing: -.009em;
+  background: radial-gradient(120% 70% at 18% -10%, rgba(15,107,108,.30), transparent 62%), radial-gradient(90% 60% at 100% 105%, rgba(255,150,100,.10), transparent 62%), var(--tp-bg);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; touch-action: none; overscroll-behavior: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; animation: tpIn .5s var(--ease) both; }
+.tp, .tp * { box-sizing: border-box; }
+.tp :where(h2, p) { margin: 0; }
+.tp :where(button, input) { font: inherit; color: inherit; }
+.tp :where(button) { background: none; border: 0; padding: 0; cursor: pointer; }
+.tp button:focus-visible, .tp input:focus-visible { outline: 2px solid var(--apricot); outline-offset: 3px; border-radius: 10px; }
+.tp [hidden] { display: none !important; }
+.tp .ic { width: 22px; height: 22px; flex: none; }
+@keyframes tpIn { from { opacity: 0; transform: scale(1.014); } }
+.tp.out { animation: tpOut .32s ease-in both; } @keyframes tpOut { to { opacity: 0; transform: scale(.992); } }
+.tp-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- camara: de fondo (con opacidad ajustable), en una esquina o escondida. Se ve en espejo, como un espejo; lo que se graba no ---- */
+.tp-cam { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: var(--cam-o); background: #000; transform: scaleX(-1); pointer-events: none; }
+.tp[data-facing="env"] .tp-cam { transform: none; }
+.tp:not([data-cam="on"]) .tp-cam, .tp[data-camview="off"] .tp-cam { display: none; }
+.tp[data-camview="corner"] .tp-cam { inset: auto; top: calc(116px + env(safe-area-inset-top)); right: 14px; width: 92px; height: 164px; opacity: 1; z-index: 4; border-radius: 28px 22px 30px 20px; box-shadow: 0 18px 40px -16px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.14); }
+
+/* ---- la lectura ---- */
+.tp-view { position: absolute; inset: 0; overflow: hidden; }
+.tp-stage { position: absolute; inset: 0; }
+.tp[data-mirror="1"] .tp-stage { transform: scaleX(-1); }
+.tp-track { position: absolute; left: 0; right: 0; top: 0; padding-left: 20px; padding-right: 20px; will-change: transform; backface-visibility: hidden; }
+.tp-body { width: min(calc(var(--tpw) * 1%), 1180px); margin: 0 auto; font: 500 var(--fs)/1.42 var(--font-d); letter-spacing: -.014em; text-align: center; color: var(--tp-ink); text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+.tp-body p { margin: 0 0 .85em; white-space: pre-line; text-wrap: pretty; overflow-wrap: anywhere; }
+.tp-body p:last-child { margin-bottom: 0; }
+.tp-cue { color: var(--apricot); font-weight: 400; font-style: italic; font-size: .76em; opacity: .9; }
+.tp-empty { font: 400 18px/1.5 var(--font); color: rgba(244,240,230,.6); }
+/* degradados arriba y abajo: lo ya leido se apaga y lo que viene aparece de a poco; no se anima nada, solo tapan */
+.tp-fade { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; }
+.tp-fade.t { top: 0; height: calc(var(--gy) - var(--lh) * .62); background: linear-gradient(var(--tp-bg), rgba(5,9,10,.9) 42%, rgba(5,9,10,.42) 74%, transparent); }
+.tp-fade.b { bottom: 0; height: calc(12% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.84) 52%, var(--tp-bg) 78%); }
+.tp[data-phase="ready"] .tp-fade.b { height: calc(34% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.93) 34%, var(--tp-bg) 54%); }
+.tp[data-camview="bg"][data-cam="on"] .tp-fade.t { background: linear-gradient(rgba(5,9,10,.92), rgba(5,9,10,.55) 45%, transparent); }
+.tp[data-camview="bg"][data-cam="on"] .tp-fade.b { background: linear-gradient(transparent, rgba(5,9,10,.7) 55%, rgba(5,9,10,.94) 80%); }
+/* la guia: una banda de luz suave en la linea que se esta leyendo, con dos marcas en los bordes */
+.tp-guide { position: absolute; left: 0; right: 0; z-index: 3; top: calc(var(--gy) - var(--lh) / 2); height: var(--lh); pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.075) 14%, rgba(255,255,255,.075) 86%, transparent); }
+.tp-guide::before, .tp-guide::after { content: ""; position: absolute; top: 50%; width: 11px; height: 17px; margin-top: -8.5px; background: var(--apricot); opacity: .92; }
+.tp-guide::before { left: max(8px, env(safe-area-inset-left)); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.tp-guide::after { right: max(8px, env(safe-area-inset-right)); clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.tp[data-mode="interview"] .tp-guide { display: none; }
+.tp[data-mode="interview"] .tp-stage, .tp[data-mode="interview"] .tp-fade.t { display: none; }
+.tp-prog { position: absolute; z-index: 7; left: 0; right: 0; top: 0; height: 3px; background: rgba(255,255,255,.08); pointer-events: none; }
+.tp-prog i { position: absolute; inset: 0; background: linear-gradient(90deg, #6fd1c0, var(--apricot)); transform: scaleX(0); transform-origin: 0 50%; will-change: transform; }
+
+/* ---- entrevista: una pregunta por vez, centrada, que aparece palabra por palabra ---- */
+.tp-iv { position: absolute; inset: 0; z-index: 2; display: none; place-content: center; justify-items: center; gap: clamp(18px, 4vh, 40px); padding: calc(110px + env(safe-area-inset-top)) 24px calc(190px + env(safe-area-inset-bottom)); text-align: center; pointer-events: none; }
+.tp[data-mode="interview"] .tp-iv { display: grid; }
+.tp-ring { position: relative; width: 104px; height: 104px; display: grid; place-items: center; transition: opacity .5s var(--ease); }
+.tp-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.tp-ring circle { fill: none; stroke-width: 6; }
+.tp-ring .trk { stroke: rgba(255,255,255,.12); } .tp-ring .val { stroke: var(--apricot); stroke-linecap: round; }
+.tp-secs { position: relative; font: 300 34px/1 var(--font-d); font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+.tp-qt { overflow-wrap: anywhere; max-width: min(17em, 100%); font: 300 var(--fsq, 52px)/1.18 var(--font-d); letter-spacing: -.03em; text-wrap: balance; text-shadow: 0 2px 22px rgba(0,0,0,.6); transition: opacity .5s ease-in, transform .5s ease-in; }
+.tp-qt .w { display: inline-block; }
+.tp-qt.pre .w { opacity: .5; }
+.tp-qt.rev .w { animation: tpWord 1s var(--ease) both; animation-delay: var(--d, 0s); }
+@keyframes tpWord { from { opacity: 0; transform: translateY(9px); } }
+.tp[data-phase="pause"] .tp-qt .w { animation-play-state: paused; }
+.tp.q-out .tp-qt { opacity: 0; transform: translateY(-10px); }
+.tp.q-out .tp-ring { opacity: 0; }
+.tp-nx { position: absolute; left: 50%; top: 50%; margin: -20px 0 0; padding: 10px 20px; border-radius: 22px 18px 24px 19px; transform: translateX(-50%) translateY(8px); opacity: 0; font: 500 16px/1 var(--font); letter-spacing: .02em; color: var(--tp-ink); background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); transition: opacity .3s, transform .45s var(--ease); white-space: nowrap; }
+.tp.q-out .tp-nx { opacity: 1; transform: translateX(-50%); transition-delay: .12s; }
+
+/* ---- barra de arriba (se esconde a los 3 s) ---- */
+.tp-top { position: absolute; left: 0; right: 0; top: 0; z-index: 6; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 8px max(14px, env(safe-area-inset-left)); }
+.tp-top { pointer-events: none; } .tp-top > * { pointer-events: auto; }
+.tp-ttl { flex: 1; min-width: 0; font: 600 14px/1.2 var(--font); color: rgba(244,240,230,.82); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 10px rgba(0,0,0,.7); }
+.tp-ib { width: 46px; height: 46px; border-radius: 23px 21px 24px 20px; display: inline-grid; place-items: center; flex: none; color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 88%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair), 0 10px 26px -12px rgba(0,0,0,.7); transition: transform .18s var(--ease), background .2s, opacity .2s; }
+.tp-ib:hover { transform: translateY(-1px); } .tp-ib:active { transform: scale(.94); }
+.tp-ib:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+.tp-ib[aria-pressed="true"], .tp-ib[aria-expanded="true"] { background: var(--solid); color: var(--on-solid); }
+/* estado (siempre visible): REC con su tiempo + lo que falta. Nunca se esconde, es lo que dice si se esta grabando */
+.tp-stat { position: absolute; z-index: 7; left: 50%; top: calc(64px + env(safe-area-inset-top)); transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 6px 13px; border-radius: 17px 15px 18px 14px; font: 600 13px/1.2 var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--tp-ink); background: rgba(5,9,10,.62); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); pointer-events: none; }
+.tp-rec { display: none; align-items: center; gap: 7px; color: #ff9d94; letter-spacing: .06em; }
+.tp[data-rec="on"] .tp-rec, .tp[data-rec="paused"] .tp-rec { display: inline-flex; }
+.tp-rec i { width: 9px; height: 9px; border-radius: 50%; background: #ff4d4d; box-shadow: 0 0 10px rgba(255,77,77,.8); animation: tpRec 1.3s ease-in-out infinite; }
+.tp[data-rec="paused"] .tp-rec i { animation: none; background: var(--warn, #f3c77a); box-shadow: none; } .tp[data-rec="paused"] .tp-rec { color: #f3c77a; }
+@keyframes tpRec { 50% { opacity: .25; } }
+.tp-rec::after { content: "·"; opacity: .4; margin-left: 3px; color: var(--tp-ink); }
+
+/* ---- el dock de abajo: grande y al alcance del pulgar ---- */
+.tp-dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; justify-items: center; gap: 12px; padding: 0 max(14px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+.tp-dock { pointer-events: none; } .tp-dock > * { pointer-events: auto; }
+.tp-read { font: 600 13px/1.2 var(--font); color: rgba(244,240,230,.78); text-align: center; text-shadow: 0 1px 10px rgba(0,0,0,.8); font-variant-numeric: tabular-nums; }
+.tp-row { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 3.6vw, 24px); width: min(100%, 540px); padding-bottom: 18px; }
+.tp-b { width: 54px; height: 54px; border-radius: 27px 25px 28px 24px; display: inline-grid; place-items: center; flex: none; color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 88%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair), 0 12px 28px -12px rgba(0,0,0,.7); transition: transform .18s var(--ease), opacity .2s; }
+.tp-b:hover { transform: translateY(-1px); } .tp-b:active { transform: scale(.93); }
+.tp-b:disabled { opacity: .32; cursor: not-allowed; transform: none; }
+.tp-pw { position: relative; flex: none; }
+.tp-play { position: relative; width: 86px; height: 80px; display: grid; place-items: center; color: #3b1606; transition: transform .2s var(--ease); }
+.tp .tp-play:focus-visible { outline: none; } .tp .tp-play:focus-visible .tp-blob { outline: 2px solid rgba(255,255,255,.88); outline-offset: 4px; }
+.tp-play:active { transform: scale(.94); } .tp-play:disabled { opacity: .4; cursor: not-allowed; }
+.tp-blob { position: absolute; inset: 0; border-radius: 54% 46% 52% 48% / 48% 54% 46% 52%; background: linear-gradient(150deg, #ffd2b4, var(--apricot) 52%, #ff946c); box-shadow: 0 18px 36px -12px rgba(255,140,90,.7), inset 0 1px 0 rgba(255,255,255,.65); animation: tpBlob 9s ease-in-out infinite; will-change: transform; }
+@keyframes tpBlob { 0%, 100% { transform: rotate(0deg) scale(1, 1); } 33% { transform: rotate(-5deg) scale(1.045, .965); } 66% { transform: rotate(4deg) scale(.975, 1.04); } } /* solo transform: el contorno "respira" sin repintar */
+.tp-play .ic { position: relative; width: 32px; height: 32px; stroke-width: 2.4; } .tp-play .ic.fill { fill: currentColor; }
+.tp-cap { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; font: 600 12.5px/1 var(--font); color: rgba(244,240,230,.82); white-space: nowrap; text-shadow: 0 1px 8px rgba(0,0,0,.8); pointer-events: none; }
+.tp[data-phase="count"] .tp-play { opacity: .35; pointer-events: none; }
+
+/* ---- bandas que se esconden cuando se lee (opacity, sin blur) ---- */
+.tp-ui { transition: opacity .35s var(--ease); }
+.tp.ui-off .tp-ui { opacity: 0; transition: opacity .7s var(--ease); }
+.tp.ui-off .tp-ui, .tp.ui-off .tp-ui * { pointer-events: none !important; }   /* invisibles = intocables: el primer toque solo despierta la pantalla */
+.tp.ui-off { cursor: none; }
+
+/* ---- listo para empezar: la camara y su aviso ---- */
+.tp-ready { position: absolute; z-index: 6; left: 50%; bottom: calc(168px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(420px, calc(100% - 28px)); display: grid; gap: 8px; justify-items: stretch; }
+.tp:not([data-phase="ready"]) .tp-ready, .tp.set-open .tp-ready { display: none; }
+.tp[data-phase="count"] .tp-dock { visibility: hidden; }   /* durante la cuenta solo se ve la cuenta (y Cancelar) */
+.tp-camsw { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 8px 14px; border-radius: 30px 27px 31px 26px; text-align: left; color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 90%, transparent); box-shadow: inset 0 0 0 1px var(--hair), 0 18px 36px -16px rgba(0,0,0,.75); }
+.tp-camsw > .ic { color: var(--accent); width: 24px; height: 24px; }
+.tp-camsw span { flex: 1; min-width: 0; display: grid; gap: 2px; } .tp-camsw b { font: 600 15px/1.2 var(--font); } .tp-camsw small { font: 400 12.5px/1.3 var(--font); color: var(--ink2); }
+.tp-camsw:disabled { cursor: default; } .tp-camsw:disabled .tp-knob { opacity: .4; }
+.tp-knob { position: relative; width: 52px; height: 30px; border-radius: 15px; background: var(--hair); transition: background .25s; flex: none; }
+.tp-knob::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); transition: transform .3s var(--spring); }
+[aria-checked="true"] > .tp-knob { background: var(--accent); } [aria-checked="true"] > .tp-knob::after { transform: translateX(22px); }
+.tp-camsw[data-st="pending"] small::after { content: ""; display: inline-block; width: 4px; height: 4px; margin-left: 4px; border-radius: 50%; background: currentColor; animation: tpRec 1s infinite; }
+.tp-note { padding: 8px 14px; border-radius: 18px 16px 19px 15px; font: 500 13px/1.35 var(--font); text-align: center; color: var(--tp-ink); background: rgba(5,9,10,.6); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+
+/* ---- cuenta regresiva 3-2-1 sobre una gota que respira ---- */
+.tp-count { position: absolute; inset: 0; z-index: 8; display: none; place-items: center; background: rgba(5,9,10,.55); }
+.tp[data-phase="count"] .tp-count { display: grid; }
+.tp-cblob { position: absolute; width: min(66vmin, 400px); height: min(60vmin, 370px); border-radius: 52% 48% 56% 44% / 50% 56% 44% 50%; background: radial-gradient(circle at 34% 30%, rgba(255,173,133,.55), rgba(15,107,108,.36) 58%, transparent 74%); animation: tpCblob 3.6s ease-in-out infinite; will-change: transform; }
+@keyframes tpCblob { 0%, 100% { transform: rotate(0deg) scale(1, 1); } 40% { transform: rotate(7deg) scale(1.06, .95); } 72% { transform: rotate(-5deg) scale(.96, 1.05); } }
+.tp-cn { position: relative; font: 300 clamp(120px, 38vmin, 250px)/1 var(--font-d); letter-spacing: -.045em; font-variant-numeric: tabular-nums; animation: tpTick 1s var(--ease) both; }
+@keyframes tpTick { 0% { opacity: 0; transform: scale(1.35); } 24% { opacity: 1; transform: scale(1); } 78% { opacity: 1; } 100% { opacity: .1; transform: scale(.93); } }
+.tp-ccancel:disabled { opacity: .3; cursor: default; }
+.tp:focus { outline: none; }
+.tp-ccancel { position: absolute; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 46px; padding: 0 22px; border-radius: 23px 21px 24px 20px; font: 500 15px/1 var(--font); color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 88%, transparent); box-shadow: inset 0 0 0 1px var(--hair); }
+
+/* ---- ajustes (hoja sobre el dock) ---- */
+.tp-set { position: absolute; z-index: 9; right: max(14px, env(safe-area-inset-right)); bottom: calc(176px + env(safe-area-inset-bottom)); width: min(390px, calc(100% - 28px)); max-height: min(66dvh, 600px); overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 8px 18px 10px; border-radius: 32px 28px 34px 29px; color: var(--ink); background: var(--glass-solid); box-shadow: inset 0 0 0 1px var(--hair), 0 40px 80px -24px rgba(0,0,0,.75); transform-origin: 90% 100%; animation: tpPop .4s var(--spring) both; scrollbar-width: thin; }
+@keyframes tpPop { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+.tp-sh { display: flex; align-items: center; justify-content: space-between; min-height: 40px; font: 600 15px/1 var(--font); }
+.tp-f { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--hair2); }
+.tp-f > label, .tp-f > .lbl { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font: 600 13px/1.2 var(--font); color: var(--ink2); }
+.tp-f output { font: 600 13px/1.2 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; }
+.tp .tp-f input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--accent); background: transparent; touch-action: pan-y; cursor: pointer; }
+.tp-sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px; text-align: left; font: 500 15px/1.25 var(--font); color: var(--ink); }
+.tp-sw small { display: block; font: 400 12.5px/1.3 var(--font); color: var(--ink2); }
+.tp-sw:disabled { opacity: .5; cursor: not-allowed; }
+.tp-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 22px; background: var(--seg-bg); }
+.tp-seg button:disabled { opacity: .45; cursor: default; }
+.tp-seg button { min-height: 40px; border-radius: 18px; font: 500 14px/1 var(--font); color: var(--ink2); } .tp-seg button[aria-checked="true"] { background: var(--seg-on); color: var(--ink); box-shadow: 0 2px 8px -2px rgba(0,0,0,.35); }
+.tp-act { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 4px; font: 500 15px/1 var(--font); color: var(--ink); } .tp-act .ic { width: 20px; height: 20px; color: var(--accent); } .tp-act:disabled { opacity: .45; cursor: not-allowed; }
+.tp-keys { padding: 10px 0 4px; border-top: 1px solid var(--hair2); font: 400 12px/1.7 var(--font); color: var(--ink3); }
+.tp-keys kbd { font: 600 11px/1 var(--font); padding: 3px 6px; border-radius: 6px; background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--hair); margin-right: 2px; color: var(--ink2); }
+@media (hover: none), (max-width: 640px) { .tp-keys { display: none; } }
+
+/* ---- final: la gota que felicita ---- */
+.tp-end { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); background: rgba(5,9,10,.8); animation: tpFade .5s var(--ease) both; touch-action: pan-y; }
+@keyframes tpFade { from { opacity: 0; } }
+.tp-endc { position: relative; width: min(470px, 100%); max-height: 100%; overflow: auto; padding: 32px 24px 22px; text-align: center; display: grid; gap: 14px; justify-items: center; color: var(--ink); border-radius: 54px 60px 56px 62px / 60px 52px 62px 54px;
+  background: radial-gradient(110% 90% at 28% 8%, var(--glass-a), transparent 72%), var(--glass-solid); box-shadow: inset 0 1px 0 var(--edge), inset 0 0 0 1px var(--hair2), 0 60px 110px -50px rgba(0,0,0,.9); animation: tpEnd 12s ease-in-out infinite; }
+@keyframes tpEnd { 0%, 100% { transform: scale(1, 1) rotate(0deg); } 35% { transform: scale(1.01, .992) rotate(-.25deg); } 68% { transform: scale(.992, 1.008) rotate(.2deg); } }
+.tp-endc .orb { width: 52px; height: 52px; }
+.tp-endc h2 { font: 600 clamp(28px, 7vw, 36px)/1.1 var(--font-d); letter-spacing: -.03em; }
+.tp-endc h2 em { font-style: normal; background: var(--title-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tp-endsub { font: 400 14.5px/1.45 var(--font); color: var(--ink2); max-width: 30em; }
+.tp-endv { width: 100%; max-height: 42dvh; border-radius: 26px 22px 28px 24px; background: #000; object-fit: contain; box-shadow: 0 20px 44px -20px rgba(0,0,0,.8); }
+.tp-enda { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; padding-top: 4px; }
+.tp-enda .btn { flex: 1 1 150px; }
+.tp-enda .btn:not(.pri) { box-shadow: inset 0 0 0 1px var(--hair); }
+.tp-enda .btn.pri { flex-basis: 100%; order: 9; min-height: 52px; }
+.tp-wait { display: inline-flex; align-items: center; gap: 10px; font: 500 14px/1 var(--font); color: var(--ink2); } .tp-wait i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: tpRec 1s infinite; }
+
+/* ---- pregunta de confirmacion ---- */
+.tp-dlg { position: absolute; inset: 0; z-index: 12; display: grid; place-items: center; padding: 20px; background: rgba(5,9,10,.66); animation: tpFade .25s ease both; }
+.tp-dlgc { width: min(400px, 100%); padding: 24px 22px 18px; display: grid; gap: 8px; border-radius: 34px 30px 36px 31px; color: var(--ink); background: var(--glass-solid); box-shadow: inset 0 0 0 1px var(--hair), 0 50px 90px -30px rgba(0,0,0,.85); animation: tpPop .4s var(--spring) both; }
+.tp-dlgc h2 { font: 600 20px/1.2 var(--font-d); letter-spacing: -.02em; } .tp-dlgc p { font: 400 14.5px/1.45 var(--font); color: var(--ink2); }
+.tp-dlga { display: grid; gap: 8px; padding-top: 10px; } .tp-dlga .btn { width: 100%; }
+
+/* ---- teléfono ---- */
+@media (max-width: 640px) {
+  .tp-set { left: 14px; right: 14px; width: auto; transform-origin: 50% 100%; }
+  .tp-qt { font-size: var(--fsq, 36px); }
+  .tp-ring { width: 84px; height: 84px; } .tp-secs { font-size: 28px; }
+  .tp-iv { padding-left: 18px; padding-right: 18px; }
+}
+@media (max-height: 520px) { .tp-ready { bottom: calc(86px + env(safe-area-inset-bottom)); width: min(340px, calc(100% - 28px)); } .tp-camsw { min-height: 44px; padding: 4px 12px; } .tp-camsw small { display: none; } .tp-read { display: none; } .tp-play { width: 70px; height: 66px; } .tp-b { width: 46px; height: 46px; } .tp-row { padding-bottom: 6px; } .tp-cap { display: none; } .tp-set { bottom: 90px; max-height: 70dvh; } }
+
+/* ---- reducir movimiento: sin fundidos ni respiracion, pero el texto sigue avanzando ---- */
+.tp.rm, .tp.rm * { animation: none !important; transition: none !important; }
+.tp.rm .tp-count .tp-cn { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .tp, .tp * { animation: none !important; transition: none !important; } }

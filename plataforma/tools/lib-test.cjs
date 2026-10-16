@@ -9,10 +9,12 @@ const ok = (cond, name, extra) => { if (cond) { pass++; console.log("  ok  ", na
 const wait = (p, ms) => p.waitForTimeout(ms);
 // la nube de Crear/Notas flota sin parar y Playwright espera que lo que toca este quieto: se congela en todas las pruebas
 const FREEZE = ".crear-cloud.jv, .nt-float, .nt-cloud { animation: none !important; }";
-async function launch() { return chromium.launch(fs.existsSync(exe) ? { executablePath: exe, args: ["--autoplay-policy=no-user-gesture-required"] } : {}); }
+// `extraArgs`: banderas extra de Chromium (p. ej. las de camara falsa del teleprompter); sin ellas todo sigue igual que antes
+async function launch(extraArgs) { return chromium.launch(fs.existsSync(exe) ? { executablePath: exe, args: ["--autoplay-policy=no-user-gesture-required"].concat(extraArgs || []) } : { args: extraArgs || [] }); }
 // abre la app (modo demostracion, sin celebracion automatica de hitos). `init` es un script que corre antes de la pagina (p. ej. para simular window.claude)
-async function open(browser, query, init, viewport) {
-  const ctx = await browser.newContext({ viewport: viewport || { width: 1440, height: 900 } }); if (init) await ctx.addInitScript(init);
+// `ctxOpts`: opciones extra del contexto (isMobile, hasTouch, reducedMotion...) para pruebas de telefono
+async function open(browser, query, init, viewport, ctxOpts) {
+  const ctx = await browser.newContext(Object.assign({ viewport: viewport || { width: 1440, height: 900 } }, ctxOpts || {})); if (init) await ctx.addInitScript(init);
   await ctx.addInitScript((css) => { document.addEventListener("DOMContentLoaded", () => { const st = document.createElement("style"); st.id = "__nofloat"; st.textContent = css; document.head.appendChild(st); }); }, FREEZE);
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(e.message)); page.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
   page.errs = errs; await page.goto(file + (query || "?demo=1&preset=kt").replace("?", "?nocel=1&"), { waitUntil: "load" });
