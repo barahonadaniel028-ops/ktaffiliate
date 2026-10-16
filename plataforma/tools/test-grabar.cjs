@@ -170,6 +170,7 @@ const spill = () => [...document.querySelectorAll("#main *")].filter((e) => { co
   await tap(p, '[data-act="grsend"]'); await wait(p, 2600);
   ok(await p.evaluate(() => location.hash === "#crear/video" && App.ui.crear.video.att.normal && App.ui.crear.video.att.normal.items.length === 1 && /grabacion\.webm/.test(App.ui.crear.video.att.normal.items[0].name)), "«Mandarlo a Un video nuevo» lo adjunta como Video normal y abre #crear/video");
   ok(await p.evaluate(() => /Grabado con Grabar/.test(App.ui.crear.video.notes)), "el pedido nuevo lleva la nota de que viene de Grabar");
+  ok(await p.evaluate(() => App.ui.crear.video.trail.length === 1 && /ya está cargada/.test(App.ui.crear.video.trail[0].html)) && /ya está cargada/.test(await text(p, ".crear-cloud .log")), "en «Un video nuevo» la nube dice de dónde viene el archivo");
   await p.evaluate(() => { location.hash = "#crear/grabar"; }); await wait(p, 2200);
   ok(await has(p, '.gr[data-step="ask"]') || await has(p, '.gr[data-step="done"]'), "volver a Grabar no deja un estado roto");
   ok(p.errs.length === 0, "sin errores en el flujo de guion", p.errs.slice(0, 3).join(" || ")); await p.context().close();
@@ -189,6 +190,36 @@ const spill = () => [...document.querySelectorAll("#main *")].filter((e) => { co
   ok(await p.evaluate(() => location.hash === "#crear" && !!document.querySelector('.crear-path[data-c="grabar"]')), "«Terminar» vuelve a «¿Qué querés crear?»");
   await p.click('.crear-path[data-c="grabar"]', { force: true }); await wait(p, 2400);
   ok(await has(p, '.gr[data-step="ask"]'), "la próxima vez Grabar arranca limpio"); await p.context().close();
+
+  console.log("\n== Cerrar el teleprompter a mitad, archivos grandes ==");
+  p = await openGrabar(browser);
+  // el teleprompter real avisa `completed: false` si se cierra antes de terminar: no hay logro ni pantalla de "grabado"
+  await p.evaluate(() => { App.teleprompter.open = (a) => { window.__tp.push(a); setTimeout(() => a.onDone({ recorded: null, durationMs: 2000, mode: a.mode, completed: false, discarded: false }), 40); }; });
+  ok(await toScript(p), "(preparación) llega al guion");
+  await tap(p, '[data-act="grapprove"]'); await until(p, '[data-act="grrec"]'); await tap(p, '[data-act="grrec"]'); await wait(p, 900);
+  ok(await p.evaluate(() => App.ui.crear.grabar.step === "ready" && !!document.querySelector('.gr[data-step="ready"]') && window.__grabado === 0 && window.__md.length === 0), "cerrar el teleprompter a mitad (sin archivo) no marca el paso ni emite aura:grabado y se queda en «listo para grabar»");
+  ok(/antes de terminar/.test(await text(p, "#toasts")), "y avisa con un mensaje corto");
+  ok(await has(p, '[data-act="grrec"]'), "«Grabar ahora» sigue disponible para probar de nuevo");
+  // cerrar a mitad pero con un archivo (se grabó un tramo): se ofrece, sin festejar
+  await p.evaluate(() => { App.teleprompter.open = (a) => { window.__tp.push(a); setTimeout(() => a.onDone({ recorded: new File([new Uint8Array(2048)], "parcial.webm", { type: "video/webm" }), durationMs: 5000, mode: a.mode, completed: false }), 40); }; });
+  await tap(p, '[data-act="grrec"]'); await until(p, '.gr[data-step="done"]');
+  ok(await p.evaluate(() => window.__grabado === 0 && window.__md.length === 0) && /parcial\.webm/.test(await text(p, ".gr-done")), "si se cerró a mitad pero quedó un archivo, se ofrece igual (descargar / mandar), sin marcar el paso");
+  // terminar de verdad: ahora sí
+  await p.evaluate(() => { App.teleprompter.open = (a) => { window.__tp.push(a); setTimeout(() => a.onDone({ recorded: new File([new Uint8Array(2048)], "completa.webm", { type: "video/webm" }), durationMs: 31000, mode: a.mode, completed: true }), 40); }; });
+  await tap(p, '[data-act="grrerec"]'); await wait(p, 900);
+  ok(await p.evaluate(() => window.__grabado === 1 && window.__md.join() === "grabar") && /completa\.webm/.test(await text(p, ".gr-done")), "terminar de verdad (completed: true) sí marca «grabar» y emite aura:grabado");
+  await p.context().close();
+
+  // una grabación más pesada que el límite de subida (19 MB): primero se descarga, y «Un video nuevo» no la adjunta pero avisa
+  p = await openGrabar(browser);
+  await p.evaluate(() => { App.teleprompter.open = (a) => { window.__tp.push(a); setTimeout(() => a.onDone({ recorded: new File([new Uint8Array(20 * 1048576)], "larga.webm", { type: "video/webm" }), durationMs: 90000, mode: a.mode, completed: true }), 40); }; });
+  ok(await toScript(p), "(preparación) llega al guion");
+  await tap(p, '[data-act="grapprove"]'); await until(p, '[data-act="grrec"]'); await tap(p, '[data-act="grrec"]'); await until(p, '.gr[data-step="done"]');
+  ok(/Pesa 20,0 MB/.test(await text(p, ".gr-done + .gr-hint")) && /hasta 19,0 MB/.test(await text(p, ".gr-done + .gr-hint")), "una grabación que pasa del límite de subida lo explica (Pesa 20 MB… hasta 19 MB)");
+  ok(await p.evaluate(() => document.querySelector(".gr-acts .btn.pri").dataset.act === "grdl" && document.querySelector('[data-act="grsend"]').classList.contains("ghost")), "y entonces lo principal es descargarla, no mandarla");
+  await tap(p, '[data-act="grsend"]'); await wait(p, 2600);
+  ok(await p.evaluate(() => location.hash === "#crear/video" && !(App.ui.crear.video.att.normal && App.ui.crear.video.att.normal.items.length)), "ir a «Un video nuevo» no adjunta un archivo que no se puede subir");
+  await p.context().close();
 
   console.log("\n== Ya tengo ideas: un guion por idea y elegir ==");
   p = await openGrabar(browser, FAKE_SR);
@@ -369,6 +400,18 @@ const spill = () => [...document.querySelectorAll("#main *")].filter((e) => { co
   ok(!/\b(eh|osea)\b/i.test(loc.sc2.texto) && /el café de la mañana no te despierta/i.test(loc.sc2.texto), "el guion local saca muletillas pero deja las palabras de la persona");
   ok(/sígueme para más ideas/i.test(loc.sc2.cierre) && loc.sc2.cierreSugerido === false, "si la persona ya dijo un cierre, se usa ese (no se inventa otro)");
   ok(typeof loc.rev.texto === "string" && loc.rev.hook && loc.rev.palabras <= loc.sc2.palabras, "revise(script, «más directo») devuelve el guion completo, sin crecer", `${loc.sc2.palabras} -> ${loc.rev.palabras}`);
+  const kinds = await p.evaluate(() => {
+    const es = App.grabarAI.local.ideas({ id: "x-es", lang: "es", piezas: ["Escribir a mano", "Tu primer cliente", "Tinta invisible", "Empezar un proyecto"], mejor: "", predictor: false }, 21, 0, []);
+    const en = App.grabarAI.local.ideas({ id: "x-en", lang: "en", piezas: ["Writing by hand", "Morning ritual", "Your first client", "Starting a project"], mejor: "", predictor: false }, 21, 0, []);
+    return { es: es.map((i) => i.titulo), en: en.map((i) => i.titulo) };
+  });
+  ok(kinds.es.length === 21 && new Set(kinds.es).size === 21 && kinds.en.length === 21 && new Set(kinds.en).size === 21, "con temas que son un verbo o llevan posesivo igual salen 21 ideas distintas");
+  ok(!kinds.es.some((t) => /con escribir|con empezar|probé tu|historia con tu|rutina con tu/i.test(t)), "en español no arma frases torcidas con verbos («con empezar un proyecto») ni con posesivos («probé tu primer cliente»)", kinds.es.filter((t) => /con escribir|con empezar|probé tu/i.test(t)).join(" | "));
+  ok(kinds.es.some((t) => /\bal escribir a mano|para escribir a mano|Cómo escribir a mano|Por qué cuesta tanto/.test(t)) || kinds.es.some((t) => /empezar un proyecto/.test(t)), "los temas con verbo usan plantillas pensadas para verbos");
+  ok(!kinds.en.some((t) => /with writing|with starting|tried your|story with your|routine with your|start with starting/i.test(t)), "en inglés pasa lo mismo con los gerundios y los posesivos", kinds.en.filter((t) => /with writing|with starting|tried your/i.test(t)).join(" | "));
+  const noop = await p.evaluate(() => { const sc = App.grabarAI.local.script({ titulo: "x" }, "Dejé el café hace un mes y dormí mejor. Si te sirvió, guárdalo."); return { corto: App.grabarAI.local.revise(sc, "hacelo más corto", "es").meta, directo: App.grabarAI.local.revise(sc, "más directo", "es").meta, raro: App.grabarAI.local.revise(sc, "agregá un chiste", "es").meta }; });
+  ok(noop.corto.applied === false && /Ya es corto/.test(noop.corto.note) && noop.directo.applied === false && /ya va al grano/.test(noop.directo.note), "si lo pedido ya estaba así lo dice («Ya es corto»), no dice que no puede");
+  ok(noop.raro.applied === false && /Sin IA conectada no puedo/.test(noop.raro.note), "y si es un cambio que sin IA no se sabe hacer, lo dice distinto");
   ok(p.errs.length === 0, "sin errores en la lógica local", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
   console.log("\n== Teléfono (390 px) ==");

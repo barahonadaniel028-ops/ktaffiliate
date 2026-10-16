@@ -57,58 +57,66 @@
   const TPL = {
     es: [
       ["mito", "El mito más grande sobre {t}", "Esto es lo que te mintieron sobre {t}."],
-      ["error", "El error que casi todos cometen con {t}", "Esto es lo que casi todos hacen mal con {t}."],
+      ["error", "El error que casi todos cometen con {t}", "Esto es lo que casi todos hacen mal con {t}.", "v"],
       ["lista", "{n} cosas que nadie te dice sobre {t}", "Esto es lo que nadie te cuenta sobre {t}."],
       ["rapido", "{t} en 30 segundos", "Esto es todo lo que necesitas saber sobre {t}, en 30 segundos."],
-      ["historia", "Mi historia con {t}", "Esto es lo que aprendí después de un año con {t}."],
-      ["reto", "Probé {t} durante 7 días", "Esto fue lo que pasó cuando probé {t} durante 7 días seguidos."],
+      ["historia", "Mi historia con {t}", "Esto es lo que aprendí después de un año con {t}.", "vp"],
+      ["reto", "Probé {t} durante 7 días", "Esto fue lo que pasó cuando probé {t} durante 7 días seguidos.", "p"],
       ["faq", "La pregunta que más me hacen sobre {t}", "Esto es lo que más me preguntan sobre {t}, y te lo respondo ahora."],
-      ["rutina", "Mi rutina con {t}, paso a paso", "Así uso {t} todos los días, paso a paso."],
-      ["cero", "Lo que haría distinto si empezara de cero con {t}", "Si empezara hoy con {t}, haría solo esto."],
+      ["rutina", "Mi rutina con {t}, paso a paso", "Así uso {t} todos los días, paso a paso.", "vp"],
+      ["cero", "Lo que haría distinto si empezara de cero con {t}", "Si empezara hoy con {t}, haría solo esto.", "vp"],
       ["reaccion", "Lo que dice internet sobre {t}", "Esto es lo que dice internet sobre {t} y por qué no siempre es cierto."],
-      ["necesitas", "Lo único que necesitas para empezar con {t}", "Esto es lo único que necesitas para empezar con {t}."],
+      ["necesitas", "Lo único que necesitas para empezar con {t}", "Esto es lo único que necesitas para empezar con {t}.", "v"],
       ["vs", "{t}: lo que todos hacen vs lo que funciona", "Esto es lo que todos hacen con {t} y lo que de verdad funciona."],
       ["secreto", "El detalle sobre {t} que casi nadie nota", "Este es el detalle sobre {t} que cambia el resultado."],
-      ["detras", "Detrás de cámaras con {t}", "Así es por dentro mi trabajo con {t}."],
+      ["detras", "Detrás de cámaras con {t}", "Así es por dentro mi trabajo con {t}.", "vp"],
       ["principiante", "Guía rápida para principiantes: {t}", "Esto es lo básico que debes saber sobre {t} si empiezas hoy."],
-      ["antes", "Antes y después: {t}", "Esto es lo que cambió cuando empecé con {t}."],
-      ["regla", "La regla de oro con {t}", "Esta es la única regla que sigo con {t}."],
+      ["antes", "Antes y después: {t}", "Esto es lo que cambió cuando empecé con {t}.", "vp"],
+      ["regla", "La regla de oro con {t}", "Esta es la única regla que sigo con {t}.", "vp"],
       ["pasos", "{t} en {n} pasos", "Así lo hago: {t} en {n} pasos simples."],
       ["yo", "Lo que le diría a mi yo de hace un año sobre {t}", "Esto es lo que le diría a mi yo del pasado sobre {t}."],
       ["dudas", "Respondo sus dudas sobre {t}", "Esto es lo que me preguntaron sobre {t} esta semana."],
-      ["porque", "Por qué cambié mi forma de ver {t}", "Esto es lo que me hizo cambiar de opinión sobre {t}."],
+      ["porque", "Por qué cambié mi forma de ver {t}", "Esto es lo que me hizo cambiar de opinión sobre {t}.", "p"],
       ["checklist", "Checklist rápido sobre {t}", "Guarda este checklist sobre {t} para tenerlo a mano."],
-      ["tendencia", "Lo que está pasando con {t} ahora mismo", "Esto es lo que cambió con {t} este mes y casi nadie lo notó."],
-      ["caso", "Un ejemplo real con {t}", "Mira este ejemplo real con {t}, paso a paso."],
+      ["tendencia", "Lo que está pasando con {t} ahora mismo", "Esto es lo que cambió con {t} este mes y casi nadie lo notó.", "vp"],
+      ["caso", "Un ejemplo real con {t}", "Mira este ejemplo real con {t}, paso a paso.", "vp"],
+      ["error_v", "El error que casi todos cometen al {t}", "Esto es lo que casi todos hacen mal al {t}.", "", "v"], // solo para temas que son un verbo («escribir a mano»)
+      ["necesitas_v", "Lo único que necesitas para {t}", "Esto es lo único que necesitas para {t}.", "", "v"],
+      ["cuesta", "Por qué cuesta tanto {t}", "Esto es lo que hace que cueste tanto {t}.", "", "v"],
+      ["sin", "Cómo {t} sin complicarte", "Así puedes {t} sin complicarte.", "", "v"],
       { b: 1, c: "parte2", t: "Parte 2 de «{b}»", h: "Muchos pidieron la segunda parte de «{b}», así que aquí está." },
       { b: 1, c: "parte2", t: "Lo que no te conté en «{b}»", h: "Esto es lo que me faltó decir en «{b}»." },
       { b: 1, c: "parte2", t: "«{b}» explicado de otra forma", h: "Esta es otra forma, más simple, de entender «{b}»." },
     ],
     en: [
       ["mito", "The biggest myth about {t}", "This is what they got wrong about {t}."],
-      ["error", "The mistake almost everyone makes with {t}", "This is what most people get wrong with {t}."],
+      ["error", "The mistake almost everyone makes with {t}", "This is what most people get wrong with {t}.", "v"],
       ["lista", "{n} things nobody tells you about {t}", "This is what nobody tells you about {t}."],
       ["rapido", "{t} in 30 seconds", "This is everything you need to know about {t}, in 30 seconds."],
-      ["historia", "My story with {t}", "This is what I learned after a year with {t}."],
-      ["reto", "I tried {t} for 7 days", "This is what happened when I tried {t} for 7 days straight."],
+      ["historia", "My story with {t}", "This is what I learned after a year with {t}.", "vp"],
+      ["reto", "I tried {t} for 7 days", "This is what happened when I tried {t} for 7 days straight.", "p"],
       ["faq", "The question I get most about {t}", "This is what people ask me most about {t}, answered."],
-      ["rutina", "My routine with {t}, step by step", "This is how I use {t} every day, step by step."],
-      ["cero", "What I would do differently starting over with {t}", "If I started with {t} today, I would do only this."],
+      ["rutina", "My routine with {t}, step by step", "This is how I use {t} every day, step by step.", "vp"],
+      ["cero", "What I would do differently starting over with {t}", "If I started with {t} today, I would do only this.", "vp"],
       ["reaccion", "What the internet says about {t}", "This is what the internet says about {t} and why it is not always true."],
-      ["necesitas", "All you need to start with {t}", "This is all you need to get started with {t}."],
+      ["necesitas", "All you need to start with {t}", "This is all you need to get started with {t}.", "v"],
       ["vs", "{t}: what everyone does vs what works", "This is what everyone does with {t} and what actually works."],
       ["secreto", "The detail about {t} almost nobody notices", "This is the detail about {t} that changes the result."],
-      ["detras", "Behind the scenes with {t}", "This is what my work with {t} looks like from the inside."],
+      ["detras", "Behind the scenes with {t}", "This is what my work with {t} looks like from the inside.", "vp"],
       ["principiante", "A quick beginner guide: {t}", "This is the basics of {t} if you are starting today."],
-      ["antes", "Before and after: {t}", "This is what changed when I started with {t}."],
-      ["regla", "The golden rule with {t}", "This is the only rule I follow with {t}."],
+      ["antes", "Before and after: {t}", "This is what changed when I started with {t}.", "vp"],
+      ["regla", "The golden rule with {t}", "This is the only rule I follow with {t}.", "vp"],
       ["pasos", "{t} in {n} steps", "Here is how I do it: {t} in {n} simple steps."],
       ["yo", "What I would tell my past self about {t}", "This is what I would tell my past self about {t}."],
       ["dudas", "Answering your questions about {t}", "This is what you asked me about {t} this week."],
-      ["porque", "Why I changed how I see {t}", "This is what made me change my mind about {t}."],
+      ["porque", "Why I changed how I see {t}", "This is what made me change my mind about {t}.", "p"],
       ["checklist", "A quick checklist for {t}", "Save this checklist for {t} so you have it handy."],
-      ["tendencia", "What is happening with {t} right now", "This is what changed with {t} this month and few noticed."],
-      ["caso", "A real example with {t}", "Look at this real example with {t}, step by step."],
+      ["tendencia", "What is happening with {t} right now", "This is what changed with {t} this month and few noticed.", "vp"],
+      ["caso", "A real example with {t}", "Look at this real example with {t}, step by step.", "vp"],
+      ["error_v", "The mistake almost everyone makes when {t}", "This is what most people get wrong when {t}.", "", "v"],
+      ["necesitas_v", "All you need for {t}", "This is all you need for {t}.", "", "v"],
+      ["cuesta", "Why {t} is harder than it looks", "This is why {t} is harder than it looks.", "", "v"],
+      ["sin", "How to keep {t} simple", "Here is how to keep {t} simple.", "", "v"],
       { b: 1, c: "parte2", t: "Part 2 of «{b}»", h: "Many of you asked for part two of «{b}», so here it is." },
       { b: 1, c: "parte2", t: "What I left out of «{b}»", h: "This is what I forgot to say in «{b}»." },
       { b: 1, c: "parte2", t: "«{b}» explained differently", h: "This is another, simpler way to understand «{b}»." },
@@ -125,7 +133,18 @@
     yo: "Mirar atrás con humildad conecta y se siente honesto.", dudas: "Contestar dudas reales refuerza a la comunidad.", porque: "Contar un cambio de opinión da credibilidad.",
     checklist: "Un checklist se guarda y se vuelve a usar.", tendencia: "Lo que cambió hoy tiene urgencia: se mira ya.", caso: "Un ejemplo real vale más que la explicación.",
     parte2: "Es lo que mejor funcionó en esta cuenta: una continuación aprovecha esa audiencia.",
+    error_v: "Un error común engancha porque nadie quiere cometerlo.", necesitas_v: "Promete simplicidad: lo único que hace falta.", cuesta: "Nombrar una dificultad real conecta con quien la vive.", sin: "Prometer que es simple baja la barrera para empezar.",
   };
+  // Qué clase de tema es, para no armar frases torcidas ("empezar con empezar un proyecto", "probé tu primer cliente"): "v" un verbo (infinitivo o gerundio: «escribir a mano»,
+  // «writing by hand»), "p" con posesivo («tu primer cliente») y "n" un sustantivo. Cada plantilla puede excluir clases (4.º dato) o valer solo para una (5.º dato).
+  const NOT_VERB = /^(lugar|taller|hogar|mujer|poder|placer|pilar|altar|azucar|collar|militar|morning|evening|spring|king|ring|thing|string|ceiling|building|wedding|clothing|painting|meaning|feeling|everything|something|nothing|anything)$/;
+  function kindOf(t, lang) {
+    const w = norm(t).split(/\s+/)[0] || "";
+    if (/^(tu|tus|mi|mis|su|sus|nuestro|nuestra|my|your|our|his|her|their)$/.test(w)) return "p";
+    if (NOT_VERB.test(w)) return "n";
+    return lang === "en" ? (/^[a-z]{3,}ing$/.test(w) ? "v" : "n") : (/^[a-z]{3,}(ar|er|ir|arse|erse|irse)$/.test(w) ? "v" : "n");
+  }
+  const fitsKind = (tp, kind) => (tp.b ? true : tp[4] ? tp[4] === kind : !(tp[3] || "").includes(kind));
   const PRED_NOTE = " Gancho de promesa directa, lo que mejor rindió en los datos.";
   // temas propios de cada cuenta del demo + comodines por idioma; las piezas reales de la cuenta van primero
   const EXTRA = {
@@ -150,7 +169,7 @@
   function localIdeas(ctx, n, round, avoid) {
     const lang = ctx.lang === "en" ? "en" : "es", tpls = TPL[lang].filter((t) => !t.b || ctx.mejor), T = topicsOf(ctx), rnd = seeded(App.hash(ctx.id + "#" + (round || 0)));
     const avoided = new Set((avoid || []).map(norm));
-    const pairs = []; tpls.forEach((tp) => (tp.b ? [[ctx.mejor, false]] : T.own.map((t) => [t, false]).concat(T.gen.map((t) => [t, true]))).forEach(([t, g]) => pairs.push([tp, t, g])));
+    const pairs = []; tpls.forEach((tp) => (tp.b ? [[ctx.mejor, false]] : T.own.map((t) => [t, false]).concat(T.gen.map((t) => [t, true]))).filter(([t]) => fitsKind(tp, kindOf(t, lang))).forEach(([t, g]) => pairs.push([tp, t, g])));
     const mk = (tp, t) => {
       const num = [3, 5, 7][Math.floor(rnd() * 3)], c = tp.c || tp[0], tt = tp.t || tp[1], hh = tp.h || tp[2], fill = (s) => s.replace(/\{t\}/g, t).replace(/\{b\}/g, t).replace(/\{n\}/g, num);
       const why = c === "parte2" ? WHY.parte2 + (ctx.mejor ? ` («${ctx.mejor}»)` : "") : WHY[c] + (ctx.predictor ? PRED_NOTE : "");
@@ -211,6 +230,7 @@
   function hookScore(s, i) {
     const w = nWords(s); let sc = 0;
     sc += w >= 5 && w <= 12 ? 4 : w <= 16 ? 2 : -3;
+    if (/^(eso|ese|esa|esos|esas|aquello|tambi[eé]n|adem[aá]s|por eso|that|those|it|also|plus)\b/i.test(s)) sc -= 4; // sin contexto no se entiende: no sirve para abrir
     if (/\d/.test(s)) sc += 2; if (HOOK_RX.test(s)) sc += 3; if (/\?/.test(s)) sc -= 3; if (CTA_RX.test(s)) sc -= 4; if (i === 0) sc += 1;
     return sc;
   }
@@ -262,20 +282,21 @@
   function localRevise(sc, instruction, lang) {
     lang = lang === "en" ? "en" : "es";
     const q = norm(instruction), cur = finishScript({ ...sc, beats: sc.beats.slice() }), before = cur.texto, out = { ...cur, beats: cur.beats.slice() };
-    let note = "";
+    let note = "", known = "";
     const firstSentence = (b) => sentences(b, lang)[0] || b;
     if (/\b(corto|breve|resum|acort|menos largo|short|trim|brief)/.test(q)) {
       // se conservan el primer y el último bloque (abren y rematan la idea) y se sacan primero los del medio más largos; después, solo la primera frase de cada bloque
       let bs = out.beats.slice(); const keep = Math.max(1, Math.round(bs.length * 0.6));
       while (bs.length > keep) { let k = 1; for (let i = 2; i < bs.length - 1; i++) if (nWords(bs[i]) > nWords(bs[k])) k = i; bs.splice(k, 1); }
       out.beats = bs.map(firstSentence).filter(Boolean);
-      note = "Lo acorté a lo esencial";
+      note = "Lo acorté a lo esencial"; known = "corto";
     } else if (/\b(directo|relleno|al grano|punch|conciso|filler|tight)/.test(q)) {
       const strip = (s) => tidy(s.replace(HEDGE[lang], " "), lang);
       out.beats = out.beats.map(strip).filter((b) => nWords(b) >= 2); out.hook = strip(out.hook) || out.hook;
-      note = "Saqué el relleno";
+      note = "Saqué el relleno"; known = "directo";
     } else if (/\b(gancho|hook|arranque|inicio|empiez|empezar|abrir)/.test(q)) {
       // otro gancho: se busca, entre las frases del desarrollo, la que mejor abre; el gancho de antes pasa a ser la primera frase del desarrollo
+      known = "gancho";
       const pool = out.beats.map((b) => sentences(b, lang)).flat(), ranked = pool.map((s, i) => [i, hookScore(s, i + 1)]).filter(([i]) => pool[i] !== out.hook).sort((a, b) => b[1] - a[1]);
       if (ranked.length && ranked[0][1] > -3) {
         const pick = pool[ranked[0][0]], t = trimHook(pick), rest = pool.filter((_, i) => i !== ranked[0][0]);
@@ -283,9 +304,12 @@
       }
     } else if (/\b(cierre|cta|final|llamado|call to action|ending)/.test(q)) {
       const alts = CTA_ALT[lang].filter((c) => c !== out.cierre), pick = alts[App.hash(out.cierre + out.hook) % alts.length];
-      out.cierre = pick; out.cierreSugerido = true; note = "Cambié el cierre";
+      out.cierre = pick; out.cierreSugerido = true; note = "Cambié el cierre"; known = "cierre";
     }
     finishScript(out);
+    // lo pedido se entendió pero el guion ya estaba así (un solo bloque, nada de relleno...): se dice eso, no "no puedo"
+    const NOOP = { corto: "Ya es corto: no hay bloques que sacar sin perder lo importante.", directo: "No encontré relleno para sacar: ya va al grano.", gancho: "No encontré otra frase tuya que sirva mejor de gancho.", cierre: "Ya tiene ese cierre." };
+    if (out.texto === before && known) return defineMeta(out, { ai: false, applied: false, note: NOOP[known] });
     if (out.texto === before) return defineMeta(out, { ai: false, applied: false, note: Y("Sin IA conectada no puedo hacer ese cambio. Probá con «más corto», «más directo», «otro gancho» u «otro cierre», o editá el guion a mano.", "Sin IA conectada no puedo hacer ese cambio. Prueba con «más corto», «más directo», «otro gancho» u «otro cierre», o edita el guion a mano.") });
     return defineMeta(out, { ai: false, applied: true, note: `Sin IA conectada: ${note.toLowerCase()} con una regla simple.` });
   }
@@ -559,9 +583,13 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const again = st.mode === "entrevista" ? "Otro tema" : "Otra idea";
     const lines = f ? `<div class="gr-done"><span class="chip good">${icon("check")}Grabado</span>${dur}<span class="chip">${icon("film")}${esc(f.name || "grabación")}${f.size ? " · " + esc(App.bytes(f.size)) : ""}</span></div>`
       : `<div class="gr-done"><span class="chip good">${icon("check")}Terminado</span>${dur}</div><p class="gr-hint">${icon("info")}<span>${esc(Y("No quedó un archivo grabado desde acá. Si grabaste con la cámara de tu celular, subilo en «Un video nuevo».", "No quedó un archivo grabado desde aquí. Si grabaste con la cámara de tu celular, súbelo en «Un video nuevo»."))}</span></p>`;
-    return lines + acts([
-      f ? { act: "grsend", label: "Mandarlo a «Un video nuevo»", icon: "film", pri: true } : { act: "grsend", label: "Subir mi grabación en «Un video nuevo»", icon: "upload", pri: true },
-      f && canDl ? { act: "grdl", label: "Descargar la grabación", icon: "download", ghost: true } : null,
+    // el límite de subida es de toda la app (19 MB): una toma de un minuto o más en HD suele pasarse. Entonces lo primero es descargarla, y lo otro se explica
+    const big = !!(f && f.size > App.act.MAX_FILE) && canDl;
+    const bigHint = big ? `<p class="gr-hint">${icon("info")}<span>${esc(Y(`Pesa ${App.bytes(f.size)} y desde acá se suben hasta ${App.bytes(App.act.MAX_FILE)}. Descargala y subila a mano en «Un video nuevo».`, `Pesa ${App.bytes(f.size)} y desde aquí se suben hasta ${App.bytes(App.act.MAX_FILE)}. Descárgala y súbela a mano en «Un video nuevo».`))}</span></p>` : "";
+    const send = f ? { act: "grsend", label: big ? "Ir a «Un video nuevo»" : "Mandarlo a «Un video nuevo»", icon: "film", pri: !big, ghost: big } : { act: "grsend", label: "Subir mi grabación en «Un video nuevo»", icon: "upload", pri: true };
+    const dl = f && canDl ? { act: "grdl", label: "Descargar la grabación", icon: "download", pri: big, ghost: !big } : null;
+    return lines + bigHint + acts([
+      big ? dl : send, big ? send : dl,
       { act: "grrerec", label: "Grabar de nuevo", icon: "camera", ghost: true }, { act: "grnext", label: again, icon: "refresh", ghost: true }, { act: "grfinish", label: "Terminar", icon: "check", ghost: true }]);
   }
   function mineView(st) {
@@ -685,7 +713,11 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
         for (let i = ev.resultIndex; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) micFinal = joinSp(micFinal, t.trim()); else interim += t; }
         paintTranscript(interim);
       };
-      r.onerror = (ev) => { if (/not-allowed|service-not-allowed|audio-capture/.test(ev.error)) { micWant = false; st.micDenied = true; } };
+      r.onerror = (ev) => {
+        if (/not-allowed|service-not-allowed|audio-capture/.test(ev.error)) { micWant = false; st.micDenied = true; }
+        // "network": el dictado del navegador usa un servicio en línea; sin conexión no hay nada que reabrir, y quien habla tiene que enterarse (no solo ver que se apagó)
+        else if (ev.error === "network") { micWant = false; toast(Y("El dictado no pudo conectarse. Escribilo en el cuadro y seguimos igual.", "El dictado no pudo conectarse. Escríbelo en el cuadro y seguimos igual.")); }
+      };
       r.onend = () => {
         // Chrome corta el dictado continuo solo tras unos segundos de silencio: si la persona sigue queriendo hablar se reabre (una vez por corte);
         // tras 3 cortes seguidos sin oír nada se deja de escuchar (se fue a tomar agua) en vez de reabrir para siempre
@@ -834,6 +866,8 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
       try {
         const file = f instanceof File ? f : new File([f], f.name || `grabacion-${slug(r.title)}.${/mp4/.test(f.type || "") ? "mp4" : "webm"}`, { type: f.type || "video/webm" });
         const a = v.att.normal = v.att.normal || App.attach.make(); a.add([file]);
+        // si el pedido todavía no tiene conversación, arranca con una línea que dice de dónde viene el archivo (en uno a medias el historial de pasos no se toca: «atrás» lo deshace de a pares)
+        if (!v.trail.length) v.trail.push({ who: "ai", html: "<p>Tu grabación ya está cargada como «Video normal».</p>" });
         toast(Y("Tu grabación quedó como «Video normal». Elegí el estilo y seguí.", "Tu grabación quedó como «Video normal». Elige el estilo y sigue."));
       } catch (e) { toast(Y("No pude adjuntar la grabación. Subila a mano en «Un video nuevo».", "No pude adjuntar la grabación. Súbela a mano en «Un video nuevo».")); }
     } else toast(Y("Subí tu grabación en «Un video nuevo».", "Sube tu grabación en «Un video nuevo»."));
