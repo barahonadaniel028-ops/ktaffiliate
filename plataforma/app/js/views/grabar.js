@@ -460,7 +460,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   // =====================================================================================================================================
   // 4) ESTADO Y PASOS (la conversación)
   // =====================================================================================================================================
-  const fresh = () => ({ step: "ask", hist: [], trail: [], mode: "", busy: "", err: "", note: "", req: 0, brand: "", enterAt: 0,
+  const fresh = () => ({ step: "ask", hist: [], trail: [], mode: "", busy: "", err: "", note: "", req: 0, brand: "", enterAt: 0, focus: false,
     ideas: [], seen: [], round: 0, pick: null, ownText: "", raw: "", rawFor: "", script: null, approved: false, revOpen: false, revText: "", editing: false, editText: "",
     mineText: "", cmp: [], cmpSel: -1, topic: "", qs: [], qRound: 0, secs: SECS_DEFAULT, listening: false, micDenied: false, result: null, lastTP: null, lang: "" });
   UI.crear.grabar = UI.crear.grabar || fresh();
@@ -609,8 +609,8 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     if (st.brand && st.brand !== bid && st.step !== "ask" && st.step !== "done") { cancelPending(); micStop(); UI.crear.grabar = st = fresh(); }
     st.brand = bid; sanitize(st);
     const step = VIEWS[st.step] ? st.step : "ask", view = VIEWS[step];
-    const busy = !!st.busy || st.listening, prompt = (PROMPT[step] || PROMPT.ask)(st);
-    return App.crear.cloud({ status: st.busy ? "pensando…" : STATUS[step] || "grabar", back: true, busy, trail: st.trail.slice(-2).concat([ai(prompt)]), body: `<div class="gr" data-step="${step}"${st.busy ? ' data-busy="1"' : ""}${Date.now() - st.enterAt < 1100 ? " data-enter" : ""}>${view(st)}</div>` });
+    const busy = !!st.busy || st.listening, prompt = st.busy ? Y("Dame un momento…", "Dame un momento…") : (PROMPT[step] || PROMPT.ask)(st);
+    return App.crear.cloud({ status: st.busy ? "pensando…" : STATUS[step] || "grabar", back: true, busy, trail: st.trail.slice(-2).concat([ai(prompt)]), body: `<div class="gr" tabindex="-1" role="group" aria-label="${esc(prompt)}" data-step="${step}"${st.busy ? ' data-busy="1"' : ""}${Date.now() - st.enterAt < 1100 ? " data-enter" : ""}>${view(st)}</div>` });
   }
 
   // =====================================================================================================================================
@@ -622,7 +622,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   // Se suelta apenas el paso nuevo se dibuja; el tope de 3 s es solo un seguro por si el movimiento nunca avisara que terminó.
   let lockUntil = 0;
   const moving = () => Date.now() < lockUntil;
-  const move = (mutate) => new Promise((res) => { lockUntil = Date.now() + 3000; App.crear.advanceStep(() => { try { mutate(); ST().enterAt = Date.now(); } finally { lockUntil = 0; } res(); }); });
+  const move = (mutate) => new Promise((res) => { lockUntil = Date.now() + 3000; App.crear.advanceStep(() => { try { mutate(); ST().enterAt = Date.now(); ST().focus = true; } finally { lockUntil = 0; } res(); }); });
   function go(step, say, mutate) {
     if (moving()) return Promise.resolve();
     const st = ST(); micStop();
@@ -717,7 +717,8 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     if (!tp || typeof tp.open !== "function") { toast("El teleprompter no está disponible ahora."); return; }
     micStop(); cancelPending(); st.lastTP = args;
     let fired = false;
-    tp.open(Object.assign({}, args, { onDone: (res) => { if (fired) return; fired = true; finishTP(st, res, args); } }));
+    try { tp.open(Object.assign({}, args, { onDone: (res) => { if (fired) return; fired = true; finishTP(st, res, args); } })); }
+    catch (e) { if (window.console) console.error(e); toast("No pude abrir el teleprompter. Probá de nuevo."); }
   }
   const scriptArgs = (st) => ({ mode: "script", title: st.script.titulo, text: st.script.texto });
   const interviewArgs = (st) => ({ mode: "interview", title: st.topic, questions: st.qs.map((q) => q.trim()).filter(Boolean), secondsPerQuestion: st.secs });
@@ -738,11 +739,10 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     });
   }
   A.grstart = (el) => {
-    const st = ST(), v = el.dataset.v;
+    const v = el.dataset.v;
     if (v === "no") { runIdeas(false); return; }
-    if (v === "si") go("mine", [ai(PROMPT.ask()), me(Y("Sí, ya tengo ideas.", "Sí, ya tengo ideas."))], (s) => { s.mode = "tengo"; });
+    if (v === "si") go("mine", [ai(PROMPT.ask()), me("Sí, ya tengo ideas.")], (s) => { s.mode = "tengo"; });
     else go("topic", [ai(PROMPT.ask()), me("Quiero hacer una entrevista.")], (s) => { s.mode = "entrevista"; });
-    void st;
   };
   A.grmore = () => { if (!ST().busy) runIdeas(true); };
   A.grskip = () => { if (ctl) { try { ctl.ac.abort(); } catch (e) { /* nada */ } } };
@@ -820,12 +820,16 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   A.grsend = () => {
     const st = ST(), r = st.result || {}, f = r.recorded;
     if (!App.crearVideo || !App.crearVideo.arriveWith) { App.crear.advanceNav("crear/video"); return; }
-    App.crearVideo.arriveWith({});
-    const v = UI.crear.video; v.notes = `Grabado con Grabar${r.title ? ": " + r.title : ""}.`;
-    if (f) {
+    // si ya había un pedido de «Un video nuevo» a medio armar (estilos o material de un video de estilo), se le suma la grabación; si no, se empieza uno nuevo
+    let v = UI.crear.video;
+    if (!v || v.format !== "corto" || !["estilos", "material"].includes(v.step)) { App.crearVideo.arriveWith({}); v = UI.crear.video; }
+    const nota = `Grabado con Grabar${r.title ? ": " + r.title : ""}.`;
+    if (!String(v.notes || "").includes(nota)) v.notes = [v.notes, nota].filter(Boolean).join("\n");
+    if (f && f.size > App.act.MAX_FILE) toast(`La grabación pesa ${App.bytes(f.size)} y pasa del límite de ${App.bytes(App.act.MAX_FILE)} para subir desde acá. Descargala y subila a mano en «Un video nuevo».`, null, 7000);
+    else if (f) {
       try {
         const file = f instanceof File ? f : new File([f], f.name || `grabacion-${slug(r.title)}.${/mp4/.test(f.type || "") ? "mp4" : "webm"}`, { type: f.type || "video/webm" });
-        const a = App.attach.make(); v.att.normal = a; a.add([file]);
+        const a = v.att.normal = v.att.normal || App.attach.make(); a.add([file]);
         toast("Tu grabación quedó como «Video normal». Elegí el estilo y seguí.");
       } catch (e) { toast("No pude adjuntar la grabación. Subila a mano en «Un video nuevo»."); }
     } else toast("Subí tu grabación en «Un video nuevo».");
@@ -903,6 +907,8 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   function bind(root) {
     const st = ST(), log = $(".crear-cloud .log", root); if (log) log.scrollTop = log.scrollHeight;
+    // al cambiar de paso el foco pasa al nuevo paso (lo anuncia el lector de pantalla con la pregunta); en los repintados comunes no se toca, para no sacarte de un campo
+    if (st.focus) { st.focus = false; const g = $(".gr", root); if (g && !(document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))) g.focus({ preventScroll: true }); }
     if (st.step === "done" && st.result && !st.result.sparked) { st.result.sparked = true; setTimeout(() => { const o = $(".crear-cloud .jh .orb"); if (o) App.morph.sparkles(o, 8); }, 500); } // un destello al terminar: es un logro
     const on = (sel0, ev, fn) => { const el = $(sel0, root); if (el) el.addEventListener(ev, fn); return el; };
     on("#grraw", "input", (e) => { st.raw = e.target.value; if (rec && micTarget === "grraw") { micBase = e.target.value; micFinal = ""; } });
