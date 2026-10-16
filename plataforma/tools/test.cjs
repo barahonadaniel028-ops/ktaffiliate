@@ -263,10 +263,28 @@ async function open(browser, url, init, viewport, o) {
     if (!(st.op === "1")) break;
   }
   await p.evaluate(() => { if (App.jarvis.isOpen()) App.jarvis.close(); }); await wait(p, 2200);
+  // el derrame liquido (DECISIONES.md #17) termina limpio: panel opaco, sin recorte ni animaciones colgadas, capa del morph vacia, grano apagado bajo el velo
+  await p.evaluate(() => App.jarvis.open()); await wait(p, 2600);
+  const fin = await p.evaluate(() => { const pn = document.querySelector("#jv"), cs = getComputedStyle(pn); return { op: cs.opacity, clip: cs.clipPath, anims: pn.getAnimations().length, morph: document.querySelector("#morph").children.length, grain: getComputedStyle(document.querySelector(".grain")).visibility }; });
+  ok(fin.op === "1" && fin.clip === "none" && fin.anims === 0 && fin.morph === 0 && fin.grain === "hidden", "Jarvis abierto: panel opaco sin recorte ni animaciones colgadas y la capa del morph vacia", JSON.stringify(fin));
+  // cerrar con la gota todavia en el aire y volver a abrir enseguida: queda abierto y visible
+  await p.evaluate(() => App.jarvis.close()); await wait(p, 2200);
+  await p.evaluate(() => { App.jarvis.open(); setTimeout(() => App.jarvis.close(), 120); setTimeout(() => App.jarvis.open(), 320); }); await wait(p, 3000);
+  const rr = await p.evaluate(() => { const pn = document.querySelector("#jv"), cs = getComputedStyle(pn); return { open: App.jarvis.isOpen(), op: cs.opacity, morph: document.querySelector("#morph").children.length }; });
+  ok(rr.open && rr.op === "1" && rr.morph === 0, "abrir, cerrar en pleno vuelo y reabrir deja el panel visible", JSON.stringify(rr));
+  await p.evaluate(() => App.jarvis.close()); await wait(p, 2400);
+  const cl = await p.evaluate(() => ({ wrap: document.querySelector("#jvwrap").className, morph: document.querySelector("#morph").children.length, root: document.getElementById("aura-root").className, orbs: [...document.querySelectorAll(".orb[data-orb], .jv-fab")].every((o) => o.style.visibility === "") }));
+  ok(!/\bopen\b/.test(cl.wrap) && cl.morph === 0 && !/\bmo(-v)?\b/.test(cl.root) && cl.orbs, "al cerrar no queda nada: ni gotas, ni modo liviano, ni orbes escondidas", JSON.stringify(cl));
+  // desde el orbe flotante: la gota sale de el y vuelve a el (antes su orbe interno, sin data-orb, quedaba escondido para siempre al cerrar)
+  await p.click(".jv-fab"); await wait(p, 2400); await p.keyboard.press("Escape"); await wait(p, 2400);
+  ok(await p.evaluate(() => !App.jarvis.isOpen() && document.querySelector(".jv-fab .orb").style.visibility === "" && getComputedStyle(document.querySelector(".jv-fab")).opacity === "1"), "abrir y cerrar desde el orbe flotante lo deja visible");
   await p.keyboard.press("Control+k"); await wait(p, 1100);
   ok(await p.evaluate(() => App.jarvis.isOpen() && document.querySelectorAll("#jvcmds button").length >= 4), "Ctrl+K abre Jarvis con comandos");
   await p.fill("#jvbox", "aprobar"); await p.keyboard.press("Enter"); await p.waitForFunction(() => App.route().name === "estudio" && !App.jarvis.isOpen(), null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
   ok(await p.evaluate(() => App.route().name === "estudio" && !App.jarvis.isOpen()), "un comando lleva a la pantalla y cierra el panel");
+  await wait(p, 1600);
+  const nv = await p.evaluate(() => ({ wrap: document.querySelector("#jvwrap").className, morph: document.querySelector("#morph").children.length, root: document.getElementById("aura-root").className, nav: App._morphNav }));
+  ok(!/\bopen\b/.test(nv.wrap) && nv.morph === 0 && !/\bmo(-v)?\b/.test(nv.root) && !nv.nav, "despues de llevarte a otra pantalla no queda nada colgado (gotas, velo, modo liviano)", JSON.stringify(nv));
   await nav(p, "#hoy", 300); await p.click('[data-act="theme"]'); await p.waitForFunction(() => document.documentElement.getAttribute("data-aura") === "night", null, { timeout: 4000 }).catch(() => {}); await wait(p, 300);
   const th = await p.evaluate(() => document.documentElement.getAttribute("data-aura") + "|" + getComputedStyle(document.documentElement).getPropertyValue("--base").trim());
   ok(/^night\|#06100f/.test(th), "el boton cambia a noche", th);

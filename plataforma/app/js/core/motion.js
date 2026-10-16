@@ -298,6 +298,7 @@
   // (la persona toco el orbe otra vez con el cierre a medias) sale sin tocar nada. Antes un cierre que seguia corriendo terminaba limpiando
   // el panel que ya se estaba abriendo: quedaba en opacity 0 con un recorte de 14 px, "se abre pero luego desaparece".
   let jvTok = 0;
+  const hidden = new Set();
   const claim = () => ++jvTok, live = (t) => t === jvTok;
   // cancela solo lo que agendo este archivo (WAAPI); las transiciones/animaciones de CSS (el velo, el contenido escalonado) siguen su curso
   const stopAnims = (el) => { if (el) el.getAnimations().forEach((a) => { if ((typeof CSSAnimation !== "undefined" && a instanceof CSSAnimation) || (typeof CSSTransition !== "undefined" && a instanceof CSSTransition)) return; try { a.cancel(); } catch (e) { /* ya cancelada */ } }); };
@@ -306,6 +307,7 @@
     stopAnims(panel); const w = panel.closest(".jv-wrap"); stopAnims(w && w.querySelector(".veil"));
     panel.style.opacity = ""; panel.style.clipPath = ""; panel.style.backdropFilter = ""; panel.style.webkitBackdropFilter = "";
     clean(); App.$$(".orb[data-orb], .jv-fab").forEach((o) => { o.style.visibility = ""; });
+    hidden.forEach((o) => { o.style.visibility = ""; }); hidden.clear(); // el orbe de adentro del boton flotante no tiene data-orb: se recuerda cual se escondio
   }
   // una apertura a medias que se interrumpe: lo que se ve en ESTE cuadro (para que el cierre arranque de ahi y no de un panel que "salta")
   function takeOver(panel) { const vis = parseFloat(getComputedStyle(panel).opacity) || 0; stopAnims(panel); clean(); panel.style.opacity = vis > 0.5 ? "1" : "0"; return vis; }
@@ -320,7 +322,7 @@
     let delay = 0, r0 = 22;
     if (fromEl) {
       const a = rectOf(fromEl), endSize = Math.round(Math.min(120, b.w * 0.2));
-      fromEl.style.visibility = "hidden"; // la gota ES el orbe que se toco
+      fromEl.style.visibility = "hidden"; hidden.add(fromEl); // la gota ES el orbe que se toco
       delay = flight(center(a), land, { size: Math.min(a.w, a.h), endSize, spread: true }).touch; r0 = endSize / 2;
     }
     const B = bloom(panel, land, 640, { delay, r0 });
@@ -379,8 +381,8 @@
   }
 
   // una nube/pantalla que "nace" en el orbe de Jarvis: la gota vuela desde el orbe hasta donde va a quedar y ahi florece (mismo vuelo + bloom
-  // que abrir Jarvis, DECISIONES.md #10 y #12). Todo se agenda ya: el elemento queda invisible por la animacion de opacidad del bloom hasta que
-  // el cuerpo le hace lugar, y su entrada escalonada (.arr-in, CSS) se corre en el tiempo para empezar en ese mismo instante.
+  // que abrir Jarvis, DECISIONES.md #10 y #12). Todo se agenda ya: el elemento espera invisible (.arr-pre y la animacion de opacidad del bloom)
+  // hasta que el cuerpo le hace lugar, y su entrada escalonada (.arr-in, CSS) se corre en el tiempo para empezar en ese mismo instante.
   // No hace nada con "reducir movimiento" ni si Jarvis ya esta llevando a la persona hasta aca (App._morphNav): ese derrame ya lo hizo el.
   function arrive(el, o) {
     o = o || {};
@@ -390,8 +392,11 @@
     lite("arr", true, 2600);
     const endSize = o.endSize || 120, F = flight(from, land, { size: ob ? Math.min(ob.w, ob.h, 64) : 56, endSize, spread: true });
     const B = bloom(el, land, o.ms || 700, { delay: F.touch, r0: endSize / 2 });
-    el.classList.remove("arr-pre"); el.classList.add("arr-in");
+    // .arr-pre (opacity 0 !important) la tiene invisible mientras la gota vuela; se suelta un poco ANTES de que el cuerpo le haga lugar (la
+    // animacion de opacidad del bloom todavia la tiene en 0), asi un timer que llega tarde no deja un hueco: el cuerpo la tapa un rato mas
+    el.classList.add("arr-pre", "arr-in");
     el.getAnimations({ subtree: true }).forEach((a) => { if (typeof CSSAnimation !== "undefined" && a instanceof CSSAnimation && a.animationName === "enterUp") a.currentTime = (a.currentTime || 0) - B.reveal; });
+    setTimeout(() => el.classList.remove("arr-pre"), Math.max(0, B.reveal - 120));
     return true;
   }
 
