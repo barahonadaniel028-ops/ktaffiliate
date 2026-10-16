@@ -48,7 +48,7 @@ async function startRun(p) { await key(p, "Space"); return waitPhase(p, "run", 9
 const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
 
 (async () => {
-  const browser = await L.launch(MEDIA);
+  const browser = await L.launch(MEDIA); let rd;
 
   // ================= guion, escritorio, con camara falsa =================
   console.log("\n== Teleprompter: guion (1440 px, camara falsa) ==");
@@ -131,7 +131,7 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   await p.fill("#wpm", "120"); await wait(p, 250); st = await S(p);
   ok(st.wpm === 120, "el deslizador cambia el WPM", String(st.wpm));
   ok(await p.evaluate(() => document.querySelector(".tp-read").textContent === "120 palabras por minuto"), "el WPM se lee en pantalla");
-  await p.fill("#fs", "46"); await p.fill("#w", "78"); await click(p, '[data-a="settings"]'); await wait(p, 300);
+  await p.fill("#fs", "46"); await p.fill("#w", "80"); await click(p, '[data-a="settings"]'); await wait(p, 300);
   // ---- espejo ----
   await key(p, "m"); await wait(p, 200);
   ok(await p.evaluate(() => document.querySelector(".tp").dataset.mirror === "1" && getComputedStyle(document.querySelector(".tp-stage")).transform.startsWith("matrix(-1")), "M: espejo horizontal del texto");
@@ -197,7 +197,7 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   const res = await p.evaluate(() => ({ n: window.__doneN, d: window.__done }));
   ok(res.n === 1, "onDone se llama UNA sola vez", String(res.n));
   ok(res.d && res.d.recorded && res.d.recorded.size > 0 && res.d.recorded.isFile && /^grabacion-\d{8}-\d{4}\.(webm|mp4)$/.test(res.d.recorded.name) && /^video\//.test(res.d.recorded.type), "onDone recibe un File de video con size > 0", JSON.stringify(res.d && res.d.recorded));
-  ok(res.d && res.d.mode === "script" && res.d.durationMs > 1500 && res.d.completed === true && res.d.discarded === false, "onDone trae modo, duracion y completed", JSON.stringify(res.d && Object.assign({}, res.d, { recorded: undefined })));
+  ok(res.d && res.d.mode === "script" && res.d.durationMs > 1500 && res.d.completed === false && res.d.discarded === false, "onDone trae modo y duracion; cortar con \"Guardar y terminar\" no cuenta como completada", JSON.stringify(res.d && Object.assign({}, res.d, { recorded: undefined })));
   // ---- limpieza total ----
   const cl = await p.evaluate(() => ({ open: App.teleprompter.isOpen(), dom: document.querySelectorAll(".tp").length, live: window.__tracks.filter((t) => t.readyState === "live").length, total: window.__tracks.length, wl: window.__wl.active, ovf: document.documentElement.style.overflow, inert: Array.from(document.querySelector(".aura-app").children).filter((n) => n.inert).length, fs: !!document.fullscreenElement }));
   ok(!cl.open && cl.dom === 0, "cerrado: isOpen() false y sin restos en el DOM", JSON.stringify(cl));
@@ -238,7 +238,7 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   await click(p, '[data-a="close"]'); await wait(p, 500);
   ok((await S(p)).phase === "pause" && !!(await p.evaluate(() => document.querySelector(".tp-dlg"))), "la X pausa y pregunta");
   await click(p, '[data-d="discard"]'); ok(await waitDone(p, 6000), "Descartar cierra y avisa");
-  let rd = await p.evaluate(() => window.__done);
+  rd = await p.evaluate(() => window.__done);
   ok(rd && rd.recorded === null && rd.discarded === true && rd.completed === false, "onDone: recorded null y discarded true", JSON.stringify(rd));
   await wait(p, 300); ok(await p.evaluate(() => window.__tracks.every((t) => t.readyState === "ended") && !document.querySelector(".tp")), "al descartar se apagan la camara y la pantalla");
   await openTp(p, { mode: "script", text: LONG }); await p.waitForFunction(() => App.teleprompter.state().camera === "on", null, { timeout: 8000 }).catch(() => {});
@@ -281,39 +281,60 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   ok(await p.evaluate(() => document.querySelectorAll(".tp-qt .w").length >= 5 && getComputedStyle(document.querySelector(".tp-qt .w")).animationName === "tpWord"), "la pregunta se revela palabra por palabra (suave, escalonada)");
   const delays = await p.evaluate(() => Array.from(document.querySelectorAll(".tp-qt .w")).map((w) => parseFloat(w.style.getPropertyValue("--d")))); ok(delays.every((d, i) => i === 0 || d > delays[i - 1]), "cada palabra entra un poco despues de la anterior", delays.join(","));
   ok(await p.evaluate(() => /^[123]$/.test(document.querySelector(".tp-secs").textContent)), "cuenta regresiva por pregunta (anillo con segundos)");
-  const off0 = await p.evaluate(() => parseFloat(document.querySelector(".tp-ring .val").style.strokeDashoffset)); await wait(p, 900);
+  const off0 = await p.evaluate(() => parseFloat(document.querySelector(".tp-ring .val").style.strokeDashoffset)); await wait(p, 700);
   const off1 = await p.evaluate(() => parseFloat(document.querySelector(".tp-ring .val").style.strokeDashoffset));
   ok(off1 > off0, "el anillo se va llenando", off0.toFixed(0) + " -> " + off1.toFixed(0));
   // pausa congela el tiempo
-  await key(p, "Space"); await waitPhase(p, "pause", 3000); const el0 = await p.evaluate(() => document.querySelector(".tp-secs").textContent); const o0 = await p.evaluate(() => document.querySelector(".tp-ring .val").style.strokeDashoffset);
+  await key(p, "Space"); await waitPhase(p, "pause", 3000); const o0 = await p.evaluate(() => document.querySelector(".tp-ring .val").style.strokeDashoffset);
   await wait(p, 1400);
   ok(await p.evaluate((a) => document.querySelector(".tp-ring .val").style.strokeDashoffset === a, o0), "en pausa el tiempo de la pregunta no corre");
   await key(p, "Space"); await waitPhase(p, "run", 3000);
   // auto avance
   ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "2 de 3", null, { timeout: 14000 }).then(() => true).catch(() => false), "al acabar el tiempo avanza solo a \"2 de 3\"");
   ok(await p.evaluate(() => document.querySelector(".tp-qt").textContent.trim() === "¿Cuál fue tu mayor error al principio?"), "con la segunda pregunta");
-  // el beat "Siguiente" se vio: lo comprobamos con la siguiente transicion
   const beat = p.waitForFunction(() => document.querySelector(".tp").classList.contains("q-out") && /Siguiente/.test(document.querySelector(".tp-nx").textContent), null, { timeout: 12000, polling: 30 }).then(() => true).catch(() => false);
   ok(await beat, "entre preguntas hay un instante suave con \"Siguiente\"");
-  ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "3 de 3", null, { timeout: 14000 }).then(() => true).catch(() => false), "avanza a \"3 de 3\"");
-  // controles manuales
-  await click(p, '[data-a="prev"]'); ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "2 de 3", null, { timeout: 5000 }).then(() => true).catch(() => false), "anterior vuelve a la pregunta 2");
-  await wait(p, 900); await key(p, "ArrowRight"); ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "3 de 3", null, { timeout: 5000 }).then(() => true).catch(() => false), "la flecha derecha pasa a la siguiente");
-  // segundos por pregunta en vivo
-  await wait(p, 900);
-  await click(p, '[data-a="plus"]'); await wait(p, 200); st = await S(p);
-  ok(st.sec === 8, "+ suma 5 segundos por pregunta (3 -> 8)", String(st.sec));
-  ok(await p.evaluate(() => document.querySelector(".tp-read").textContent === "8 segundos por pregunta"), "se lee en pantalla");
-  await click(p, '[data-a="plus"]'); await click(p, '[data-a="plus"]'); await wait(p, 200); st = await S(p); ok(st.sec === 18, "y sigue sumando", String(st.sec));
-  await click(p, '[data-a="minus"]'); await wait(p, 200); st = await S(p); ok(st.sec === 13, "- resta 5", String(st.sec));
-  await click(p, '[data-a="settings"]'); await wait(p, 300); await p.fill("#sec", "3"); await wait(p, 200); st = await S(p);
-  ok(st.sec === 3, "el deslizador de tiempo tambien", String(st.sec)); await click(p, '[data-a="settings"]');
-  // final
-  ok(await p.waitForFunction(() => !!document.querySelector(".tp-end"), null, { timeout: 14000 }).then(() => true).catch(() => false), "al terminar la ultima pregunta aparece la pantalla final");
+  ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "3 de 3", null, { timeout: 14000, polling: 30 }).then(() => true).catch(() => false), "avanza a \"3 de 3\"");
+  // un toque justo despues del cambio no se pierde (la pantalla todavia esta en su "beat")
+  await click(p, '[data-a="prev"]'); ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "2 de 3", null, { timeout: 5000 }).then(() => true).catch(() => false), "anterior (apenas cambio) vuelve a la pregunta 2: no se pierde el toque");
+  ok(await p.evaluate(() => document.querySelector(".tp-qt").textContent.trim() === "¿Cuál fue tu mayor error al principio?"), "con su texto");
+  // final natural
+  ok(await p.waitForFunction(() => !!document.querySelector(".tp-end"), null, { timeout: 16000 }).then(() => true).catch(() => false), "al terminar la ultima pregunta aparece la pantalla final");
   ok(await p.evaluate(() => /Listo\.\s*¡Buen trabajo!/.test(document.querySelector(".tp-end h2").textContent)), "\"Listo. ¡Buen trabajo!\"");
+  ok(await p.evaluate(() => /3 preguntas/.test(document.querySelector(".tp-endsub").textContent)), "resume cuantas preguntas se hicieron");
   await click(p, '.tp-end [data-a="ok"]'); ok(await waitDone(p, 5000), "Listo llama a onDone");
   rd = await p.evaluate(() => window.__done); ok(rd && rd.mode === "interview" && rd.completed === true && rd.recorded === null, "onDone de la entrevista (sin camara): modo y completed", JSON.stringify(rd));
   ok(p.errs.length === 0, "sin errores de pagina (entrevista)", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
+  // ---- entrevista: controles en vivo (segundos por pregunta, saltos rapidos) ----
+  p = await open(browser, "?demo=1&preset=kt#hoy", SPY);
+  await openTp(p, { mode: "interview", questions: QS, secondsPerQuestion: 40 }); await wait(p, 600);
+  await click(p, '[data-a="camtoggle"]'); await wait(p, 200);
+  await click(p, '[data-a="play"]'); await waitPhase(p, "run", 9000); await key(p, "Space"); await waitPhase(p, "pause", 3000);
+  ok(await p.evaluate(() => document.querySelector(".tp-read").textContent === "40 segundos por pregunta"), "se lee cuantos segundos dura cada pregunta");
+  await click(p, '[data-a="plus"]'); await wait(p, 150); st = await S(p);
+  ok(st.sec === 45, "+ suma 5 segundos por pregunta (40 -> 45)", String(st.sec));
+  ok(await p.evaluate(() => document.querySelector(".tp-read").textContent === "45 segundos por pregunta"), "y se lee en pantalla");
+  await click(p, '[data-a="minus"]'); await click(p, '[data-a="minus"]'); await wait(p, 150); st = await S(p); ok(st.sec === 35, "- resta 5 cada vez", String(st.sec));
+  ok(await p.evaluate(() => document.querySelector(".tp-secs").textContent === "35"), "el anillo muestra el nuevo total");
+  await click(p, '[data-a="settings"]'); await wait(p, 300); await p.fill("#sec", "12"); await wait(p, 200); st = await S(p);
+  ok(st.sec === 12, "el deslizador de tiempo por pregunta tambien", String(st.sec));
+  await p.fill("#sec", "2"); await wait(p, 150); ok((await S(p)).sec === 2 && (await p.evaluate(() => document.querySelector('[data-a="minus"]').disabled)), "el minimo es 2 s y - se deshabilita");
+  await p.fill("#sec", "30"); await click(p, '[data-a="settings"]'); await wait(p, 300);
+  await key(p, "ArrowRight"); await key(p, "ArrowRight");
+  ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "3 de 3", null, { timeout: 6000 }).then(() => true).catch(() => false), "dos toques rapidos en siguiente llegan a la pregunta 3 (ninguno se pierde)");
+  await wait(p, 1200); await click(p, '[data-a="prev"]'); await click(p, '[data-a="prev"]');
+  ok(await p.waitForFunction(() => document.querySelector(".tp-info").textContent === "1 de 3", null, { timeout: 6000 }).then(() => true).catch(() => false), "dos toques rapidos en anterior vuelven a la 1");
+  ok(await p.evaluate(() => document.querySelector(".tp-qt").textContent.trim() === "¿Qué te hizo empezar a crear contenido?"), "con su texto");
+  await wait(p, 1400); await key(p, "ArrowRight"); await wait(p, 1300); await key(p, "ArrowRight"); await wait(p, 1300);
+  await click(p, '[data-a="next"]');
+  ok(await p.waitForFunction(() => !!document.querySelector(".tp-end"), null, { timeout: 6000 }).then(() => true).catch(() => false), "siguiente en la ultima pregunta termina");
+  await p.evaluate(() => App.teleprompter.close()); await waitDone(p, 5000);
+  ok(p.errs.length === 0, "sin errores de pagina (controles de entrevista)", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+  p = await open(browser, "?demo=1&preset=kt#hoy", SPY);
+  await openTp(p, { mode: "interview", questions: QS, secondsPerQuestion: 2 }); await wait(p, 500);
+  ok((await S(p)).sec === 2, "se acepta secondsPerQuestion de 2 s");
+  await p.evaluate(() => App.teleprompter.close()); await wait(p, 600); await p.context().close();
 
   // ================= sin camara: nada se rompe =================
   console.log("\n== Teleprompter: sin camara ==");

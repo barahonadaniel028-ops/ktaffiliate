@@ -16,7 +16,7 @@
   const App = window.App, { esc, icon, mmss, bytes } = App;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const snap = (v, s) => Math.round(v / s) * s;
-  const WPM = { min: 60, max: 260, def: 140, step: 5 }, SEC = { min: 5, max: 120, def: 20, step: 5 }, FS = { min: 22, max: 96 };
+  const WPM = { min: 60, max: 260, def: 140, step: 5 }, SEC = { min: 2, max: 120, def: 20, jump: 5 }, FS = { min: 22, max: 96 };
   const UI_HIDE_MS = 3000;   // los controles se esconden a los 3 s sin mover el puntero (solo leyendo)
   const COUNT_FROM = 3;
   const BEAT_SWAP = 560, BEAT_END = 1000;   // entrevista: la pregunta se apaga (0-560 ms), cambia el texto y reaparece; a los 1000 ms vuelve a correr el tiempo
@@ -24,11 +24,28 @@
   const phoneW = () => innerWidth <= 640;
   let cur = null;   // la sesion abierta (solo hay una)
 
+  // La app de abajo queda inerte (ni teclado ni lector de pantalla la alcanzan) y la pagina no se desplaza. Si un teleprompter reemplaza a otro, el nuevo no
+  // puede encontrarla "ya inerte" y dejarla activa cuando el viejo termine de limpiar (el viejo puede tardar en entregar la grabacion): se cuenta quien la necesita.
+  const locks = new Map(); let scrollLocks = 0, scrollSaved = null;
+  function lockApp(host, root) {
+    const mine = [];
+    Array.from(host.children).forEach((n) => {
+      if (n === root || !(n instanceof HTMLElement) || n.classList.contains("tp")) return;
+      const c = locks.get(n); if (c) { locks.set(n, c + 1); mine.push(n); } else if (!n.inert) { locks.set(n, 1); n.inert = true; mine.push(n); }
+    });
+    if (!scrollLocks++) { const st = document.documentElement.style; scrollSaved = [st.overflow, st.overscrollBehavior]; st.overflow = "hidden"; st.overscrollBehavior = "none"; }
+    return mine;
+  }
+  function unlockApp(nodes) {
+    nodes.forEach((n) => { const c = (locks.get(n) || 1) - 1; if (c <= 0) { locks.delete(n); try { n.inert = false; } catch (e) { /* ok */ } } else locks.set(n, c); });
+    if (scrollLocks && !--scrollLocks && scrollSaved) { const st = document.documentElement.style; st.overflow = scrollSaved[0]; st.overscrollBehavior = scrollSaved[1]; scrollSaved = null; }
+  }
+
   // ---------- preferencias que se recuerdan (solo comodidad de esta persona en este navegador) ----------
   const loadPrefs = () => {
     const s = App.store.get("tp", {}) || {}, num = (v, d, a, b) => (Number.isFinite(+v) && +v >= a && +v <= b ? +v : d);
     return {
-      wpm: snap(num(s.wpm, WPM.def, WPM.min, WPM.max), WPM.step), sec: snap(num(s.sec, SEC.def, SEC.min, SEC.max), SEC.step), fsS: num(s.fsS, 0, FS.min, FS.max), fsQ: num(s.fsQ, 0, FS.min, 120),
+      wpm: snap(num(s.wpm, WPM.def, WPM.min, WPM.max), WPM.step), sec: Math.round(num(s.sec, SEC.def, SEC.min, SEC.max)), fsS: num(s.fsS, 0, FS.min, FS.max), fsQ: num(s.fsQ, 0, FS.min, 120),
       w: num(s.w, phoneW() ? 100 : 78, 40, 100), mirror: !!s.mirror, cam: s.cam !== false, camView: ["bg", "corner", "off"].includes(s.camView) ? s.camView : "bg", camO: num(s.camO, 45, 10, 90),
     };
   };
@@ -54,7 +71,7 @@
     const text = String(o.text == null ? "" : o.text).replace(/\r\n?/g, "\n").trim();
     const questions = (Array.isArray(o.questions) ? o.questions : []).map((q) => String(q == null ? "" : q).replace(/\s+/g, " ").trim()).filter(Boolean).slice(0, 60);
     const hasContent = mode === "interview" ? questions.length > 0 : countWords(text) > 0;
-    const P = loadPrefs(); if (mode === "interview" && Number.isFinite(+o.secondsPerQuestion) && +o.secondsPerQuestion > 0) P.sec = clamp(snap(+o.secondsPerQuestion, 1), 3, SEC.max);
+    const P = loadPrefs(); if (mode === "interview" && Number.isFinite(+o.secondsPerQuestion) && +o.secondsPerQuestion > 0) P.sec = clamp(Math.round(+o.secondsPerQuestion), SEC.min, SEC.max);
     const words = mode === "script" ? Math.max(1, countWords(text)) : 1;
     const rm = App.reduceMotion();
     const mime = pickMime();
@@ -67,10 +84,11 @@
     let wpm = P.wpm, sec = P.sec, mirror = P.mirror, wantCam = P.cam, camView = P.camView, camO = P.camO, widthPct = P.w;
     let fsS = P.fsS || (phoneW() ? 36 : 46), fsQ = P.fsQ || (phoneW() ? 36 : 54);
     let runMs = 0, raf = 0, lastT = 0, lastAct = 0, uiOff = false, setOpen = false, dlg = null, cn = 0, wl = null, fsEntered = false;
-    const iv = { i: 0, el: 0, beat: false, target: 0, lastSecs: -1 };
-    const timers = new Set(), offs = [], urls = [], inerted = [];
+    const iv = { i: 0, el: 0, beat: false, swapped: false, target: 0, lastSecs: -1 };
+    const timers = new Set(), offs = [], urls = [];
+    let inerted = [], kbd = false;   // kbd: la ultima interaccion fue con teclado (decide si el foco "viaja" a los botones o se queda en la pantalla)
     let beatT = [], countT = 0;
-    const prevFocus = document.activeElement, htmlOverflow = document.documentElement.style.overflow, htmlOverscroll = document.documentElement.style.overscrollBehavior;
+    const prevFocus = o._prevFocus || document.activeElement;
     // grabacion
     let rec = null, chunks = [], recWanted = false, recSeg = 0, recAcc = 0, recState = "off", lastRecSec = -1, finalFile = null, finalMs = 0, recErr = "", stopP = null;
     // camara
@@ -241,16 +259,20 @@
       if (iv.el >= sec) goQ(iv.i + 1, "Siguiente");
     }
     // una pregunta nueva: la actual se apaga con suavidad, aparece "Siguiente" un instante y la nueva se va revelando palabra por palabra
+    // Si se pide otro cambio mientras la pregunta todavia se esta apagando, solo cambia a donde va; si la nueva ya se mostro, arranca otro cambio desde ahi
+    // (nunca se pierde un toque).
     function goQ(target, label) {
       if (target >= questions.length) { finish("end"); return; }
       target = Math.max(0, target);
-      if (iv.beat) { iv.target = target; return; }
-      iv.beat = true; iv.target = target; nxEl.textContent = label || "Siguiente"; root.classList.add("q-out");
+      nxEl.textContent = label || "Siguiente"; iv.target = target;
+      if (iv.beat && !iv.swapped) return;
+      beatT.forEach(unlater);
+      iv.beat = true; iv.swapped = false; root.classList.add("q-out");
       beatT = [later(swapQ, rm ? 40 : BEAT_SWAP), later(endBeat, rm ? 90 : BEAT_END)];
       say((label || "Siguiente") + ", " + (target + 1) + " de " + questions.length);
     }
-    function swapQ() { iv.i = iv.target; iv.el = 0; renderQ(phase === "run" || phase === "pause"); root.classList.remove("q-out"); }
-    function endBeat() { iv.beat = false; }
+    function swapQ() { iv.swapped = true; iv.i = iv.target; iv.el = 0; renderQ(phase === "run" || phase === "pause"); root.classList.remove("q-out"); }
+    function endBeat() { iv.beat = false; iv.swapped = false; }
 
     // ================= camara y grabacion (siempre opcionales) =================
     function paintCam() {
@@ -392,10 +414,10 @@
     }
     function adj(dir) {
       if (phase === "done") return;
-      if (mode === "script") setWpm(wpm + dir * 10); else setSec(sec + dir * 5);
+      if (mode === "script") setWpm(wpm + dir * 10); else setSec(sec + dir * SEC.jump);
     }
     function setWpm(v) { wpm = clamp(snap(v, WPM.step), WPM.min, WPM.max); speed(); lastRem = -1; paint(); paintStat(); syncSettings(); save(); }
-    function setSec(v) { sec = clamp(snap(v, SEC.step), SEC.min, SEC.max); if (mode === "interview") { paintRing(true); paintProgQ(); refreshDock(); } paintStat(); syncSettings(); save(); }
+    function setSec(v) { sec = clamp(Math.round(v), SEC.min, SEC.max); if (mode === "interview") { paintRing(true); paintProgQ(); refreshDock(); } paintStat(); syncSettings(); save(); }
     function setFs(v) { const x = clamp(Math.round(v), FS.min, mode === "script" ? FS.max : 120); if (mode === "script") fsS = x; else fsQ = x; layout(); syncSettings(); save(); }
     function setWidth(v) { widthPct = clamp(Math.round(v / 5) * 5, 40, 100); layout(); syncSettings(); save(); }
     function setMirror(v) { mirror = !!v; root.dataset.mirror = mirror ? "1" : "0"; syncSettings(); save(); }
@@ -493,8 +515,7 @@
       offs.splice(0).forEach((f) => { try { f(); } catch (e) { /* ok */ } });
       camStopStream(); recDiscardSilently(); wlRelease(); exitFs();
       urls.splice(0).forEach((u) => URL.revokeObjectURL(u));
-      inerted.splice(0).forEach((n) => { try { n.inert = false; n.removeAttribute("inert"); } catch (e) { /* ok */ } });
-      document.documentElement.style.overflow = htmlOverflow; document.documentElement.style.overscrollBehavior = htmlOverscroll;
+      unlockApp(inerted.splice(0));
       const res = result();
       const fin = () => {
         root.remove(); if (cur === api) cur = null;
@@ -546,7 +567,7 @@
       const range = (id, label, val, a, b, step, out) => `<div class="tp-f"><label for="${id}"><span>${label}</span><output id="${id}o">${out}</output></label><input id="${id}" type="range" min="${a}" max="${b}" step="${step}" value="${val}" data-set="${id}"></div>`;
       const sw = (a, label, on, sub) => `<div class="tp-f"><button class="tp-sw" type="button" role="switch" aria-checked="${on}" data-a="${a}"><span>${label}${sub ? `<small>${sub}</small>` : ""}</span><i class="tp-knob" aria-hidden="true"></i></button></div>`;
       return `<div class="tp-sh"><span>Ajustes</span><button class="tp-ib" type="button" data-a="settings" aria-label="Cerrar ajustes" style="width:40px;height:40px">${icon("x")}</button></div>
-        ${mode === "script" ? range("wpm", "Velocidad", wpm, WPM.min, WPM.max, WPM.step, wpm + " pal/min") : range("sec", "Tiempo por pregunta", sec, SEC.min, SEC.max, SEC.step, sec + " s")}
+        ${mode === "script" ? range("wpm", "Velocidad", wpm, WPM.min, WPM.max, WPM.step, wpm + " pal/min") : range("sec", "Tiempo por pregunta", sec, SEC.min, SEC.max, 1, sec + " s")}
         ${range("fs", "Tamaño de letra", mode === "script" ? fsS : fsQ, FS.min, mode === "script" ? FS.max : 120, 2, (mode === "script" ? fsS : fsQ) + " px")}
         ${mode === "script" ? range("w", "Ancho del texto", widthPct, 40, 100, 5, widthPct + "%") : ""}
         ${sw("mirror", "Espejo horizontal", mirror, "Para cristal reflectante")}
@@ -576,8 +597,8 @@
     function toggleSettings(force) {
       const open_ = typeof force === "boolean" ? force : !setOpen; if (open_ === setOpen) return;
       setOpen = open_; setEl.hidden = !open_; settingsBtn.setAttribute("aria-expanded", String(open_));
-      if (open_) { if (!setEl.firstChild) setEl.innerHTML = settingsHtml(); renderSettingsCam(); syncSettings(); wake(); const f = setEl.querySelector("input"); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
-      else { try { if (!closing && root.contains(document.activeElement) && setEl.contains(document.activeElement)) settingsBtn.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
+      if (open_) { if (!setEl.firstChild) setEl.innerHTML = settingsHtml(); renderSettingsCam(); syncSettings(); wake(); const f = setEl.querySelector("input"); if (f && kbd) try { f.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
+      else { try { if (!closing && kbd && root.contains(document.activeElement) && setEl.contains(document.activeElement)) settingsBtn.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
     }
     function toggleFs() {
       if (document.fullscreenElement) { exitFs(); fsEntered = false; try { document.exitFullscreen(); } catch (e) { /* ok */ } return; }
@@ -587,7 +608,8 @@
     // ================= eventos =================
     const acts = {
       close: () => requestClose(), settings: () => toggleSettings(), play: () => togglePlay(), restart: () => restart(), minus: () => adj(-1), plus: () => adj(1),
-      prev: () => { if (phase === "run" || phase === "pause") goQ(iv.i - 1, iv.i === 0 ? "De nuevo" : "Anterior"); }, next: () => { if (phase === "run" || phase === "pause") { if (iv.i >= questions.length - 1) askFinish(); else goQ(iv.i + 1, "Siguiente"); } },
+      prev: () => { if (phase === "run" || phase === "pause") { const b = iv.beat ? iv.target : iv.i; goQ(b - 1, b === 0 ? "De nuevo" : "Anterior"); } },
+      next: () => { if (phase === "run" || phase === "pause") { const b = iv.beat ? iv.target : iv.i; if (b >= questions.length - 1) askFinish(); else goQ(b + 1, "Siguiente"); } },
       finish: () => askFinish(), cancelcount: () => cancelCount(), camtoggle: () => camToggle(), camflip: () => camFlip(), fs: () => toggleFs(),
       mirror: () => setMirror(!mirror), camview: (b) => setCamView(b.dataset.v), view: () => showPreview(), dl: () => download(), again: () => again(), ok: () => shutdown("ok"),
     };
@@ -595,7 +617,10 @@
       const d = e.target.closest("[data-d]"); if (d && dlg) { closeDlg(d.dataset.d); return; }
       const b = e.target.closest("[data-a]"); if (!b || !root.contains(b) || b.disabled) return;
       wake(); const f = acts[b.dataset.a]; if (f) f(b, e);
+      // con el mouse o el dedo el foco no se queda en el boton: Espacio siempre es empezar/pausar, no "repetir el ultimo boton"
+      if (!kbd && !dlg && !closing && b.matches("button") && root.contains(document.activeElement) && document.activeElement !== root && !$q(".tp-end")) { try { root.focus({ preventScroll: true }); } catch (er) { /* ok */ } }
     });
+    on(window, "pointerdown", () => { kbd = false; }, true);
     on(setEl, "input", (e) => {
       const t = e.target.closest("[data-set]"); if (!t) return; const v = +t.value;
       ({ wpm: setWpm, sec: setSec, fs: setFs, w: setWidth, camo: setCamO })[t.dataset.set](v);
@@ -605,6 +630,7 @@
       if (closing) return;
       e.stopPropagation();
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      kbd = true;
       const k = e.key, t = e.target, onBtn = !!(t && t.closest && t.closest("button")), onRange = !!(t && t.matches && t.matches('input[type="range"]'));
       wake();
       if (k === "Tab") {
@@ -616,7 +642,7 @@
       }
       if (k === "Escape") { e.preventDefault(); onEscape(); return; }
       if (dlg) return;   // con una pregunta abierta solo valen Tab, Esc y los botones
-      if ((k === " " || k === "Spacebar" || k === "Enter") && !onBtn && !onRange) { e.preventDefault(); if (phase === "done") return; togglePlay(); return; }
+      if ((k === " " || k === "Spacebar" || k === "Enter") && !onBtn) { e.preventDefault(); if (phase === "done") return; togglePlay(); return; }
       if (k === "k" || k === "K") { e.preventDefault(); togglePlay(); return; }
       if (phase === "done") return;
       if (k === "+" || k === "=") { e.preventDefault(); adj(1); return; }
@@ -671,15 +697,13 @@
 
     // ================= arranque =================
     const api = {
-      root, shutdown, state() {
+      root, shutdown, prevFocus, state() {
         return { open: !closing, mode, phase, pos, maxPos, wpm, sec, pxPerSec: pxs, words, fontSize: mode === "script" ? fsS : fsQ, widthPct, mirror, camera: wantCam ? cam.st : "off", cameraWhy: cam.why, recording: recState, recMs: Math.round(recMs()), question: iv.i, questions: questions.length, uiHidden: uiOff, mime };
       },
       _cmd: { start, pause, resume, finish, goQ, setWpm, setSec, setFs, setMirror },
     };
     host.appendChild(root);
-    // lo demas de la app queda inerte (ni teclado ni lector de pantalla lo alcanzan) y la pagina no se desplaza por debajo
-    Array.from(host.children).forEach((n) => { if (n !== root && n instanceof HTMLElement && !n.inert) { n.inert = true; inerted.push(n); } });
-    document.documentElement.style.overflow = "hidden"; document.documentElement.style.overscrollBehavior = "none";
+    inerted = lockApp(host, root);
     layout();
     if (mode === "interview") { renderQ(false); }
     paintStat(); refreshDock(); paintCam(); recLabel();
@@ -691,8 +715,9 @@
 
   App.teleprompter = {
     open(o) {
+      const keepFocus = cur && cur.prevFocus;   // el foco vuelve a donde estaba ANTES del primero, no a un boton del que se va
       if (cur) cur.shutdown("replace");   // solo una a la vez: la anterior entrega su resultado y se va
-      cur = create(o || {}); return cur;
+      cur = create(Object.assign({}, o || {}, { _prevFocus: keepFocus || null })); return cur;
     },
     close() { if (cur) return cur.shutdown("api"); return Promise.resolve(); },
     isOpen: () => !!cur && !!cur.root && cur.state().open,

@@ -110,7 +110,8 @@
 
 /* ---- bandas que se esconden cuando se lee (opacity, sin blur) ---- */
 .tp-ui { transition: opacity .35s var(--ease); }
-.tp.ui-off .tp-ui { opacity: 0; pointer-events: none; transition: opacity .7s var(--ease); }
+.tp.ui-off .tp-ui { opacity: 0; transition: opacity .7s var(--ease); }
+.tp.ui-off .tp-ui, .tp.ui-off .tp-ui * { pointer-events: none !important; }   /* invisibles = intocables: el primer toque solo despierta la pantalla */
 .tp.ui-off { cursor: none; }
 
 /* ---- listo para empezar: la camara y su aviso ---- */
