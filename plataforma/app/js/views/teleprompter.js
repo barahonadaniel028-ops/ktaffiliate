@@ -4,8 +4,10 @@
          script:    `text` es el guion entero (parrafos separados por linea en blanco) que se desplaza solo; velocidad en palabras por minuto, tamano, ancho y espejo ajustables.
                     Lo que va entre [corchetes] es una acotacion ("[pausa]", "[sonrie]"): se ve en otro color y NO cuenta como palabra.
          interview: `questions` es un arreglo de preguntas; se muestra UNA por vez, lento, `secondsPerQuestion` segundos cada una (se cambia en vivo con +/- 5 s)
-         onDone(result): se llama UNA sola vez, al terminar o al cerrar:  result = { recorded: File|null, durationMs, mode, completed, discarded }
-                    recorded = la grabacion de la camara (null si no hubo camara o se descarto); completed = se llego al final (o la persona toco Terminar).
+         onDone(result): se llama UNA sola vez, al terminar o al cerrar:  result = { recorded: File|null, durationMs, mode, completed, discarded, cancelled }
+                    recorded = la grabacion de la camara (null si no hubo camara o se descarto); completed = se llego al final (o la persona toco Terminar);
+                    discarded = la persona eligio descartar lo grabado; cancelled = no quedo ninguna toma (se cerro sin llegar al final y sin video guardado, o se descarto):
+                    quien llama (Grabar) no lo cuenta como sesion hecha. Cerrar a mitad de camino guardando el video da completed false pero cancelled false.
      App.teleprompter.close()    cierra sin preguntar; si se estaba grabando, la grabacion NO se pierde: llega en onDone({recorded}).
      App.teleprompter.isOpen()   false apenas empieza a cerrarse
      App.teleprompter.state()    foto del estado (para pruebas y para quien quiera mirar): fase, posicion, wpm, velocidad en px/s, camara, grabando...
@@ -16,7 +18,7 @@
   const App = window.App, { esc, icon, mmss, bytes } = App;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const snap = (v, s) => Math.round(v / s) * s;
-  const WPM = { min: 60, max: 260, def: 140, step: 5 }, SEC = { min: 2, max: 120, def: 20, jump: 5 }, FS = { min: 22, max: 96 };
+  const WPM = { min: 60, max: 260, def: 140, step: 5 }, SEC = { min: 2, max: 300, def: 20, jump: 5 }, FS = { min: 22, max: 96 };
   const UI_HIDE_MS = 3000;   // los controles se esconden a los 3 s sin mover el puntero (solo leyendo)
   const COUNT_FROM = 3;
   const BEAT_SWAP = 560, BEAT_END = 1000;   // entrevista: la pregunta se apaga (0-560 ms), cambia el texto y reaparece; a los 1000 ms vuelve a correr el tiempo
@@ -509,7 +511,9 @@
 
     // ================= cerrar =================
     function result() {
-      return { recorded: discarded ? null : finalFile, durationMs: finalFile && !discarded ? finalMs : Math.round(runMs), mode, completed: !!completed && !discarded, discarded };
+      const rec_ = discarded ? null : finalFile, done_ = !!completed && !discarded;
+      // cancelled = no quedo ninguna toma (ni se llego al final ni se guardo un video): quien llama no la cuenta como una sesion hecha
+      return { recorded: rec_, durationMs: rec_ ? finalMs : Math.round(runMs), mode, completed: done_, discarded, cancelled: discarded || (!done_ && !rec_) };
     }
     async function shutdown(reason) {
       if (closing) return; closing = true;
