@@ -36,9 +36,9 @@
 .tp-empty { font: 400 18px/1.5 var(--font); color: rgba(244,240,230,.6); }
 /* degradados arriba y abajo: lo ya leido se apaga y lo que viene aparece de a poco; no se anima nada, solo tapan */
 .tp-fade { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; }
-.tp-fade.t { top: 0; height: calc(var(--gy) - var(--lh) * .62); background: linear-gradient(var(--tp-bg), rgba(5,9,10,.86) 40%, transparent); }
+.tp-fade.t { top: 0; height: calc(var(--gy) - var(--lh) * .62); background: linear-gradient(var(--tp-bg), rgba(5,9,10,.9) 42%, rgba(5,9,10,.42) 74%, transparent); }
 .tp-fade.b { bottom: 0; height: calc(12% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.84) 52%, var(--tp-bg) 78%); }
-.tp[data-phase="ready"] .tp-fade.b { height: calc(30% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.9) 40%, var(--tp-bg) 66%); }
+.tp[data-phase="ready"] .tp-fade.b { height: calc(34% + 190px); background: linear-gradient(transparent, rgba(5,9,10,.93) 34%, var(--tp-bg) 54%); }
 .tp[data-camview="bg"][data-cam="on"] .tp-fade.t { background: linear-gradient(rgba(5,9,10,.92), rgba(5,9,10,.55) 45%, transparent); }
 .tp[data-camview="bg"][data-cam="on"] .tp-fade.b { background: linear-gradient(transparent, rgba(5,9,10,.7) 55%, rgba(5,9,10,.94) 80%); }
 /* la guia: una banda de luz suave en la linea que se esta leyendo, con dos marcas en los bordes */
@@ -100,7 +100,7 @@
 .tp-b:disabled { opacity: .32; cursor: not-allowed; transform: none; }
 .tp-pw { position: relative; flex: none; }
 .tp-play { position: relative; width: 86px; height: 80px; display: grid; place-items: center; color: #3b1606; transition: transform .2s var(--ease); }
-.tp .tp-play:focus-visible { outline: none; } .tp .tp-play:focus-visible .tp-blob { outline: 3px solid #fff; outline-offset: 3px; }
+.tp .tp-play:focus-visible { outline: none; } .tp .tp-play:focus-visible .tp-blob { outline: 2px solid rgba(255,255,255,.88); outline-offset: 4px; }
 .tp-play:active { transform: scale(.94); } .tp-play:disabled { opacity: .4; cursor: not-allowed; }
 .tp-blob { position: absolute; inset: 0; border-radius: 54% 46% 52% 48% / 48% 54% 46% 52%; background: linear-gradient(150deg, #ffd2b4, var(--apricot) 52%, #ff946c); box-shadow: 0 18px 36px -12px rgba(255,140,90,.7), inset 0 1px 0 rgba(255,255,255,.65); animation: tpBlob 9s ease-in-out infinite; will-change: transform; }
 @keyframes tpBlob { 0%, 100% { transform: rotate(0deg) scale(1, 1); } 33% { transform: rotate(-5deg) scale(1.045, .965); } 66% { transform: rotate(4deg) scale(.975, 1.04); } } /* solo transform: el contorno "respira" sin repintar */
@@ -116,7 +116,8 @@
 
 /* ---- listo para empezar: la camara y su aviso ---- */
 .tp-ready { position: absolute; z-index: 6; left: 50%; bottom: calc(168px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(420px, calc(100% - 28px)); display: grid; gap: 8px; justify-items: stretch; }
-.tp:not([data-phase="ready"]) .tp-ready { display: none; }
+.tp:not([data-phase="ready"]) .tp-ready, .tp.set-open .tp-ready { display: none; }
+.tp[data-phase="count"] .tp-dock { visibility: hidden; }   /* durante la cuenta solo se ve la cuenta (y Cancelar) */
 .tp-camsw { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 8px 14px; border-radius: 30px 27px 31px 26px; text-align: left; color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 90%, transparent); box-shadow: inset 0 0 0 1px var(--hair), 0 18px 36px -16px rgba(0,0,0,.75); }
 .tp-camsw > .ic { color: var(--accent); width: 24px; height: 24px; }
 .tp-camsw span { flex: 1; min-width: 0; display: grid; gap: 2px; } .tp-camsw b { font: 600 15px/1.2 var(--font); } .tp-camsw small { font: 400 12.5px/1.3 var(--font); color: var(--ink2); }
@@ -134,6 +135,8 @@
 @keyframes tpCblob { 0%, 100% { transform: rotate(0deg) scale(1, 1); } 40% { transform: rotate(7deg) scale(1.06, .95); } 72% { transform: rotate(-5deg) scale(.96, 1.05); } }
 .tp-cn { position: relative; font: 300 clamp(120px, 38vmin, 250px)/1 var(--font-d); letter-spacing: -.045em; font-variant-numeric: tabular-nums; animation: tpTick 1s var(--ease) both; }
 @keyframes tpTick { 0% { opacity: 0; transform: scale(1.35); } 24% { opacity: 1; transform: scale(1); } 78% { opacity: 1; } 100% { opacity: .1; transform: scale(.93); } }
+.tp-ccancel:disabled { opacity: .3; cursor: default; }
+.tp:focus { outline: none; }
 .tp-ccancel { position: absolute; left: 50%; bottom: calc(30px + env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 46px; padding: 0 22px; border-radius: 23px 21px 24px 20px; font: 500 15px/1 var(--font); color: var(--ink); background: color-mix(in srgb, var(--glass-solid) 88%, transparent); box-shadow: inset 0 0 0 1px var(--hair); }
 
 /* ---- ajustes (hoja sobre el dock) ---- */
@@ -143,11 +146,12 @@
 .tp-f { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--hair2); }
 .tp-f > label, .tp-f > .lbl { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font: 600 13px/1.2 var(--font); color: var(--ink2); }
 .tp-f output { font: 600 13px/1.2 var(--font); color: var(--ink); font-variant-numeric: tabular-nums; }
-.tp-f input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--accent); background: transparent; touch-action: pan-y; cursor: pointer; }
+.tp .tp-f input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--accent); background: transparent; touch-action: pan-y; cursor: pointer; }
 .tp-sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px; text-align: left; font: 500 15px/1.25 var(--font); color: var(--ink); }
 .tp-sw small { display: block; font: 400 12.5px/1.3 var(--font); color: var(--ink2); }
 .tp-sw:disabled { opacity: .5; cursor: not-allowed; }
 .tp-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 22px; background: var(--seg-bg); }
+.tp-seg button:disabled { opacity: .45; cursor: default; }
 .tp-seg button { min-height: 40px; border-radius: 18px; font: 500 14px/1 var(--font); color: var(--ink2); } .tp-seg button[aria-checked="true"] { background: var(--seg-on); color: var(--ink); box-shadow: 0 2px 8px -2px rgba(0,0,0,.35); }
 .tp-act { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 4px; font: 500 15px/1 var(--font); color: var(--ink); } .tp-act .ic { width: 20px; height: 20px; color: var(--accent); } .tp-act:disabled { opacity: .45; cursor: not-allowed; }
 .tp-keys { padding: 10px 0 4px; border-top: 1px solid var(--hair2); font: 400 12px/1.7 var(--font); color: var(--ink3); }
@@ -167,6 +171,7 @@
 .tp-endv { width: 100%; max-height: 42dvh; border-radius: 26px 22px 28px 24px; background: #000; object-fit: contain; box-shadow: 0 20px 44px -20px rgba(0,0,0,.8); }
 .tp-enda { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; padding-top: 4px; }
 .tp-enda .btn { flex: 1 1 150px; }
+.tp-enda .btn:not(.pri) { box-shadow: inset 0 0 0 1px var(--hair); }
 .tp-enda .btn.pri { flex-basis: 100%; order: 9; min-height: 52px; }
 .tp-wait { display: inline-flex; align-items: center; gap: 10px; font: 500 14px/1 var(--font); color: var(--ink2); } .tp-wait i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: tpRec 1s infinite; }
 

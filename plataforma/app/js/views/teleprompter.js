@@ -301,7 +301,7 @@
       cam.stream = stream; video.srcObject = stream; try { const pr = video.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) { /* sin autoplay: el video igual se graba */ }
       const vt = stream.getVideoTracks()[0], st = (vt && vt.getSettings && vt.getSettings()) || {};
       cam.facing = st.facingMode === "environment" ? "environment" : "user"; root.dataset.facing = cam.facing === "environment" ? "env" : "user";
-      if (vt) vt.addEventListener("ended", () => { if (cam.stream === stream && !closing && phase !== "done") { camStopStream(); camSet("none", "lost"); if (rec && rec.state !== "inactive") say("Se perdió la cámara."); } });
+      if (vt) vt.addEventListener("ended", () => { if (cam.stream === stream && !closing && phase !== "done") { camStopStream(); camSet("none", "lost"); if (recActive()) { say("Se perdió la cámara."); App.toast(App.say("Se perdió la cámara. El texto sigue y lo grabado hasta acá queda guardado.", "Se perdió la cámara. El texto sigue y lo grabado hasta aquí queda guardado.")); } } });
       camSet("on");
       try { const ds = await md.enumerateDevices(); cam.multi = ds.filter((d) => d.kind === "videoinput").length > 1; } catch (e) { cam.multi = false; }
       if (tok === cam.token) paintCam();
@@ -327,7 +327,8 @@
       }
       old.getTracks().forEach((t) => t.stop());
       cam.stream = stream; video.srcObject = stream; try { video.play().catch(() => {}); } catch (e) { /* ok */ }
-      cam.facing = ((vt && vt.getSettings && vt.getSettings().facingMode) || want) === "environment" ? "environment" : "user"; root.dataset.facing = cam.facing === "environment" ? "env" : "user";
+      // una compu con dos webcams no informa facingMode: se queda como "user" (espejo) en vez de adivinar que la segunda mira para atras
+      cam.facing = (vt && vt.getSettings && vt.getSettings().facingMode) === "environment" ? "environment" : "user"; root.dataset.facing = cam.facing === "environment" ? "env" : "user";
       camSet("on");
     }
     function recStart() {
@@ -338,6 +339,8 @@
       const r = rec;
       r.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
       r.onerror = () => { recErr = "error"; };
+      // si el navegador corta la grabadora solo (se perdio la camara, se lleno el disco), el REC no se queda prendido mintiendo: lo grabado hasta ahi se conserva
+      r.onstop = () => { if (rec === r && recState !== "off") { if (recState === "on") recAcc += performance.now() - recSeg; recState = "off"; recLabel(); say("La grabación se detuvo."); } };
       try { r.start(1000); } catch (e) { rec = null; recErr = "start"; return false; }
       recSeg = performance.now(); recState = "on"; lastRecSec = -1; recTime.textContent = "0:00"; recLabel(); return true;
     }
@@ -384,7 +387,7 @@
       recWanted = wantCam && cam.st === "on";
       if (mode === "interview") { iv.i = 0; iv.el = 0; iv.beat = false; }
       runMs = 0; holdLeft = 0;
-      setPhase("count"); toggleSettings(false);
+      setPhase("count"); toggleSettings(false); armCancel();
       if (recWanted) recStart();   // arranca con la cuenta regresiva: queda un colchon al principio que luego se recorta
       cn = COUNT_FROM; countStep();
     }
@@ -393,6 +396,8 @@
       countEl.hidden = false; const n = countEl.querySelector(".tp-cn"), fresh = n.cloneNode(false); fresh.textContent = String(cn); fresh.className = "tp-cn"; fresh.setAttribute("aria-hidden", "true"); n.replaceWith(fresh);
       say(String(cn)); cn--; countT = later(countStep, 1000);
     }
+    // "Cancelar" queda justo donde estaba el boton de empezar: durante el primer instante no recibe toques, asi un doble toque en Empezar no cancela la cuenta
+    function armCancel() { const b = $q(".tp-ccancel"); b.disabled = true; later(() => { b.disabled = false; }, 900); }
     function cancelCount() {
       if (phase !== "count") return;
       unlater(countT); countEl.hidden = true; recDiscard(); wlRelease(); setPhase("ready"); say("Cuenta cancelada");
@@ -455,7 +460,7 @@
         btns = `<button class="btn" type="button" data-a="view">${icon("eye")}<span>Ver lo que grabaste</span></button><button class="btn" type="button" data-a="dl">${icon("download")}<span>Descargar</span></button><button class="btn ghost" type="button" data-a="again">${icon("refresh")}<span>Otra toma</span></button>`;
       } else {
         const unit = mode === "interview" ? questions.length + " " + App.plural(questions.length, "pregunta", "preguntas") : words + " palabras";
-        sub = (recErr ? "No se pudo guardar el video de esta toma. " : "") + (mode === "interview" ? "Pasaste por " + unit + " en " + dur + "." : "Leíste el guion (" + unit + ") en " + dur + ".") + (recWanted ? "" : " Esta vez no se grabó video.");
+        sub = (recErr ? "No se pudo guardar el video de esta toma. " : "") + (mode === "interview" ? "Pasaste por " + unit + " en " + dur + "." : "Leíste el guion (" + unit + ") en " + dur + ".");
         btns = `<button class="btn ghost" type="button" data-a="again">${icon("refresh")}<span>Repetir</span></button>`;
       }
       el.innerHTML = `<div class="tp-endc"><span class="orb" aria-hidden="true"></span><h2 tabindex="-1">Listo. <em>¡Buen trabajo!</em></h2><p class="tp-endsub">${sub}</p><div class="tp-endvw" hidden></div>
@@ -486,7 +491,7 @@
       try {
         const url = URL.createObjectURL(f), a = document.createElement("a"); a.href = url; a.download = f.name; a.style.display = "none"; root.appendChild(a); a.click();
         setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 10000);
-        App.toast("Descarga lista: " + f.name);
+        App.toast("Descargando " + f.name);
       } catch (e) { App.toast(App.say("No se pudo descargar acá. Abrí Aura en su propia pestaña e intentá de nuevo.", "No se pudo descargar aquí. Abre Aura en su propia pestaña e inténtalo de nuevo.")); }
     }
     async function again() {
@@ -563,8 +568,9 @@
     function closeDlg(result_) { if (!dlg) return; const d = dlg; dlg = null; d.el.remove(); d.resolve(result_ === "cancel" ? d.def : result_); try { if (!closing) (playBtn.disabled ? root : playBtn).focus({ preventScroll: true }); } catch (e) { /* ok */ } }
 
     // ================= ajustes =================
+    const fillPct = (v, a, b) => (b > a ? clamp(((v - a) / (b - a)) * 100, 0, 100) : 0).toFixed(1);
     function settingsHtml() {
-      const range = (id, label, val, a, b, step, out) => `<div class="tp-f"><label for="${id}"><span>${label}</span><output id="${id}o">${out}</output></label><input id="${id}" type="range" min="${a}" max="${b}" step="${step}" value="${val}" data-set="${id}"></div>`;
+      const range = (id, label, val, a, b, step, out) => `<div class="tp-f"><label for="${id}"><span>${label}</span><output id="${id}o">${out}</output></label><input id="${id}" type="range" min="${a}" max="${b}" step="${step}" value="${val}" data-set="${id}" style="--v:${fillPct(val, a, b)}%"></div>`;
       const sw = (a, label, on, sub) => `<div class="tp-f"><button class="tp-sw" type="button" role="switch" aria-checked="${on}" data-a="${a}"><span>${label}${sub ? `<small>${sub}</small>` : ""}</span><i class="tp-knob" aria-hidden="true"></i></button></div>`;
       return `<div class="tp-sh"><span>Ajustes</span><button class="tp-ib" type="button" data-a="settings" aria-label="Cerrar ajustes" style="width:40px;height:40px">${icon("x")}</button></div>
         ${mode === "script" ? range("wpm", "Velocidad", wpm, WPM.min, WPM.max, WPM.step, wpm + " pal/min") : range("sec", "Tiempo por pregunta", sec, SEC.min, SEC.max, 1, sec + " s")}
@@ -588,7 +594,7 @@
       const fl = setEl.querySelector('[data-a="camflip"]'); if (fl) { fl.hidden = !(usable && cam.multi); fl.disabled = recState !== "off"; }
     }
     function syncSettings() {
-      const set = (id, v, out) => { const i = setEl.querySelector("#" + id), o_ = setEl.querySelector("#" + id + "o"); if (i && +i.value !== v) i.value = v; if (o_) o_.textContent = out; };
+      const set = (id, v, out) => { const i = setEl.querySelector("#" + id), o_ = setEl.querySelector("#" + id + "o"); if (i && +i.value !== v) i.value = v; if (i) i.style.setProperty("--v", fillPct(v, +i.min, +i.max) + "%"); if (o_) o_.textContent = out; };
       set("wpm", wpm, wpm + " pal/min"); set("sec", sec, sec + " s"); set("fs", mode === "script" ? fsS : fsQ, (mode === "script" ? fsS : fsQ) + " px"); set("w", widthPct, widthPct + "%"); set("camo", camO, camO + "%");
       const m = setEl.querySelector('[data-a="mirror"]'); if (m) m.setAttribute("aria-checked", String(mirror));
       setEl.querySelectorAll('[data-a="camview"]').forEach((b) => b.setAttribute("aria-checked", String(b.dataset.v === camView))); renderSettingsCam();
@@ -596,7 +602,7 @@
     }
     function toggleSettings(force) {
       const open_ = typeof force === "boolean" ? force : !setOpen; if (open_ === setOpen) return;
-      setOpen = open_; setEl.hidden = !open_; settingsBtn.setAttribute("aria-expanded", String(open_));
+      setOpen = open_; root.classList.toggle("set-open", open_); setEl.hidden = !open_; settingsBtn.setAttribute("aria-expanded", String(open_));
       if (open_) { if (!setEl.firstChild) setEl.innerHTML = settingsHtml(); renderSettingsCam(); syncSettings(); wake(); const f = setEl.querySelector("input"); if (f && kbd) try { f.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
       else { try { if (!closing && kbd && root.contains(document.activeElement) && setEl.contains(document.activeElement)) settingsBtn.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
     }
@@ -707,7 +713,7 @@
     layout();
     if (mode === "interview") { renderQ(false); }
     paintStat(); refreshDock(); paintCam(); recLabel();
-    const first = playBtn.disabled ? $q('[data-a="close"]') : playBtn; try { first.focus({ preventScroll: true }); } catch (e) { /* ok */ }
+    const first = playBtn.disabled ? root : playBtn; try { first.focus({ preventScroll: true }); } catch (e) { /* ok */ }   // sin contenido el foco queda en la pantalla: Espacio no cierra nada
     say(mode === "interview" ? "Entrevista lista. " + questions.length + " preguntas." : "Teleprompter listo.");
     if (!hasContent) camSet("off"); else if (wantCam) camStart("user"); else camSet("off");
     return api;

@@ -131,6 +131,14 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   await p.fill("#wpm", "120"); await wait(p, 250); st = await S(p);
   ok(st.wpm === 120, "el deslizador cambia el WPM", String(st.wpm));
   ok(await p.evaluate(() => document.querySelector(".tp-read").textContent === "120 palabras por minuto"), "el WPM se lee en pantalla");
+  // camara: al fondo / esquina / oculta
+  ok(await p.evaluate(() => document.querySelector(".tp").dataset.camview === "bg" && getComputedStyle(document.querySelector(".tp-cam")).opacity === "0.45"), "la camara va al fondo con opacidad controlada (45 %)");
+  await p.fill("#camo", "20"); await wait(p, 150); ok(await p.evaluate(() => getComputedStyle(document.querySelector(".tp-cam")).opacity === "0.2"), "el deslizador cambia la transparencia de la camara");
+  await click(p, '[data-a="camview"][data-v="corner"]'); await wait(p, 200);
+  ok(await p.evaluate(() => { const v = document.querySelector(".tp-cam").getBoundingClientRect(); return v.width < 140 && v.right > innerWidth - 40 && v.top < 200 && getComputedStyle(document.querySelector(".tp-cam")).opacity === "1"; }), "\"Esquina\": vista previa chica arriba a la derecha");
+  await click(p, '[data-a="camview"][data-v="off"]'); await wait(p, 200);
+  ok(await p.evaluate(() => getComputedStyle(document.querySelector(".tp-cam")).display === "none" && App.teleprompter.state().recording === "on"), "\"Oculta\": no se ve, pero sigue grabando");
+  await click(p, '[data-a="camview"][data-v="bg"]'); await p.fill("#camo", "45"); await wait(p, 150);
   await p.fill("#fs", "46"); await p.fill("#w", "80"); await click(p, '[data-a="settings"]'); await wait(p, 300);
   // ---- espejo ----
   await key(p, "m"); await wait(p, 200);
@@ -249,6 +257,32 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   rd = await p.evaluate(() => window.__done);
   ok(rd && rd.recorded && rd.recorded.size > 0 && rd.discarded === false, "close() grabando NO pierde la grabacion", JSON.stringify(rd && rd.recorded));
   await wait(p, 500); ok(await p.evaluate(() => window.__tracks.every((t) => t.readyState === "ended") && !document.querySelector(".tp") && window.__wl.active === 0), "y limpia todo");
+  // boton Terminar: pregunta si falta mucho y luego cuenta como completada
+  await openTp(p, { mode: "script", text: LONG }); await p.waitForFunction(() => App.teleprompter.state().camera === "on", null, { timeout: 8000 }).catch(() => {});
+  await startRun(p); await wait(p, 1800);
+  await click(p, '[data-a="finish"]'); await wait(p, 400);
+  ok(await p.evaluate(() => !!document.querySelector(".tp-dlg") && /Terminar la toma/.test(document.querySelector(".tp-dlg h2").textContent)) && (await S(p)).phase === "pause", "Terminar a mitad: pausa y confirma");
+  await click(p, '[data-d="stay"]'); await wait(p, 300); ok((await S(p)).phase === "pause" && !(await p.evaluate(() => document.querySelector(".tp-dlg"))), "Seguir: vuelve a la pausa sin perder nada");
+  await click(p, '[data-a="finish"]'); await wait(p, 300); await click(p, '[data-d="ok"]');
+  ok(await p.waitForFunction(() => { const e = document.querySelector(".tp-end"); return e && e.querySelector('[data-a="view"]'); }, null, { timeout: 9000 }).then(() => true).catch(() => false), "Terminar: tarjeta final con la grabacion");
+  await click(p, '.tp-end [data-a="ok"]'); await waitDone(p, 6000); rd = await p.evaluate(() => window.__done);
+  ok(rd && rd.completed === true && rd.recorded && rd.recorded.size > 0, "Terminar a mano cuenta como completada", JSON.stringify(rd));
+  // "Otra toma": descarta y vuelve a empezar
+  await openTp(p, { mode: "script", text: SHORT }); await p.waitForFunction(() => App.teleprompter.state().camera === "on", null, { timeout: 8000 }).catch(() => {});
+  await p.evaluate(() => App.teleprompter._cmd("setWpm", 260)); await startRun(p); await waitPhase(p, "done", 25000);
+  await p.waitForFunction(() => { const e = document.querySelector(".tp-end"); return e && e.querySelector('[data-a="again"]') && !e.querySelector(".tp-wait"); }, null, { timeout: 9000 }).catch(() => {});
+  await click(p, '.tp-end [data-a="again"]'); await wait(p, 400); await click(p, '[data-d="ok"]'); await wait(p, 600);
+  ok((await S(p)).phase === "ready" && (await S(p)).pos === 0 && !(await p.evaluate(() => document.querySelector(".tp-end"))), "Otra toma: vuelve a quedar lista (pide confirmar porque descarta la grabacion)");
+  ok(await p.waitForFunction(() => App.teleprompter.state().camera === "on", null, { timeout: 8000 }).then(() => true).catch(() => false), "...y la camara se vuelve a prender");
+  // la camara se pierde en plena lectura: sigue el texto, se conserva lo grabado
+  await startRun(p); await wait(p, 1800);
+  await p.evaluate(() => window.__tracks.forEach((t) => { t.stop(); t.dispatchEvent(new Event("ended")); })); await wait(p, 900);
+  st = await S(p);
+  ok(st.phase === "run" && st.camera === "none" && st.recording === "off", "si se pierde la camara leyendo: el texto sigue y el REC se apaga", JSON.stringify({ ph: st.phase, c: st.camera, r: st.recording }));
+  await waitPhase(p, "done", 25000);
+  ok(await p.waitForFunction(() => { const e = document.querySelector(".tp-end"); return e && !e.querySelector(".tp-wait"); }, null, { timeout: 9000 }).then(() => true).catch(() => false), "termina igual");
+  await click(p, '.tp-end [data-a="ok"]'); await waitDone(p, 6000); rd = await p.evaluate(() => window.__done);
+  ok(rd && rd.completed === true && rd.recorded && rd.recorded.size > 0, "y entrega lo que se alcanzo a grabar", JSON.stringify(rd && rd.recorded));
   // abrir uno nuevo mientras hay otro: el primero entrega su resultado
   await openTp(p, { mode: "script", text: SHORT }); await wait(p, 400);
   await p.evaluate(() => { window.__first = null; App.teleprompter.open({ mode: "interview", questions: ["¿Una?", "¿Dos?"], onDone: (r) => { window.__first = r; } }); }); await wait(p, 700);
@@ -336,6 +370,27 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   ok((await S(p)).sec === 2, "se acepta secondsPerQuestion de 2 s");
   await p.evaluate(() => App.teleprompter.close()); await wait(p, 600); await p.context().close();
 
+  // ================= dos camaras: girar =================
+  console.log("\n== Teleprompter: girar camara (dos camaras falsas) ==");
+  const b2 = await L.launch(["--use-fake-device-for-media-stream=device-count=2", "--use-fake-ui-for-media-stream"]);
+  p = await open(b2, "?demo=1&preset=kt#hoy", SPY);
+  await openTp(p, { mode: "script", text: LONG }); await p.waitForFunction(() => App.teleprompter.state().camera === "on", null, { timeout: 8000 }).catch(() => {});
+  await wait(p, 600); await click(p, '[data-a="settings"]'); await wait(p, 300);
+  ok(await p.evaluate(() => { const b = document.querySelector('[data-a="camflip"]'); return !!b && !b.hidden && b.offsetWidth > 0; }), "con dos camaras aparece \"Girar cámara\"");
+  const id0 = await p.evaluate(() => window.__tracks.filter((t) => t.kind === "video" && t.readyState === "live").map((t) => t.getSettings().deviceId)[0]);
+  await click(p, '[data-a="camflip"]');
+  ok(await p.waitForFunction((a) => window.__tracks.some((t) => t.kind === "video" && t.readyState === "live" && t.getSettings().deviceId !== a), id0, { timeout: 9000 }).then(() => true).catch(() => false), "girar cambia a la otra camara");
+  await wait(p, 600);
+  ok(await p.evaluate(() => window.__tracks.filter((t) => t.kind === "video" && t.readyState === "live").length === 1 && App.teleprompter.state().camera === "on"), "y suelta la anterior (una sola camara viva)");
+  await p.evaluate(() => App.teleprompter.close()); await waitDone(p, 5000); await wait(p, 400);
+  ok(await p.evaluate(() => window.__tracks.every((t) => t.readyState === "ended")), "al cerrar quedan todas las pistas detenidas");
+  ok(p.errs.length === 0, "sin errores de pagina (girar camara)", p.errs.slice(0, 3).join(" || ")); await p.context().close(); await b2.close();
+  // con una sola camara no hay boton de girar
+  p = await open(browser, "?demo=1&preset=kt#hoy", SPY);
+  await openTp(p, { mode: "script", text: LONG }); await p.waitForFunction(() => App.teleprompter.state().camera === "on", null, { timeout: 8000 }).catch(() => {}); await wait(p, 500); await click(p, '[data-a="settings"]'); await wait(p, 300);
+  ok(await p.evaluate(() => { const b = document.querySelector('[data-a="camflip"]'); return !b || b.hidden || !b.offsetWidth; }), "con una sola camara no se ofrece girar");
+  await p.evaluate(() => App.teleprompter.close()); await wait(p, 600); await p.context().close();
+
   // ================= sin camara: nada se rompe =================
   console.log("\n== Teleprompter: sin camara ==");
   for (const [name, init] of [["permiso negado", NOCAM_DENIED], ["sin mediaDevices", NOCAM_NONE]]) {
@@ -420,14 +475,15 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   ok(mob.wpct === "100" && mob.fs <= 40, "en el telefono el texto usa todo el ancho y una letra manejable", mob.wpct + "/" + mob.fs);
   ok(await p.evaluate(() => { const d = document.querySelector(".tp-dock").getBoundingClientRect(); return d.bottom <= innerHeight && d.height > 100; }), "los controles grandes quedan abajo, al alcance del pulgar");
   await p.screenshot({ path: "/tmp/tp-shot-mobile-ready.png" }).catch(() => {});
-  await p.touchscreen.tap(195, 740); await wait(p, 300);   // (ya sobre el dock: no deberia romper nada)
+  await p.touchscreen.tap(195, 300); await wait(p, 300); ok((await S(p)).phase === "ready", "telefono: tocar el texto antes de empezar no hace nada");
   await click(p, '[data-a="play"]'); ok(await waitPhase(p, "run", 9000), "telefono: empieza");
   await wait(p, 1200); await p.screenshot({ path: "/tmp/tp-shot-mobile-run.png" }).catch(() => {});
   await p.touchscreen.tap(195, 300); ok(await waitPhase(p, "pause", 3000), "telefono: tocar el texto pausa");
   await click(p, '[data-a="settings"]'); await wait(p, 500);
   const sheet = await p.evaluate(() => { const s = document.querySelector(".tp-set").getBoundingClientRect(); return { l: s.left, r: s.right, t: s.top, b: s.bottom, h: innerHeight, sc: document.documentElement.scrollWidth }; });
   ok(sheet.l >= 0 && sheet.r <= 390 && sheet.t >= 0 && sheet.b <= sheet.h && sheet.sc <= 390, "los ajustes caben en el telefono", JSON.stringify(sheet));
-  ok(await p.evaluate(() => Array.from(document.querySelectorAll(".tp-set input[type=range]")).every((i) => i.getBoundingClientRect().height >= 40) && Array.from(document.querySelectorAll(".tp-set button")).filter((b) => b.offsetWidth).every((b) => b.getBoundingClientRect().height >= 40)), "controles de los ajustes con area tactil comoda");
+  const small = await p.evaluate(() => Array.from(document.querySelectorAll(".tp-set input[type=range], .tp-set button")).filter((b) => b.offsetWidth && b.getBoundingClientRect().height < 40).map((b) => b.tagName + "." + (b.dataset.a || b.id) + ":" + Math.round(b.getBoundingClientRect().height)));
+  ok(small.length === 0, "controles de los ajustes con area tactil comoda (40 px o mas)", small.join(","));
   await p.screenshot({ path: "/tmp/tp-shot-mobile-settings.png" }).catch(() => {});
   await click(p, '[data-a="settings"]'); await p.evaluate(() => App.teleprompter.close()); await waitDone(p, 8000); await wait(p, 400);
   await openTp(p, { mode: "interview", title: "Entrevista", questions: QS, secondsPerQuestion: 10 }); await wait(p, 900);
