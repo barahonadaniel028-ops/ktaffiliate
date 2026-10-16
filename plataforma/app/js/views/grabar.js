@@ -240,7 +240,9 @@
     const all = sentences(raw, lang), ideaHook = idea && idea.gancho ? String(idea.gancho) : "";
     let last = all.length > 1 && CTA_RX.test(all[all.length - 1]) ? all.pop() : "", hook = "", rest = "", fromIdea = false;
     let bi = -1, bs = -99; all.forEach((s, i) => { const sc = hookScore(s, i); if (sc > bs) { bs = sc; bi = i; } });
-    if (bi >= 0 && bs >= 3) { const t = trimHook(all.splice(bi, 1)[0]); hook = t.hook; rest = t.rest; }
+    // con poco dicho, la frase más "gancho" de la persona suele ser solo la presentación de la idea ("mi idea es…"): si hay un gancho propuesto, gana salvo que la frase sea muy fuerte
+    const weak = nWords(raw) < 25 && ideaHook && bs < 7;
+    if (bi >= 0 && bs >= 3 && !weak) { const t = trimHook(all.splice(bi, 1)[0]); hook = t.hook; rest = t.rest; }
     else if (ideaHook) { hook = ideaHook; fromIdea = true; }
     else if (all.length) { const t = trimHook(all.shift()); hook = t.hook; rest = t.rest; }
     const beats = groupBeats((rest ? [rest] : []).concat(all));
@@ -924,5 +926,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const st = ST(); st.req++; if (st.step === "done") UI.crear.grabar = fresh();
   });
 
-  App.crearGrabar = { render, bind, back };
+  // reset(): vuelve al principio (cancela la consulta y el micrófono). Lo usan las pruebas y, a futuro, un "empezar de nuevo" desde afuera
+  function reset() { cancelPending(); micStop(); UI.crear.grabar = fresh(); }
+  App.crearGrabar = { render, bind, back, reset };
 })();
