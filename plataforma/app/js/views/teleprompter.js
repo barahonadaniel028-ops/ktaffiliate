@@ -300,6 +300,8 @@
       if (!stream && !(err && /NotAllowed|Security|Abort/i.test(err.name || ""))) { stream = await get({ video: { facingMode: { ideal: facing } }, audio: false }); if (stream) cam.noAudio = true; }
       if (tok !== cam.token || closing) { if (stream) stream.getTracks().forEach((t) => t.stop()); return false; }   // se cerro o se cambio de idea mientras se esperaba el permiso
       if (!stream) { camSet("none", (err && err.name) || "error"); return false; }
+      // el permiso llego tarde (la persona ya empezo solo con texto): no se prende una camara que no se va a grabar ni se mezcla con una toma en curso
+      if (phase !== "ready") { stream.getTracks().forEach((t) => t.stop()); camSet("none", "late"); return false; }
       cam.stream = stream; video.srcObject = stream; try { const pr = video.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) { /* sin autoplay: el video igual se graba */ }
       const vt = stream.getVideoTracks()[0], st = (vt && vt.getSettings && vt.getSettings()) || {};
       cam.facing = st.facingMode === "environment" ? "environment" : "user"; root.dataset.facing = cam.facing === "environment" ? "env" : "user";

@@ -60,7 +60,7 @@
 .tp-ring circle { fill: none; stroke-width: 6; }
 .tp-ring .trk { stroke: rgba(255,255,255,.12); } .tp-ring .val { stroke: var(--apricot); stroke-linecap: round; }
 .tp-secs { position: relative; font: 300 34px/1 var(--font-d); font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
-.tp-qt { max-width: min(17em, 100%); font: 300 var(--fsq, 52px)/1.18 var(--font-d); letter-spacing: -.03em; text-wrap: balance; text-shadow: 0 2px 22px rgba(0,0,0,.6); transition: opacity .5s ease-in, transform .5s ease-in; }
+.tp-qt { overflow-wrap: anywhere; max-width: min(17em, 100%); font: 300 var(--fsq, 52px)/1.18 var(--font-d); letter-spacing: -.03em; text-wrap: balance; text-shadow: 0 2px 22px rgba(0,0,0,.6); transition: opacity .5s ease-in, transform .5s ease-in; }
 .tp-qt .w { display: inline-block; }
 .tp-qt.pre .w { opacity: .5; }
 .tp-qt.rev .w { animation: tpWord 1s var(--ease) both; animation-delay: var(--d, 0s); }

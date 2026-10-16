@@ -400,6 +400,19 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   ok(await p.evaluate(() => { const b = document.querySelector('[data-a="camflip"]'); return !b || b.hidden || !b.offsetWidth; }), "con una sola camara no se ofrece girar");
   await p.evaluate(() => App.teleprompter.close()); await wait(p, 600); await p.context().close();
 
+  // ================= el permiso de camara tarda: se puede empezar solo con texto =================
+  console.log("\n== Teleprompter: permiso de camara lento ==");
+  p = await open(browser, "?demo=1&preset=kt#hoy", "(" + SPY.toString() + ")(); { const md = navigator.mediaDevices, g = md.getUserMedia.bind(md); md.getUserMedia = (c) => new Promise((res, rej) => setTimeout(() => g(c).then(res, rej), 2500)); }");
+  await openTp(p, { mode: "script", text: SHORT, title: "Lento" }); await wait(p, 500);
+  ok((await S(p)).camera === "pending", "mientras se espera el permiso la camara figura como pendiente");
+  await p.evaluate(() => App.teleprompter._cmd("setWpm", 260)); await click(p, '[data-a="play"]');
+  ok(await waitPhase(p, "run", 9000), "se puede empezar sin esperar a la camara");
+  await wait(p, 1500);
+  ok(await p.evaluate(() => App.teleprompter.state().recording === "off" && App.teleprompter.state().camera === "none" && window.__tracks.every((t) => t.readyState === "ended")), "si el permiso llega tarde se suelta la camara: no queda una luz prendida sin grabar");
+  await waitPhase(p, "done", 25000); await click(p, '.tp-end [data-a="ok"]'); await waitDone(p, 5000);
+  ok(await p.evaluate(() => window.__done && window.__done.completed === true && window.__done.recorded === null), "y termina como una toma de solo texto");
+  ok(p.errs.length === 0, "sin errores de pagina (permiso lento)", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
   // ================= sin camara: nada se rompe =================
   console.log("\n== Teleprompter: sin camara ==");
   for (const [name, init] of [["permiso negado", NOCAM_DENIED], ["sin mediaDevices", NOCAM_NONE]]) {
@@ -453,6 +466,16 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   ok(await p.evaluate(() => { const g = document.querySelector(".tp-prog"); return g.getAttribute("role") === "progressbar" && g.hasAttribute("aria-valuenow"); }), "la barra de progreso es un progressbar con aria-valuenow");
   await p.evaluate(() => App.teleprompter.close()); await wait(p, 700);
   await p.evaluate(() => App.jarvis.close()); await wait(p, 500);
+  // por encima del editor (Estudio)
+  await p.evaluate(() => { const v = App.sel.pending()[0]; location.hash = "#estudio/editor/" + encodeURIComponent(v.id); }); await wait(p, 2200);
+  const edOpen = await p.evaluate(() => !!document.querySelector(".stx"));
+  ok(edOpen, "(editor abierto)");
+  if (edOpen) {
+    await openTp(p, { mode: "script", text: LONG }); await wait(p, 700);
+    ok(await p.evaluate(() => [[720, 450], [100, 100], [1300, 800], [720, 860], [20, 450]].map(([x, y]) => document.elementFromPoint(x, y)).every((e) => e && e.closest(".tp"))), "queda por encima del editor");
+    await key(p, "Escape"); await wait(p, 900);
+    ok(!(await p.evaluate(() => App.teleprompter.isOpen())) && await p.evaluate(() => !!document.querySelector(".stx")), "Esc cierra solo el teleprompter: el editor de abajo no se entera y sigue ahi");
+  }
   // por encima del editor (Estudio)
   ok(p.errs.length === 0, "sin errores de pagina (vacio y capas)", p.errs.slice(0, 3).join(" || ")); await p.context().close();
 
