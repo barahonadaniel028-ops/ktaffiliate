@@ -122,13 +122,10 @@
       const t = mk(s * f), sz = s * f;
       t.animate(sp.map((v, i) => { const u = i / (N - 1), off = lagMax * lag * Math.pow(v / vmax, 0.9), sc = 1.25 - 0.95 * u; return { transform: at(sz, off, ang, Math.max(0.3, sc) * (1 + 0.5 * (v / vmax)), Math.max(0.3, sc) * (1 - 0.25 * (v / vmax))), opacity: u > 0.82 ? 1 - (u - 0.82) / 0.18 : 1, offset: u }; }), { duration: ms * (0.96 - idx * 0.02), delay, easing: "linear", fill: "both" });
     });
-    // aparecer y fundirse: la opacidad es de la caja filtrada entera (dentro del filtro goo una opacidad parcial "se come" la forma en vez de
-    // transparentarla, por el umbral de alfa)
-    const op = [[0, 1]];
-    if (delay && o.fadeIn) op.splice(0, 1, [0, 0], [delay - o.fadeIn, 0], [delay, 1]);
-    if (o.spread) op.push([plan.touch, 1], [plan.touch + 80, 0]);
-    const opEnd = Math.max(plan.end, op[op.length - 1][0]);
-    goo.animate(keysAt(opEnd, op, "opacity"), { duration: opEnd, fill: "both" });
+    // aparecer y fundirse: la opacidad es de la caja filtrada entera (dentro del filtro goo una opacidad parcial "se come" la forma por el umbral
+    // de alfa, en vez de transparentarla). Dos animaciones cortas y no una que dure todo el vuelo: solo existen en los ~100 ms en que hacen algo
+    if (delay && o.fadeIn) goo.animate([{ opacity: 0 }, { opacity: 1 }], { duration: o.fadeIn, delay: Math.max(0, delay - o.fadeIn), fill: "backwards" });
+    if (o.spread) goo.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 80, delay: plan.touch, fill: "forwards" });
     if (o.onLand) setTimeout(() => { if (!(o.stale && o.stale())) o.onLand(); }, plan.touch);
     plan.el = goo;
     plan.done = settled(anim).then(() => { if (o.spread) setTimeout(() => goo.remove(), 60); return main; });
@@ -183,7 +180,7 @@
     const g = document.createElement("div"); g.className = "lq";
     Object.assign(g.style, { left: rect.x + "px", top: rect.y + "px", width: rect.w + "px", height: rect.h + "px" });
     const parts = [], add = (kind, w, h, cls) => { const e = document.createElement("i"); if (cls) e.className = cls; e.style.width = w + "px"; e.style.height = h + "px"; if (kind !== "S") e.style.background = color; g.appendChild(e); parts.push({ kind, e, n: { w, h } }); };
-    if (shadow) add("S", rect.w, rect.h, "sh");
+    if (shadow) add("S", 160, 120, "sh"); // un degradado blando: alcanza con rasterizarlo chico y estirarlo (no se nota y no ocupa una textura del tamano del panel)
     add("H", rect.w, rect.h); add("V", rect.w, rect.h);
     ["TL", "TR", "BL", "BR"].forEach((k) => add(k, cw, ch, "r"));
     const L = layer(), goo = L.querySelector(".gooed"); if (goo) L.insertBefore(g, goo); else L.appendChild(g); // la gota en vuelo siempre por encima

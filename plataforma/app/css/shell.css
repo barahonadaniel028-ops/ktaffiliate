@@ -105,6 +105,9 @@ body.in-editor .jv-fab { right: 22px; bottom: 300px; }
    cuadro en que algo se mueve debajo (medido: el segundo costo mas grande del movimiento, DECISIONES.md #17). Vuelve con un fundido. */
 #aura-root .grain { transition: opacity .5s var(--ease), visibility 0s; }
 #aura-root.mo-v .grain { opacity: 0; visibility: hidden; transition: opacity .2s var(--ease), visibility 0s .2s; }
+/* y los orbes de la pantalla de abajo dejan de girar mientras tanto: su color gira con una propiedad propia (--spin) que se repinta en el hilo
+   principal en cada cuadro (medido en la traza); una vuelta dura 18 s, asi que un segundo quieto bajo el velo no se nota. El de Jarvis sigue vivo. */
+#aura-root.mo-v .orb:not(.jv-wrap .orb) { animation-play-state: paused; }
 .jv-wrap.in .veil { opacity: 1; }
 /* al cerrar el velo se va con la sustancia que se junta, no de golpe: si la pantalla de colores aparece antes, el cuerpo se ve como una sabana blanca encima */
 .jv-wrap.open:not(.in) .veil { transition: opacity .42s cubic-bezier(.45,0,.55,1) .08s; }
