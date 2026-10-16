@@ -17,9 +17,9 @@
    3. La forma no es una curva de tiempo sino un resorte muestreado: el ancho y el alto son dos resortes desfasados (primero se abre a lo
       ancho -el aplaste del aterrizaje- y despues baja), con rebote, y las esquinas pasan de "todo redondo" a los radios del panel recien
       cuando ya casi lleno su lugar: eso es lo que se lee como liquido con tension superficial, no como una figura geometrica.
-   4. El panel real espera invisible (ya pintado: tener una animacion de opacidad pendiente lo sube a su propia capa durante el vuelo) y
-      aparece DEBAJO del cuerpo, que es de su mismo color; el cuerpo se desvanece encima y el contenido sube escalonado. El panel ademas
-      sigue el resorte del cuerpo (escala desde el punto de aterrizaje), asi el asentado se ve en el panel y no en una capa aparte.
+   4. El panel real espera invisible (se sube a su propia capa y se pinta ~150 ms antes de que la gota toque, no en el clic) y aparece
+      DEBAJO del cuerpo, que es de su mismo color; el cuerpo se desvanece encima y el contenido sube escalonado. El panel ademas sigue el
+      resorte del cuerpo (escala desde el punto de aterrizaje), asi el asentado se ve en el panel y no en una capa aparte.
    5. Nunca `fill: forwards` sobre el panel (ver resetJv/wilt): el estado final se deja en estilo inline.
    Con "reducir movimiento": fundido simple, sin vuelo ni cola. */
 (function () {
@@ -236,12 +236,20 @@
     const gA = B.g.animate(keysAt(total, [[0, 0], [delay, 0], [delay + 1, peak], [delay + fA * D, peak], [delay + fB * D, 0]], "opacity"), { duration: total, fill: "both" });
     const rv = delay + (splash ? 0.28 : 0.3) * D, re = delay + (splash ? 0.6 : 0.5) * D;
     if (target && !o.splash) {
-      // sin fill forwards: al terminar manda el estilo propio del target (para el panel de Jarvis, opacity 1 inline)
-      target.animate(keysAt(re, [[0, 0], [rv, 0, "cubic-bezier(.3,0,.2,1)"], [re, 1]], "opacity"), { duration: re });
-      if (!splash && o.jelly !== false && !cssMoved(target)) {
-        const base = getComputedStyle(target).transform, pre = base && base !== "none" ? base + " " : "";
-        target.animate(P.map((t) => ({ transform: pre + t })), { duration: D, delay, easing: "linear", fill: "backwards" });
-      }
+      const keepOp = target.style.opacity, jelly = !splash && o.jelly !== false && !cssMoved(target);
+      const base = jelly ? getComputedStyle(target).transform : "none", pre = base && base !== "none" ? base + " " : "";
+      const mount = () => {
+        if ((o.stale && o.stale()) || !target.isConnected) return; // otro turno ya tomo el panel (se cerro con la gota en el aire)
+        target.style.opacity = keepOp;
+        // sin fill forwards: al terminar manda el estilo propio del target (para el panel de Jarvis, opacity 1 inline)
+        const a = [target.animate(keysAt(re, [[0, 0], [rv, 0, "cubic-bezier(.3,0,.2,1)"], [re, 1]], "opacity"), { duration: re })];
+        if (jelly) a.push(target.animate(P.map((t) => ({ transform: pre + t })), { duration: D, delay, easing: "linear", fill: "backwards" }));
+        if (gA.startTime != null) a.forEach((x) => { x.startTime = gA.startTime; }); // el mismo reloj que el cuerpo, aunque se creen despues
+      };
+      // El panel se sube a su propia capa (y se pinta) un poco antes de que la gota toque, no en el clic: medido, componer un panel invisible
+      // durante todo el vuelo encarecia los primeros cuadros (y el clic es lo que mas se siente). Hasta entonces espera en opacidad 0 inline;
+      // si el timer llega tarde, el cuerpo opaco lo sigue tapando un rato mas, asi que no se ve un hueco.
+      if (delay > 250) { target.style.opacity = "0"; setTimeout(mount, delay - 150); } else mount();
     }
     setTimeout(() => B.g.remove(), total + 60);
     return plan(settled(gA), rv, re, total);
@@ -322,7 +330,7 @@
       fromEl.style.visibility = "hidden"; hidden.add(fromEl); // la gota ES el orbe que se toco
       delay = flight(center(a), land, { size: Math.min(a.w, a.h), endSize, spread: true }).touch; r0 = endSize / 2;
     }
-    const B = bloom(panel, land, 640, { delay, r0 });
+    const B = bloom(panel, land, 640, { delay, r0, stale: () => !live(t) });
     // el contenido del panel sube escalonado justo cuando el cuerpo le deja lugar (shell.css: --jv-d), sobre el mismo reloj
     wrap.style.setProperty("--jv-d", Math.round(B.reveal) + "ms"); wrap.classList.add("shown");
     await after(B.revealEnd); if (!live(t)) return;
