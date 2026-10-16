@@ -39,6 +39,7 @@ El mismo morph lleva al orbe a la pantalla que pedís ("llevame a aprobar") y a 
 
 | Sección | Para qué | Acción principal |
 |---|---|---|
+| **Empieza aquí** | Los 6 primeros pasos para conocer Aura. Primera del menú mientras falte alguno; al terminar baja al final y sigue ahí | Seguir con el paso que toca |
 | **Hoy** | La frase del día + lo que sigue | Empezar a aprobar |
 | **Crear** | Pedir videos nuevos y **subir videos** (crudos, clips, referencias) | Enviar pedido |
 | **Biblioteca** | Estilos, transiciones, textos, fondos, subtítulos y sonidos ya aprobados | Usar en un video nuevo |
@@ -48,6 +49,9 @@ El mismo morph lleva al orbe a la pantalla que pedís ("llevame a aprobar") y a 
 | **Estudio** | Listado de todos los videos. Entrar a uno abre una vista general (revisar, aprobar, agendar — lo que antes era "Aprobar"); desde ahí, "Abrir en editor" lleva al editor completo (ver §6) | Aprobar / Editar |
 | **Ajustes** | Espacio de trabajo, cuentas, tema, voz de Jarvis, zona segura, modo demo | — |
 | **Jarvis** | Asistente en el orbe, disponible en toda pantalla | Preguntar / pedir |
+
+### Empieza aquí
+Lo primero que se ve al abrir el portal por primera vez (sin hash en la URL), y **primer item del menú hasta completar los seis pasos**; al completarlos baja sola al final del menú y se queda ahí (nunca desaparece). Ver `DECISIONES.md` #18. Una nube de vidrio —la misma materia que Crear, Notas y Jarvis, que nace del orbe— con el anillo de avance **"N de 6 pasos"** alrededor del orbe, y al lado la línea de pasos: cada tarjeta lleva número (o visto), título, una sola frase de para qué sirve, un botón principal que lleva directo al lugar y «Ya lo hice»; el próximo paso sin hacer queda resaltado. Los pasos (ids `jarvis · estilo · grabar · pedido · revisar · metricas`): **conocer a Jarvis**, **mirar los estilos** (Biblioteca o Laboratorio), **grabar el primer video** (Crear → Grabar con el teleprompter), **pedir el primer video**, **aprobar o rechazar un video** y **mirar las Métricas**. Cada uno se completa **solo** al hacerlo (se detecta por rutas, datos y la capa de Jarvis) o con `App.onboarding.markDone(id)` desde otra función. Al completar el último: celebración (confeti, felicitación por el nombre, frase motivadora) y el menú la baja al final. Terminada, la pantalla muestra los pasos hechos con «Volver a verlo» y **«Volver a ver los pasos»** (reinicia). Mientras falten pasos, **Hoy** muestra arriba una tarjeta compacta con el avance. El progreso vive en `home/onboarding` (con respaldo en el navegador).
 
 ### Hoy
 Orbe grande + saludo con mini onda + frase del día (300/56 px, lo importante en 500 con resaltado damasco) calculada de datos reales, p. ej. "Inglés se queda sin contenido el jueves. Con 5 aprobados hoy llegás al 20." Cápsulas: **Empezar a aprobar (n)** · Pedir un video · Abrir el Estudio. Campo "Preguntale a Jarvis" con micrófono. Tarjetas de vidrio: *Contenido asegurado* (días por cuenta, barras), *Por aprobar* (tira de videos con puntaje), *Redes 7 días* (vistas, seguidores, interacciones con curva), *Pedidos en curso* (Claude trabajando, con avance), *Pendientes de Daniel* (lista con urgencia), *Laboratorio* (ronda abierta).

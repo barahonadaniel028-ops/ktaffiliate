@@ -129,14 +129,15 @@
     });
     jvObs.observe(w, { attributes: true, attributeFilter: ["class"] });
   }
-  // grabar: la funcion Grabar llama markDone("grabar") o emite "aura:grabado"; ademas, si el teleprompter termina con una grabacion (o una lectura
-  // de mas de 5 s: abrirlo y cerrarlo enseguida no cuenta) se cuenta aca. Se envuelve onDone sin cambiar nada de lo que devuelve App.teleprompter.open.
+  // grabar: la funcion Grabar llama markDone("grabar") o emite "aura:grabado"; ademas, si el teleprompter termina con una grabacion (o con una sesion de
+  // lectura de 15 s o mas, por ejemplo sin camara: abrirlo y cerrarlo enseguida no cuenta) se cuenta aca. Se envuelve onDone sin cambiar nada de lo que
+  // devuelve App.teleprompter.open. Si la lectura corta si fue "grabar" de verdad, esta el «Ya lo hice».
   function hookTeleprompter() {
     const T = App.teleprompter; if (!T || typeof T.open !== "function" || T.open.__empieza) return;
     const orig = T.open;
     T.open = function (o) {
       o = o || {}; const user = o.onDone;
-      return orig.call(T, Object.assign({}, o, { onDone(res) { if (res && (res.recorded || res.durationMs >= 5000)) markDone("grabar"); if (user) return user.apply(this, arguments); } }));
+      return orig.call(T, Object.assign({}, o, { onDone(res) { if (res && (res.recorded || res.durationMs >= 15000)) markDone("grabar"); if (user) return user.apply(this, arguments); } }));
     };
     T.open.__empieza = true;
   }
@@ -183,7 +184,7 @@
   function stepHtml(s, i) {
     const nx = nextStep(), st = isDone(s.id) ? "done" : nx && nx.id === s.id ? "next" : "todo";
     return `<li class="es-li" data-step="${s.id}" data-state="${st}" ${st === "next" ? 'aria-current="step"' : ""}><span class="es-badge" aria-hidden="true"><b class="n">${i + 1}</b>${icon("check")}</span>
-      <div class="es-card card lg"><div class="es-top"><h3 class="es-t">${esc(s.title)}</h3><span class="chip es-tag es-tag-next">Siguiente</span><span class="chip good es-tag es-tag-done">${icon("check")}Hecho</span></div>
+      <div class="es-card card lg"><div class="es-top"><h2 class="es-t">${esc(s.title)}</h2><span class="chip es-tag es-tag-next">Siguiente</span><span class="chip good es-tag es-tag-done">${icon("check")}Hecho</span></div>
         <p class="es-d">${esc(s.desc)}</p>
         <div class="es-acts">${cta(s, "es-cta" + (st === "next" ? " pri" : st === "done" ? " ghost" : ""), true)}<button class="es-quiet es-skip" type="button" data-act="esmark" data-id="${s.id}">Ya lo hice</button></div></div></li>`;
   }

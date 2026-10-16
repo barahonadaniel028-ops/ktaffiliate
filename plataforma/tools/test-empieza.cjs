@@ -136,8 +136,13 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
   await p.evaluate(() => { App.teleprompter.open = function (o) { window.__tpOnDone = o.onDone; }; App.emit("x"); }); await wait(p, 300);
   await p.evaluate(() => { App.teleprompter.open({ mode: "script", onDone: (r) => { window.__userDone = r; } }); window.__tpOnDone({ recorded: null, durationMs: 800, mode: "script" }); }); await wait(p, 400);
   ok(!(await doneIds(p)).includes("grabar") && await p.evaluate(() => !!window.__userDone), "cerrar el teleprompter enseguida no cuenta como grabar, y el onDone de quien lo abrió sigue funcionando");
-  await p.evaluate(() => { App.teleprompter.open({ mode: "interview", onDone: () => {} }); window.__tpOnDone({ recorded: { name: "toma.webm" }, durationMs: 15000, mode: "interview" }); });
+  await p.evaluate(() => { App.teleprompter.open({ mode: "script", onDone: () => {} }); window.__tpOnDone({ recorded: null, durationMs: 9000, mode: "script" }); }); await wait(p, 400);
+  ok(!(await doneIds(p)).includes("grabar"), "una lectura corta sin grabar (9 s) tampoco cuenta");
+  await p.evaluate(() => { App.teleprompter.open({ mode: "interview", onDone: () => {} }); window.__tpOnDone({ recorded: { name: "toma.webm" }, durationMs: 4000, mode: "interview" }); });
   ok(await waitDone(p, "grabar", 3000), "una sesión del teleprompter con grabación completa «Grabá tu primer video»");
+  await p.evaluate(() => App.onboarding.unmark("grabar")); await wait(p, 400);
+  await p.evaluate(() => { App.teleprompter.open({ mode: "script", onDone: () => {} }); window.__tpOnDone({ recorded: null, durationMs: 40000, mode: "script" }); });
+  ok(await waitDone(p, "grabar", 3000), "una sesión de lectura completa de 40 s (aunque sin grabar) también cuenta");
   await p.evaluate(() => { App.onboarding.markDone("metricas"); }); await wait(p, 400);
   ok(await waitDone(p, "metricas", 2000) && !(await doneIds(p)).includes("pedido"), "otras funciones pueden llamar App.onboarding.markDone(id)");
   ok(await p.evaluate(async () => (await App.onboarding.markDone("no-existe")) === false && (await App.onboarding.markDone("metricas")) === false), "un id desconocido o un paso ya hecho no hacen nada");

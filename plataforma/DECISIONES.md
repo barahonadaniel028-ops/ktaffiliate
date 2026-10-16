@@ -107,6 +107,39 @@ Daniel: *"La seccion de crear aun no esta como te lo pedi especificamente."* Aud
 
 ---
 
+## 2026-10-16 — Tercera ronda: secciones nuevas (Empieza aquí, Grabar, Teleprompter)
+
+### 18. Empieza aquí: los primeros pasos, primera del menú hasta completarlos
+Daniel: *"Quiero que creemos una nueva seccion que se llame empieza aqui. Que es mismo branding siempre, donde vamos a poner una serie de pasos, es lo primero primero que ven a la hora de abrir el portal por primera vez, hasta que no hayan completado todos los pasos de introduccion no se les va a eliminar ese 'empieza aqui' o al menos mover abajo"*.
+
+**Qué es.** Una sección nueva, `#empieza` (`views/empieza.js`, `css/v-empieza.css`, pruebas en `tools/test-empieza.cjs`), con el mismo branding: una nube de vidrio (contorno que se deforma, flota, nace del orbe de Jarvis la primera vez de la sesión) con el anillo de avance "N de 6 pasos" alrededor del orbe y, al lado, la línea de seis pasos. Cada paso es una tarjeta de vidrio con su número (o el visto), título, una sola frase de para qué sirve, un botón principal que lleva **directo** al lugar (a Jarvis se lo abre; los demás van a su pantalla) y un «Ya lo hice» en voz baja. El primer paso sin hacer queda resaltado ("Siguiente") y la nube repite su botón.
+- **Los seis pasos y cómo se detectan solos** (`App.onboarding.STEPS`; también se pueden marcar con `App.onboarding.markDone(id)`, que es lo que llama otra función cuando pasa algo, pero **no se depende de eso**):
+  1. `jarvis` · abrir a Jarvis (se mira la capa `#jvwrap` con un observador, sin tocar `jarvis.js`; cuenta al aterrizar el panel).
+  2. `estilo` · entrar a Biblioteca o al Laboratorio (visitar la pantalla alcanza).
+  3. `grabar` · terminar una sesión de Crear → Grabar: `markDone("grabar")`, el evento `window` `aura:grabado`, `App.emit("grabado")`, o `App.teleprompter.open` terminando con una grabación o con 15 s o más de lectura (se envuelve su `onDone` sin cambiar nada de lo que devuelve).
+  4. `pedido` · crear un pedido de video o de estilo (`S.requests` `new_video`/`new_style` hecho por esta persona; en demostración los pedidos de ejemplo que ya estaban no cuentan; si todavía no se sabe quién es la persona, cuentan solo los de esta sesión; tras «Volver a ver los pasos» solo los posteriores).
+  5. `revisar` · aprobar o rechazar un video (cambio de estado hecho ahora; los que ya venían decididos no cuentan; «Quizás» tampoco).
+  6. `metricas` · entrar a Métricas.
+- **El menú.** Mientras falte un paso, "Empieza aquí" es el **primer** item del riel (y el primer tab del teléfono, donde Hoy pasa a «Más»); al completar el último **baja solo al final** (el riel se desliza con FLIP, solo `transform`) y en el teléfono pasa a «Más». Sigue ahí para repasarlo: nunca desaparece. Lo ordena `App.navOrder()` y se reordena con `App.emit("home")`.
+- **Primera vez.** Sin hash en la URL y con pasos pendientes, `boot.js` abre `#empieza`; un enlace directo (`#hoy`, `#crear`…) no se pisa.
+- **Aviso al avanzar.** Si el paso se completa estando en otra pantalla: pulso en el icono del menú y un aviso "¡Paso listo! Miraste tus estilos (2 de 6)" con **Deshacer** (espera a que Jarvis/el editor no estén abiertos). Estando en la propia pantalla, la tarjeta gira, brilla y el anillo avanza sin repintar nada.
+- **Al terminar los seis**: celebración propia (no la de hitos de `celebrate.js`): la gota sale del orbe y florece una tarjeta de vidrio con el orbe y su check, **confeti** de la marca, felicitación por el nombre y una frase para seguir; se cierra con «¡Genial!» o Escape. Con movimiento reducido: igual pero sin confeti.
+- **Después de terminar** la pantalla sigue accesible (item al final del menú): los seis pasos aparecen hechos con «Volver a verlo», más «Ir a Hoy» y **«Volver a ver los pasos»** (reinicia; con Deshacer). Nunca es un callejón.
+- **Hoy**: mientras falten pasos, una tarjeta compacta arriba de todo (anillo 2/6, el paso que sigue y «Seguir»); desaparece al terminar.
+- **Dónde se guarda**: `home/onboarding` en la base (`S.onboardDoc`) **y**, de respaldo, en el navegador (`App.store "onboard"`); se leen los dos y se unen (un paso hecho en cualquiera cuenta; `resetAt` marca el «Volver a ver los pasos»: lo anterior a esa marca ya no vale). Si la base no deja escribir, no se pierde nada al recargar.
+
+**NO recrear / supuestos propios (ajustar con Daniel si no coincide):**
+- **No** es un tour modal ni un bloqueo: es una sección más, la primera del menú mientras haya pasos pendientes. **No** se quita del menú al terminar: baja al final (el pedido decía "o al menos mover abajo").
+- Los **seis pasos y su orden** (Jarvis, estilos, grabar, pedido, revisar, métricas) son decisión propia a partir de lo que ofrece la plataforma; se editan en `STEPS` de `empieza.js` sin tocar nada más (el total y el anillo se calculan solos).
+- «Mirá tus estilos» y «Mirá cómo te va» cuentan con solo **visitar** la pantalla (no se exige abrir un estilo ni leer una cifra).
+- El progreso es **por espacio de trabajo**, no por persona: `home/onboarding` es un único documento. Si más de una persona usa el mismo portal, la primera que termine los pasos se los quita a las demás (el respaldo del navegador no lo evita). Si hace falta por persona, guardar `home/onboarding_<userId>`.
+- La detección usa lo que ya existe (rutas, `S.requests`, `S.videos`, la capa de Jarvis, el teleprompter) y **no** modifica `jarvis.js`, `motion.js` ni `shell.css`; un retoque de esos archivos no debería romperla, pero un cambio del id `#jvwrap` o de sus clases `open`/`shown` sí desactivaría el paso 1 (queda el «Ya lo hice»).
+- En una carga nueva en otro dispositivo, con la base real, hasta que llega `home` la barra puede mostrar un instante "Empieza aquí" primero y, si ya estaba completo, bajarla.
+
+**Estado: implementado y probado** en el navegador de pruebas (`node tools/test-empieza.cjs`: primera vez, cada fuente de detección, anillo, celebración, orden del menú, persistencia entre cargas, base simulada, teléfono 390×844, tablet, movimiento reducido). **Falta confirmar a ojo** (el navegador de pruebas no tiene GPU): la fluidez del deslizamiento del menú, de la gota de entrada y del confeti, y la detección contra Jarvis, el teleprompter y la base en el artefacto real.
+
+---
+
 ## Cómo agregar una entrada nueva
 
 Una entrada por ronda de feedback, fecha arriba. Para cada pedido: la cita textual de Daniel cuando la haya, qué reemplaza (si elimina o reestructura algo de una versión anterior, decirlo explícito y marcar **NO RECREAR** lo que corresponda), y el estado. No editar ni borrar entradas viejas — si una decisión se revierte más adelante, se agrega una entrada nueva que lo diga, no se reescribe la vieja.
