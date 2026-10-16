@@ -17,9 +17,9 @@
    3. La forma no es una curva de tiempo sino un resorte muestreado: el ancho y el alto son dos resortes desfasados (primero se abre a lo
       ancho -el aplaste del aterrizaje- y despues baja), con rebote, y las esquinas pasan de "todo redondo" a los radios del panel recien
       cuando ya casi lleno su lugar: eso es lo que se lee como liquido con tension superficial, no como una figura geometrica.
-   4. El panel real espera invisible (se sube a su propia capa y se pinta ~150 ms antes de que la gota toque, no en el clic) y aparece
-      DEBAJO del cuerpo, que es de su mismo color; el cuerpo se desvanece encima y el contenido sube escalonado. El panel ademas sigue el
-      resorte del cuerpo (escala desde el punto de aterrizaje), asi el asentado se ve en el panel y no en una capa aparte.
+   4. El panel real espera invisible (su animacion de opacidad, agendada en el clic, lo sube a su propia capa y se pinta durante el vuelo) y
+      aparece DEBAJO del cuerpo, que es de su mismo color; el cuerpo se desvanece encima y el contenido sube escalonado. El panel ademas sigue
+      el resorte del cuerpo (escala desde el punto de aterrizaje), asi el asentado se ve en el panel y no en una capa aparte.
    5. Nunca `fill: forwards` sobre el panel (ver resetJv/wilt): el estado final se deja en estilo inline.
    Con "reducir movimiento": fundido simple, sin vuelo ni cola. */
 (function () {
@@ -246,10 +246,10 @@
         if (jelly) a.push(target.animate(P.map((t) => ({ transform: pre + t })), { duration: D, delay, easing: "linear", fill: "backwards" }));
         if (gA.startTime != null) a.forEach((x) => { x.startTime = gA.startTime; }); // el mismo reloj que el cuerpo, aunque se creen despues
       };
-      // El panel se sube a su propia capa (y se pinta) un poco antes de que la gota toque, no en el clic: medido, componer un panel invisible
-      // durante todo el vuelo encarecia los primeros cuadros (y el clic es lo que mas se siente). Hasta entonces espera en opacidad 0 inline;
-      // si el timer llega tarde, el cuerpo opaco lo sigue tapando un rato mas, asi que no se ve un hueco.
-      if (delay > 250) { target.style.opacity = "0"; setTimeout(mount, delay - 150); } else mount();
+      // Se agenda YA, en el clic, sobre el mismo reloj que el cuerpo (y el panel se pinta durante el vuelo). Se probo crearlo con un timer justo
+      // antes de que la gota toque: con el hilo principal ocupado el timer llego tarde, el cuerpo ya se habia desvanecido y quedo un hueco
+      // vacio de ~200 ms antes de que apareciera el panel -- exactamente el "se ve buggeado". En los primeros cuadros no medimos diferencia.
+      mount();
     }
     setTimeout(() => B.g.remove(), total + 60);
     return plan(settled(gA), rv, re, total);
@@ -397,11 +397,12 @@
     lite("arr", true, 2600);
     const endSize = o.endSize || 120, F = flight(from, land, { size: ob ? Math.min(ob.w, ob.h, 64) : 56, endSize, spread: true });
     const B = bloom(el, land, o.ms || 700, { delay: F.touch, r0: endSize / 2 });
-    // .arr-pre (opacity 0 !important) la tiene invisible mientras la gota vuela; se suelta un poco ANTES de que el cuerpo le haga lugar (la
-    // animacion de opacidad del bloom todavia la tiene en 0), asi un timer que llega tarde no deja un hueco: el cuerpo la tapa un rato mas
+    // .arr-pre (opacity 0 !important) la marca invisible al arrancar, pero se suelta enseguida: desde ahi la tiene en 0 la animacion de opacidad
+    // del bloom, que va en el mismo reloj que el cuerpo. Si se soltara recien al florecer, un timer tarde dejaria un hueco (el cuerpo ya se fue
+    // y la nube todavia no aparece); soltandola temprano, el timer puede llegar tarde sin que se note nada.
     el.classList.add("arr-pre", "arr-in");
     el.getAnimations({ subtree: true }).forEach((a) => { if (typeof CSSAnimation !== "undefined" && a instanceof CSSAnimation && a.animationName === "enterUp") a.currentTime = (a.currentTime || 0) - B.reveal; });
-    setTimeout(() => el.classList.remove("arr-pre"), Math.max(0, B.reveal - 120));
+    setTimeout(() => el.classList.remove("arr-pre"), Math.min(120, Math.max(0, B.reveal - 120)));
     return true;
   }
 
