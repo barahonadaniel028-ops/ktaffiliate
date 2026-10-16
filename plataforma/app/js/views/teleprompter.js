@@ -90,7 +90,7 @@
     let beatT = [], countT = 0;
     const prevFocus = o._prevFocus || document.activeElement;
     // grabacion
-    let rec = null, chunks = [], recWanted = false, recSeg = 0, recAcc = 0, recState = "off", lastRecSec = -1, finalFile = null, finalMs = 0, recErr = "", stopP = null;
+    let saving = false, rec = null, chunks = [], recWanted = false, recSeg = 0, recAcc = 0, recState = "off", lastRecSec = -1, finalFile = null, finalMs = 0, recErr = "", stopP = null;
     // camara
     const cam = { st: wantCam ? "pending" : "off", stream: null, token: 0, facing: "user", multi: false, noAudio: false, why: "" };
 
@@ -442,8 +442,9 @@
       if (phase === "done" || closing) return;
       unlater(countT); beatT.forEach(unlater); beatT = []; countEl.hidden = true; stopLoop(); wlRelease(); toggleSettings(false); closeDlg("cancel");
       completed = why !== "keep"; setPhase("done"); exitFs();
-      root.classList.remove("q-out"); renderEnd(!!rec);
+      root.classList.remove("q-out"); saving = true; renderEnd(!!rec);
       const file = await recStop();
+      saving = false;
       if (closing) return;
       camStopStream();   // la camara ya no hace falta: se apaga la luz
       finalFile = file; finalMs = file ? Math.round(recAcc) : Math.round(runMs);
@@ -532,7 +533,8 @@
     }
     function recDiscardSilently() { const r = rec; rec = null; if (r && r.state !== "inactive") { r.ondataavailable = null; r.onerror = null; r.onstop = null; try { r.stop(); } catch (e) { /* ok */ } } }
     async function requestClose() {
-      if (closing || phase === "done") return;
+      if (closing) return;
+      if (phase === "done") { if (!saving && !dlg) shutdown("ok"); return; }
       if (phase === "count") cancelCount();
       if (phase === "run") pause();
       if (phase === "ready") { shutdown("close"); return; }
@@ -673,7 +675,6 @@
       if (setOpen) { toggleSettings(false); return; }
       if (phase === "count") { cancelCount(); return; }
       if (phase === "run") { pause(); return; }
-      if (phase === "done") return;
       requestClose();
     }
     // tocar el texto: leyendo = pausa, en pausa = sigue; arrastrar con el dedo (o la rueda) mueve el texto mientras esta en pausa
@@ -698,6 +699,7 @@
     on(root, "pointermove", wake, { passive: true }); on(root, "pointerdown", wake, { passive: true }); on(root, "focusin", wake);
     on(root, "contextmenu", (e) => { if (e.target.closest(".tp-view")) e.preventDefault(); });
     on(document, "visibilitychange", () => { if (document.hidden && phase === "run") pause(); });
+    on(window, "hashchange", () => { if (phase === "run") pause(); });   // el boton "atras" del navegador no debe dejar el texto corriendo sin que nadie lo lea
     on(document, "fullscreenchange", () => { if (!document.fullscreenElement && fsEntered) { fsEntered = false; if (phase === "run") pause(); } });
     if (window.ResizeObserver) { const rz = new ResizeObserver(App.debounce(() => { if (!closing) layout(); }, 120)); rz.observe(view); offs.push(() => rz.disconnect()); } else on(window, "resize", App.debounce(() => { if (!closing) layout(); }, 120));
 

@@ -188,7 +188,7 @@
   .tp-ring { width: 84px; height: 84px; } .tp-secs { font-size: 28px; }
   .tp-iv { padding-left: 18px; padding-right: 18px; }
 }
-@media (max-height: 520px) { .tp-ready { display: none !important; } .tp-play { width: 70px; height: 66px; } .tp-b { width: 46px; height: 46px; } .tp-row { padding-bottom: 6px; } .tp-cap { display: none; } .tp-set { bottom: 90px; max-height: 70dvh; } }
+@media (max-height: 520px) { .tp-ready { bottom: calc(86px + env(safe-area-inset-bottom)); width: min(340px, calc(100% - 28px)); } .tp-camsw { min-height: 44px; padding: 4px 12px; } .tp-camsw small { display: none; } .tp-read { display: none; } .tp-play { width: 70px; height: 66px; } .tp-b { width: 46px; height: 46px; } .tp-row { padding-bottom: 6px; } .tp-cap { display: none; } .tp-set { bottom: 90px; max-height: 70dvh; } }
 
 /* ---- reducir movimiento: sin fundidos ni respiracion, pero el texto sigue avanzando ---- */
 .tp.rm, .tp.rm * { animation: none !important; transition: none !important; }

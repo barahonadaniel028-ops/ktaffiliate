@@ -231,7 +231,7 @@ const click = (p, sel) => p.click(sel, { force: true, timeout: 8000 });
   ok(await waitPhase(p, "done", 25000), "al llegar al final se detiene solo y pasa a la tarjeta final");
   ok(await p.waitForFunction(() => { const e = document.querySelector(".tp-end"); return e && e.querySelector('[data-a="view"]'); }, null, { timeout: 9000 }).then(() => true).catch(() => false), "la tarjeta final espera a que el archivo este armado");
   ok(await p.evaluate(() => document.querySelector(".tp-prog").getAttribute("aria-valuenow") === "100" || +document.querySelector(".tp-prog").getAttribute("aria-valuenow") >= 99), "la barra de progreso llega al 100 %");
-  await click(p, '.tp-end [data-a="ok"]'); ok(await waitDone(p, 6000), "Listo cierra");
+  await key(p, "Escape"); ok(await waitDone(p, 6000), "Escape en la tarjeta final = Listo (la grabacion llega igual)");
   const r2 = await p.evaluate(() => window.__done);
   ok(r2 && r2.recorded && r2.recorded.size > 1000 && r2.completed === true, "onDone: grabacion completa", JSON.stringify(r2 && r2.recorded));
   ok(!(await p.evaluate(() => App.teleprompter.isOpen())), "cerrado tras Listo");
