@@ -91,7 +91,7 @@
 .es-hoy-t { flex: 1; min-width: 0; display: grid; gap: 4px; }
 .es-hoy-t b { font: 600 16px/1.1 var(--font-d); letter-spacing: -.02em; } .es-hoy-t b em { font-style: normal; background: var(--title-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .es-hoy-t span { color: var(--ink2); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.es-hoy-go { flex: none; min-height: 44px; padding: 0 18px; border-radius: 22px; font-size: 14.5px; pointer-events: none; }
+.es-hoy .es-hoy-go.btn { flex: none; height: 44px; min-height: 44px; padding: 0 18px; border-radius: 22px; font-size: 14.5px; pointer-events: none; } /* .btn.sm pisa a una sola clase: de ahi el doble selector; toda la tarjeta es el enlace, el botoncito es la pista */
 
 /* ---- el festejo al terminar ---- */
 .es-fin-wrap { position: fixed; inset: 0; z-index: 430; }
@@ -139,7 +139,7 @@
   .es-li[data-state="next"] .es-cta { flex: 1 1 100%; }
   .es-badge .n { font-size: 15px; }
   .es-hoy { gap: 12px; min-height: 72px; padding: 10px 10px 10px 12px; border-radius: 36px; }
-  .es-hoy-go { padding: 0 14px; }
+  .es-hoy .es-hoy-go.btn { padding: 0 14px; }
   .es-fin { padding: 10px 20px 24px; border-radius: 46px 54px 48px 56px / 56px 46px 54px 48px; }
   .es-fin-hero { height: 168px; } .es-fin-t { font-size: 25px; }
 }
