@@ -286,7 +286,7 @@
       out.cierre = pick; out.cierreSugerido = true; note = "Cambié el cierre";
     }
     finishScript(out);
-    if (out.texto === before) return defineMeta(out, { ai: false, applied: false, note: "Sin IA conectada no puedo hacer ese cambio. Probá con «más corto», «más directo», «otro gancho» u «otro cierre», o editá el guion a mano." });
+    if (out.texto === before) return defineMeta(out, { ai: false, applied: false, note: Y("Sin IA conectada no puedo hacer ese cambio. Probá con «más corto», «más directo», «otro gancho» u «otro cierre», o editá el guion a mano.", "Sin IA conectada no puedo hacer ese cambio. Prueba con «más corto», «más directo», «otro gancho» u «otro cierre», o edita el guion a mano.") });
     return defineMeta(out, { ai: false, applied: true, note: `Sin IA conectada: ${note.toLowerCase()} con una regla simple.` });
   }
 
@@ -533,8 +533,8 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
   }
   function scriptCard(sc) {
     return `<article class="gr-script" aria-label="Guion"><header><h3>${esc(sc.titulo)}</h3><div class="gr-meta"><span class="chip">${icon("clock")}≈ ${esc(clock(sc.segundos))}</span><span class="chip">${sc.palabras} palabras</span>${sc.thin ? `<span class="chip warn">Idea corta</span>` : ""}</div></header>
-      <section><span class="gr-lab">Gancho · primeros 3 segundos</span><p class="gr-hook"><span class="mark">${esc(sc.hook)}</span></p></section>
-      <section><span class="gr-lab">Desarrollo</span><ol class="gr-beats">${sc.beats.map((b) => `<li>${esc(b)}</li>`).join("")}</ol></section>
+      <section><span class="gr-lab">Gancho · primeros 3 segundos${sc.hookDeLaIdea ? " · sugerido" : ""}</span><p class="gr-hook"><span class="mark">${esc(sc.hook)}</span></p></section>
+      <section><span class="gr-lab">Desarrollo</span>${sc.beats.length ? `<ol class="gr-beats">${sc.beats.map((b) => `<li>${esc(b)}</li>`).join("")}</ol>` : `<p class="gr-empty">${esc(Y("Todavía no hay desarrollo: contá más sobre tu idea (con la voz, si querés) y lo armamos.", "Todavía no hay desarrollo: cuenta más sobre tu idea (con la voz, si quieres) y lo armamos."))}</p>`}</section>
       <section><span class="gr-lab">Cierre${sc.cierreSugerido ? " · sugerido" : ""}</span><p>${esc(sc.cierre)}</p></section></article>`;
   }
   function scriptView(st) {
@@ -543,7 +543,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const quick = [[Y("Hacelo más corto", "Hazlo más corto"), "más corto"], ["Más directo", "más directo"], ["Otro gancho", "otro gancho"], ["Otro cierre", "otro cierre"]];
     const revise = st.revOpen ? `<form class="gr-rev" id="grrevform" autocomplete="off"><div class="gr-quick" role="group" aria-label="Cambios rápidos">${quick.map(([l, q]) => `<button type="button" class="chip" data-act="grquick" data-q="${esc(q)}">${esc(l)}</button>`).join("")}</div>
       <div class="gr-own"><input type="text" id="grrev" maxlength="300" placeholder="${esc(Y("Ej.: hacelo más corto, más directo…", "Ej.: hazlo más corto, más directo…"))}" aria-label="Qué cambio querés" value="${esc(st.revText)}"><button type="submit" class="btn sm pri">Aplicar</button></div></form>` : "";
-    const edit = st.editing ? `<div class="field gr-edit"><label for="gredit">Guion completo (el primer párrafo es el gancho y el último el cierre; separá con una línea en blanco)</label><textarea id="gredit" rows="10">${esc(st.editText)}</textarea></div>${acts([{ act: "gredone", label: "Listo, usar este texto", icon: "check", pri: true }, { act: "grscript", label: "Cancelar", ghost: true, data: { cancel: "1" } }])}` : scriptCard(sc);
+    const edit = st.editing ? `<div class="field gr-edit"><label for="gredit">${esc(Y("Guion completo (el primer párrafo es el gancho y el último el cierre; separá con una línea en blanco)", "Guion completo (el primer párrafo es el gancho y el último el cierre; separa con una línea en blanco)"))}</label><textarea id="gredit" rows="10">${esc(st.editText)}</textarea></div>${acts([{ act: "gredone", label: "Listo, usar este texto", icon: "check", pri: true }, { act: "grscript", label: "Cancelar", ghost: true, data: { cancel: "1" } }])}` : scriptCard(sc);
     const thin = sc.thin && !st.editing ? `<p class="gr-hint">${icon("info")}<span>${esc(Y("Es una idea corta: para un guion más rico, contame más con tu voz.", "Es una idea corta: para un guion más rico, cuéntame más con tu voz."))}</span></p>` : "";
     return `${noteHtml(st)}${edit}${thin}${st.editing ? "" : revise}${st.editing ? "" : acts([{ act: "grapprove", label: "Aprobar guion", icon: "check", pri: true }, { act: "grchanges", label: "Pedir cambios", icon: "wand", ghost: true, aria: st.revOpen ? "Cerrar pedir cambios" : "Pedir cambios" }, { act: "gredit", label: "Editar a mano", icon: "lines", ghost: true }, sc.thin ? { act: "grtellmore", label: "Contar más", icon: "mic", ghost: true } : null, { act: "grbackscript", label: "Volver", icon: "chevleft", ghost: true }])}`;
   }
@@ -584,7 +584,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const n = st.qs.length;
     return `${noteHtml(st)}<p class="gr-count"><span id="grqcount">${n}</span> ${n === 1 ? "pregunta" : "preguntas"}</p>
       <ol class="gr-qs">${st.qs.map((q, i) => `<li class="gr-q" style="--i:${Math.min(i, 8)}"><span class="n">${i + 1}</span><textarea class="gr-qi" rows="2" data-i="${i}" maxlength="300" aria-label="Pregunta ${i + 1}">${esc(q)}</textarea><div class="gr-qb"><button type="button" class="iconbtn" data-act="grqup" data-i="${i}" aria-label="Subir la pregunta ${i + 1}" ${i === 0 ? "disabled" : ""}>${icon("chevup")}</button><button type="button" class="iconbtn" data-act="grqdn" data-i="${i}" aria-label="Bajar la pregunta ${i + 1}" ${i === n - 1 ? "disabled" : ""}>${icon("chevdown")}</button><button type="button" class="iconbtn" data-act="grqdel" data-i="${i}" aria-label="Borrar la pregunta ${i + 1}">${icon("trash")}</button></div></li>`).join("")}</ol>
-      ${errHtml(st)}${acts([{ act: "grqnext", label: "Seguir: elegir los segundos", icon: "arrow", pri: true }, { act: "grqadd", label: "Agregar una pregunta", icon: "plus", ghost: true, disabled: n >= Q_MAX }, { act: "grqmore", label: "Sugerime más", icon: "sparkles", ghost: true, disabled: n >= Q_MAX }])}`;
+      ${errHtml(st)}${acts([{ act: "grqnext", label: "Seguir: elegir los segundos", icon: "arrow", pri: true }, { act: "grqadd", label: "Agregar una pregunta", icon: "plus", ghost: true, disabled: n >= Q_MAX }, { act: "grqmore", label: Y("Sugerime más", "Sugiéreme más"), icon: "sparkles", ghost: true, disabled: n >= Q_MAX }])}`;
   }
   const secsTotal = (st) => st.qs.filter((q) => q.trim()).length * st.secs;
   const secsSummary = (st) => { const n = st.qs.filter((q) => q.trim()).length; return `${n} ${n === 1 ? "pregunta" : "preguntas"} × ${st.secs} s ≈ ${clock(secsTotal(st))} en total`; };
@@ -718,7 +718,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     micStop(); cancelPending(); st.lastTP = args;
     let fired = false;
     try { tp.open(Object.assign({}, args, { onDone: (res) => { if (fired) return; fired = true; finishTP(st, res, args); } })); }
-    catch (e) { if (window.console) console.error(e); toast("No pude abrir el teleprompter. Probá de nuevo."); }
+    catch (e) { if (window.console) console.error(e); toast(Y("No pude abrir el teleprompter. Probá de nuevo.", "No pude abrir el teleprompter. Prueba de nuevo.")); }
   }
   const scriptArgs = (st) => ({ mode: "script", title: st.script.titulo, text: st.script.texto });
   const interviewArgs = (st) => ({ mode: "interview", title: st.topic, questions: st.qs.map((q) => q.trim()).filter(Boolean), secondsPerQuestion: st.secs });
@@ -813,7 +813,7 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     const r = ST().result, f = r && r.recorded; if (!f) return;
     const ext = /mp4/.test(f.type || "") ? "mp4" : "webm", name = f.name || `grabacion-${slug(r.title)}-${App.dayKey(new Date())}.${ext}`;
     let ok = false; try { ok = await App.adapter().download(name, f); } catch (e) { ok = false; }
-    if (ok === true) toast("Descarga lista: " + name); else if (ok !== "declined") toast("No se pudo descargar. Probá de nuevo.");
+    if (ok === true) toast("Descarga lista: " + name); else if (ok !== "declined") toast(Y("No se pudo descargar. Probá de nuevo.", "No se pudo descargar. Prueba de nuevo."));
   };
   // La grabación pasa a ser material de un pedido nuevo: se arma el estado de «Un video nuevo» y se sube por el mismo camino que cualquier archivo
   // (App.attach → App.act.upload), en la categoría "Video normal". Sin archivo, solo se lleva a esa pantalla con la nota.
@@ -825,14 +825,14 @@ ${avoid.length ? "No repitas estas: " + JSON.stringify(avoid.slice(-20)) + "\n" 
     if (!v || v.format !== "corto" || !["estilos", "material"].includes(v.step)) { App.crearVideo.arriveWith({}); v = UI.crear.video; }
     const nota = `Grabado con Grabar${r.title ? ": " + r.title : ""}.`;
     if (!String(v.notes || "").includes(nota)) v.notes = [v.notes, nota].filter(Boolean).join("\n");
-    if (f && f.size > App.act.MAX_FILE) toast(`La grabación pesa ${App.bytes(f.size)} y pasa del límite de ${App.bytes(App.act.MAX_FILE)} para subir desde acá. Descargala y subila a mano en «Un video nuevo».`, null, 7000);
+    if (f && f.size > App.act.MAX_FILE) toast(Y(`La grabación pesa ${App.bytes(f.size)} y pasa del límite de ${App.bytes(App.act.MAX_FILE)} para subir desde acá. Descargala y subila a mano en «Un video nuevo».`, `La grabación pesa ${App.bytes(f.size)} y pasa del límite de ${App.bytes(App.act.MAX_FILE)} para subir desde aquí. Descárgala y súbela a mano en «Un video nuevo».`), null, 7000);
     else if (f) {
       try {
         const file = f instanceof File ? f : new File([f], f.name || `grabacion-${slug(r.title)}.${/mp4/.test(f.type || "") ? "mp4" : "webm"}`, { type: f.type || "video/webm" });
         const a = v.att.normal = v.att.normal || App.attach.make(); a.add([file]);
-        toast("Tu grabación quedó como «Video normal». Elegí el estilo y seguí.");
-      } catch (e) { toast("No pude adjuntar la grabación. Subila a mano en «Un video nuevo»."); }
-    } else toast("Subí tu grabación en «Un video nuevo».");
+        toast(Y("Tu grabación quedó como «Video normal». Elegí el estilo y seguí.", "Tu grabación quedó como «Video normal». Elige el estilo y sigue."));
+      } catch (e) { toast(Y("No pude adjuntar la grabación. Subila a mano en «Un video nuevo».", "No pude adjuntar la grabación. Súbela a mano en «Un video nuevo».")); }
+    } else toast(Y("Subí tu grabación en «Un video nuevo».", "Sube tu grabación en «Un video nuevo»."));
     App.crear.advanceNav("crear/video");
   };
 

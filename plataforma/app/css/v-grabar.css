@@ -88,6 +88,7 @@
 .gr-beats li { counter-increment: beat; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; font-size: 16px; line-height: 1.5; }
 .gr-beats li::before { content: counter(beat); width: 26px; height: 26px; margin-top: 1px; display: grid; place-items: center; border-radius: 9px 10px 8px 11px / 10px 8px 11px 9px; background: var(--accent-soft); color: var(--accent); font: 600 12.5px/1 var(--font); }
 .gr-script section > p:not(.gr-hook) { font-size: 16px; line-height: 1.5; color: var(--ink2); }
+.gr-script .gr-empty { font-size: 14.5px; color: var(--ink3); }
 .gr-rev { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px; border-radius: 22px; background: var(--glass-b); box-shadow: inset 0 0 0 1px var(--hair2); }
 .gr-quick { display: flex; flex-wrap: wrap; gap: 8px; }
 .gr-quick .chip, .gr-sugs .chip { height: 38px; padding: 0 16px; border-radius: 19px; font-size: 13.5px; cursor: pointer; transition: background .2s, color .2s, transform .2s var(--ease); }
