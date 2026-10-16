@@ -22,7 +22,7 @@ npm install                                   # solo trae playwright-core, para 
 
 ## Leer primero (en este orden)
 
-1. `DECISIONES.md` — historial de cada pedido de Daniel, con sus palabras, qué estado tiene y **qué NO recrear** (la pestaña Logros, la pestaña Aprobar, el Crear de dos modos, la bandeja de Notas…). Entradas 1-10 = primera ronda, 11-16 = segunda.
+1. `DECISIONES.md` — historial de cada pedido de Daniel, con sus palabras, qué estado tiene y **qué NO recrear** (la pestaña Logros, la pestaña Aprobar, el Crear de dos modos, la bandeja de Notas…). Entradas 1-10 = primera ronda, 11-17 = segunda (17 = Jarvis líquido), 18-20 = tercera (Empieza aquí, Grabar, Teleprompter).
 2. `MASTER-PROMPT.md` — la especificación completa y al día (el "qué es Aura").
 3. `ENTREGA-A-CLAUDE.md` y `CONTRATO-DE-DATOS.md` — cómo se conecta a datos reales (base del artefacto, Metricool).
 4. `PASAR-A-WEB.md` — cómo llevar Aura a un sitio web real fuera de claude.ai (qué ya funciona, qué hay que construir en el backend y en qué orden).
@@ -36,7 +36,7 @@ Aura es JS clásico bajo `window.App` (sin bundler); `tools/build.py` junta `app
 python3 tools/build.py                 # dist/index.html (CDN) y dist/artifact.html (fragmento para artefacto)
 python3 tools/build.py --demo          # además dist/preview.html: arranca siempre en modo demostración (el que se publica en claude.ai)
 python3 tools/build.py --local VENDOR  # dist/index.local.html con GSAP y fuentes locales (sin internet) — lo que usan las pruebas
-node tools/test.cjs                    # 190 pruebas de interacción (Playwright + Chromium), necesita index.local.html
+node tools/test.cjs                    # ~740 pruebas: 200 de la app + las de Empieza aquí (111), Grabar (194) y teleprompter (235), que corren al final; tarda ~12 min; necesita index.local.html
 ```
 
 `VENDOR` es una carpeta con `gsap/dist/gsap.min.js` y `fonts/<paquete>/files/*.woff2` (paquetes `@fontsource` de anton, caveat, inter y onest):
@@ -57,14 +57,15 @@ Se publica `dist/preview.html` (después de `python3 tools/build.py --demo`) con
 
 ## Herramientas para movimiento y capturas (`tools/`)
 
-- `test.cjs` — las 190 pruebas.
+- `test.cjs` — la suite completa (la app y, al final, `test-empieza.cjs`, `test-grabar.cjs`, `test-teleprompter.cjs`, que también se pueden correr solas). `lib-test.cjs` — ayudas compartidas.
 - `shoot.cjs` — capturas de las pantallas.
 - `perf-jarvis.cjs` — mide cuánto tarda cada cuadro al abrir/cerrar Jarvis; con variantes (`base,nogoo,nobd,…`) para saber qué es lo caro. El navegador de pruebas no tiene GPU: sirve para ordenar causas, no para saber los fps reales.
 - `frames.cjs` + `sheet.py` — graban la animación cuadro por cuadro (sin ffmpeg) y arman una hoja de contactos para revisarla a ojo.
 
 ## Qué falta confirmar (solo se puede en el artefacto real, no en el sandbox)
 
-- Que la animación de Jarvis se sienta fluida en tu navegador. Si no: el siguiente candidato es el `clip-path` de `App.morph.bloom` (`app/js/core/motion.js`), que se anima en el hilo principal.
+- Que la animación de Jarvis se sienta fluida en tu navegador. Se rehízo entera (DECISIONES #17: un solo reloj, cuerpo de elipses y barras, sin `clip-path` ni `filter`); el navegador de pruebas no tiene GPU, así que solo se midió y se miró cuadro por cuadro (`tools/frames.cjs` + `sheet.py`). Si aún no se siente líquida, mandar un video corto de pantalla: con eso se ajusta `app/js/core/motion.js`.
+- Grabar y el teleprompter dentro del artefacto de claude.ai: la cámara y el micrófono pueden estar bloqueados por el iframe (no hay una capacidad para pedirlos). El teleprompter funciona igual sin cámara (solo lee el guion), y en un sitio web propio con HTTPS la cámara se pide normal. Las ideas/guiones con IA usan la capacidad `sample` (hay que declararla al publicar; si no, usa el generador local).
 - Que el editor abra bien desde Estudio y que **Exportar** descargue (DECISIONES.md #3 y #8).
 
 ## Pendientes / ideas abiertas

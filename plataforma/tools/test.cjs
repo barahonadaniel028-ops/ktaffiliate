@@ -463,7 +463,7 @@ async function open(browser, url, init, viewport, o) {
   console.log(`\n${pass} ok, ${fail} fallan`); if (fail) { console.log(failures.join("\n")); }
   // pruebas extra por funcion (cada archivo es independiente, ver tools/lib-test.cjs): se corren al final y se suman al resultado
   let extraFail = 0;
-  for (const f of ["test-empieza.cjs", "test-grabar.cjs", "test-teleprompter.cjs"]) {
+  for (const f of process.env.CORE_ONLY ? [] : ["test-empieza.cjs", "test-grabar.cjs", "test-teleprompter.cjs"]) { // CORE_ONLY=1: solo la suite de la app
     const fp = path.join(__dirname, f); if (!fs.existsSync(fp)) continue;
     console.log("\n== " + f + " =="); const r = require("node:child_process").spawnSync(process.execPath, [fp], { stdio: "inherit" }); if (r.status !== 0) extraFail++;
   }
