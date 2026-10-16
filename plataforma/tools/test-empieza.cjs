@@ -77,6 +77,7 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
   // «Ya lo hice» manual, con Deshacer
   await p.click('.es-li[data-step="grabar"] .es-skip', { force: true }); await wait(p, 700);
   ok(await doneIds(p).then((d) => d.includes("grabar")) && await p.evaluate(() => document.querySelector('.es-li[data-step="grabar"]').dataset.state === "done" && document.querySelector('[data-es="done"]').textContent === "3"), "«Ya lo hice» marca el paso a mano (3 de 6)");
+  ok(await p.evaluate(() => { const f = document.activeElement; return !!f && f.classList.contains("es-cta") && f.closest(".es-li").dataset.step === "pedido"; }), "después de «Ya lo hice» el foco pasa al botón del paso que sigue");
   ok(await p.evaluate(() => [...document.querySelectorAll(".toast")].some((t) => /3 de 6/.test(t.textContent) && /Deshacer/.test(t.textContent))), "el aviso del marcado manual trae Deshacer");
   await p.evaluate(() => { [...document.querySelectorAll(".toast button")].filter((x) => /Deshacer/.test(x.textContent)).pop().click(); }); await wait(p, 700);
   ok(!(await doneIds(p)).includes("grabar") && await p.evaluate(() => document.querySelector('.es-li[data-step="grabar"]').dataset.state === "next" && document.querySelector('[data-es="done"]').textContent === "2"), "Deshacer devuelve el paso a pendiente y vuelve a ser el siguiente");
@@ -112,7 +113,7 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
 
   console.log("\n== Después de terminar: sigue a mano, sin callejón ==");
   await nav(p, "#hoy", 1200);
-  ok(await p.evaluate(() => !document.querySelector(".hoy .es-hoy") && !document.querySelector("[data-es-hoy]").children.length), "Hoy ya no muestra la tarjeta");
+  ok(await p.evaluate(() => !document.querySelector(".hoy .es-hoy")), "Hoy ya no muestra la tarjeta");
   await p.click('#rail [data-nav="empieza"]'); await wait(p, 1200); await p.addStyleTag({ content: FREEZE });
   ok(await hash(p) === "#empieza" && await p.evaluate(() => document.querySelectorAll('.es-li[data-state="done"]').length === 6 && document.querySelector('[data-es="done"]').textContent === "6"), "se puede volver a entrar: los 6 pasos aparecen hechos");
   ok(await p.evaluate(() => !!document.querySelector('[data-act="esreset"]') && /Volver a ver los pasos/.test(document.querySelector('[data-act="esreset"]').textContent) && /Ir a Hoy/.test(document.querySelector(".es-next").textContent)), "ofrece «Ir a Hoy» y «Volver a ver los pasos»");
@@ -142,6 +143,22 @@ const closeFinale = async (p) => { if (await p.evaluate(() => !!document.querySe
   ok(await p.evaluate(async () => (await App.onboarding.markDone("no-existe")) === false && (await App.onboarding.markDone("metricas")) === false), "un id desconocido o un paso ya hecho no hacen nada");
   await p.evaluate(() => App.emit("grabado")); // el evento interno "grabado" de App.emit también vale
   ok(p.errs.length === 0, "sin errores con las distintas fuentes", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+
+  console.log("\n== Jarvis desde Hoy, enlaces directos y tablet ==");
+  p = await openWith(b, "?demo=1&preset=kt#hoy"); await wait(p, 1200);
+  ok(await hash(p) === "#hoy", "un enlace directo (#hoy) no se pisa con Empieza aquí: solo se abre ahí cuando no hay hash");
+  await p.click(".hoy .talk .orb", { force: true });
+  ok(await waitDone(p, "jarvis", 8000), "abrir a Jarvis desde el orbe de Hoy completa el paso 1");
+  await wait(p, 800);
+  ok(await p.evaluate(() => App.jarvis.isOpen() && ![...document.querySelectorAll(".toast")].some((t) => /Paso listo/.test(t.textContent))), "mientras Jarvis está abierto no sale ningún aviso encima");
+  await p.evaluate(() => App.jarvis.close()); await wait(p, 2500);
+  ok(await p.evaluate(() => [...document.querySelectorAll(".toast")].some((t) => /Paso listo/.test(t.textContent) && /1 de 6/.test(t.textContent))), "al cerrarlo aparece el aviso «¡Paso listo!» (1 de 6)");
+  ok(await p.evaluate(() => { const c = document.querySelector(".hoy .es-hoy"); return !!c && /1\s*\/\s*6/.test(c.textContent) && /Mirá tus estilos/.test(c.textContent) && /Seguir/.test(c.textContent); }), "la tarjeta de Hoy ya dice 1/6 y propone el paso siguiente");
+  ok(await p.evaluate(() => [...document.querySelectorAll(".orb[data-orb]")].filter((o) => o.offsetParent).every((o) => getComputedStyle(o).visibility === "visible")), "el orbe de Hoy vuelve a verse después de cerrar a Jarvis");
+  ok(p.errs.length === 0, "sin errores al abrir a Jarvis desde Hoy", p.errs.slice(0, 3).join(" || ")); await p.context().close();
+  p = await openWith(b, "?demo=1&preset=kt", { viewport: { width: 1024, height: 768 } });
+  ok(await overflow(p) && await p.evaluate(() => { const l = document.querySelector(".es-li").getBoundingClientRect(), c = document.querySelector("#escloud").getBoundingClientRect(); return l.top < innerHeight - 200 && l.left > c.right - 4; }), "en tablet apaisada la nube queda al lado y el primer paso se ve sin bajar");
+  await p.context().close();
 
   console.log("\n== Rechazar también cuenta; el Estudio real ==");
   p = await openWith(b, "?demo=1&preset=kt#estudio");

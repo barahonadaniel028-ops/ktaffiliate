@@ -170,7 +170,7 @@
     if (!nx) return `<div class="es-next" data-k="all"><a class="btn pri lg2" href="#hoy">${icon("home")}Ir a Hoy</a><button class="es-quiet" type="button" data-act="esreset">${icon("refresh")}Volver a ver los pasos</button></div>`;
     return `<div class="es-next" data-k="${nx.id}"><span class="es-nx-k">${P.done ? "Tu siguiente paso" : "Para empezar"}</span><b class="es-nx-t">${esc(nx.title)}</b>${cta(nx, "pri lg2")}</div>`;
   }
-  const ringArgs = (p, r) => { const C = 2 * Math.PI * (r || 42); return `${(C * p).toFixed(1)} ${C.toFixed(1)}`; }; // r = radio con el que se dibujo el anillo (ring() de util.js)
+  const ringArgs = (p) => { const C = 2 * Math.PI * 42; return `${(C * p).toFixed(1)} ${C.toFixed(1)}`; }; // 42 = el radio con el que se dibuja el anillo grande (ring() de util.js)
   function cloudHtml() {
     const P = progress();
     return `<section class="es-cloud" id="escloud" aria-labelledby="esh1"><span class="es-liq" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -288,33 +288,13 @@
   A.esfinclose = () => closeFinale();
 
   // ---------- la tarjeta chica de Hoy mientras falten pasos ----------
-  // Hoy dibuja solo un hueco vacio (data-es-hoy) y la tarjeta se mete y se actualiza desde aca: asi avanzar un paso no obliga a repintar toda la pantalla de Hoy
-  // (se veria parpadear justo cuando abris a Jarvis desde Hoy, que es el paso 1). Al terminar los pasos la tarjeta se desvanece y el hueco se cierra.
-  const hoyLabel = (P, nx) => `Empieza aquí: ${P.done} de ${P.total} pasos. ${P.done ? "Seguir con" : "Empezar con"} ${nx.title}`;
+  // Hoy se repinta entero con cualquier cambio de datos (sus graficos llevan ids al azar), asi que la tarjeta no necesita actualizarse sola: se dibuja
+  // con el estado de ese momento y desaparece sola cuando ya no queda ningun paso.
   function hoyCard() {
     if (!pending()) return "";
     const P = progress(), nx = nextStep();
-    return `<a class="es-hoy lg" href="#empieza" aria-label="${esc(hoyLabel(P, nx))}">${ring(P.done / P.total, 52, { r: 40, sw: 8, inner: `<b class="num es-hoy-n">${P.done}<small>/${P.total}</small></b>` })}<span class="es-hoy-t"><b>Empieza <em>aquí</em></b><span>${esc((P.done ? "Siguiente" : "Primer paso") + ": " + nx.title)}</span></span><span class="btn sm pri es-hoy-go">${P.done ? "Seguir" : "Empezar"}${icon("arrow")}</span></a>`;
+    return `<a class="es-hoy lg" href="#empieza" aria-label="${esc(`Empieza aquí: ${P.done} de ${P.total} pasos. ${P.done ? "Seguir con" : "Empezar con"} ${nx.title}`)}">${ring(P.done / P.total, 52, { r: 40, sw: 8, inner: `<b class="num es-hoy-n">${P.done}<small>/${P.total}</small></b>` })}<span class="es-hoy-t"><b>Empieza <em>aquí</em></b><span>${esc((P.done ? "Siguiente" : "Primer paso") + ": " + nx.title)}</span></span><span class="btn sm pri es-hoy-go">${P.done ? "Seguir" : "Empezar"}${icon("arrow")}</span></a>`;
   }
-  function syncHoy(slot) {
-    slot = slot && slot.nodeType === 1 ? slot : $("[data-es-hoy]"); if (!slot) return;
-    const P = progress(), nx = nextStep(), key = nx ? P.done + ":" + nx.id : "", cur = $(".es-hoy:not(.leaving)", slot);
-    if (slot.dataset.k === key && !!cur === !!key) return;
-    slot.dataset.k = key;
-    if (!key) { // terminaron: la tarjeta se va flotando hacia arriba (transform/opacity) y recien despues se cierra el hueco
-      if (cur) { cur.classList.add("leaving"); const rm = () => cur.remove(); if (App.reduceMotion() || !cur.animate) rm(); else cur.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-12px) scale(.985)" }], { duration: 420, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }).finished.then(rm, rm); }
-      return;
-    }
-    if (!cur) { slot.insertAdjacentHTML("afterbegin", hoyCard()); return; }
-    // el mismo tarjeta avanza: el anillo crece, el numero y el texto se cambian en su lugar
-    const rv = $(".ring-val", cur), n = $(".es-hoy-n", cur), t = $(".es-hoy-t span", cur), go = $(".es-hoy-go", cur);
-    if (rv) rv.style.strokeDasharray = ringArgs(P.done / P.total, 40);
-    if (n) { n.innerHTML = `${P.done}<small>/${P.total}</small>`; swapIn(n); }
-    if (t) { t.textContent = (P.done ? "Siguiente" : "Primer paso") + ": " + nx.title; swapIn(t); }
-    if (go) go.innerHTML = `${P.done ? "Seguir" : "Empezar"}${icon("arrow")}`;
-    cur.setAttribute("aria-label", hoyLabel(P, nx));
-  }
-  App.on(() => syncHoy());
 
-  App.onboarding = { STEPS, doc, isDone, progress, pending, markDone, unmark, reset, next: nextStep, hoyCard, syncHoy };
+  App.onboarding = { STEPS, doc, isDone, progress, pending, markDone, unmark, reset, next: nextStep, hoyCard };
 })();

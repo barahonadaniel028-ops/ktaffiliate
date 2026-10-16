@@ -84,8 +84,7 @@
 .es-card .btn.es-cta { min-height: 46px; }
 
 /* ---- Hoy: la tarjeta chica arriba de todo mientras falten pasos ---- */
-.hoy > .es-hoy-slot { grid-column: 1 / -1; min-width: 0; } .es-hoy-slot:empty { display: none; } /* el hueco vacio (ya terminaron los pasos) no ocupa fila ni deja su separacion */
-.es-hoy { display: flex; align-items: center; gap: 16px; min-height: 78px; padding: 12px 14px 12px 16px; border-radius: 39px; transition: transform .28s var(--ease); }
+.hoy > .es-hoy { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; min-height: 78px; padding: 12px 14px 12px 16px; border-radius: 39px; transition: transform .28s var(--ease); }
 .es-hoy:hover { transform: translateY(-2px); }
 .es-hoy-n { font: 600 16px/1 var(--font-d); letter-spacing: -.03em; } .es-hoy-n small { font: 500 10.5px/1 var(--font); color: var(--ink3); margin-left: 1px; }
 .es-hoy-t { flex: 1; min-width: 0; display: grid; gap: 4px; }
@@ -118,7 +117,14 @@
 .es-fin .btn { min-width: 190px; min-height: 50px; border-radius: 25px; font-size: 16px; margin-top: 10px; }
 
 /* ---- pantallas angostas ---- */
-@media (max-width: 1100px) {
+/* tablet apaisada: la nube se angosta pero se queda al lado de los pasos (apilada, el primer paso quedaba fuera de la pantalla) */
+@media (min-width: 821px) and (max-width: 1100px) {
+  .es { grid-template-columns: minmax(250px, 310px) minmax(0, 1fr); gap: 22px; }
+  .es-cloud { padding-inline: 16px; border-radius: 80px 92px 84px 96px / 92px 78px 96px 84px; }
+  .es-next .btn { min-width: 0; width: 100%; max-width: 240px; }
+  .es-card.card { padding: 16px 18px; }
+}
+@media (max-width: 820px) {
   .es { grid-template-columns: minmax(0, 660px); }
   .es-hero { position: static; }
   .es-float { width: min(560px, 100%); margin: 0 auto; }
@@ -138,7 +144,7 @@
   .es-li[data-state="next"] .es-card { padding-block: 18px; }
   .es-li[data-state="next"] .es-cta { flex: 1 1 100%; }
   .es-badge .n { font-size: 15px; }
-  .es-hoy { gap: 12px; min-height: 72px; padding: 10px 10px 10px 12px; border-radius: 36px; }
+  .hoy > .es-hoy { gap: 12px; min-height: 72px; padding: 10px 10px 10px 12px; border-radius: 36px; }
   .es-hoy .es-hoy-go.btn { padding: 0 14px; }
   .es-fin { padding: 10px 20px 24px; border-radius: 46px 54px 48px 56px / 56px 46px 54px 48px; }
   .es-fin-hero { height: 168px; } .es-fin-t { font-size: 25px; }
