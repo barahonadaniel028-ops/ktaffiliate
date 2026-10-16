@@ -107,6 +107,19 @@ Daniel: *"La seccion de crear aun no esta como te lo pedi especificamente."* Aud
 
 ---
 
+## 2026-10-16 — Jarvis, tercera vez
+
+### 17. Jarvis: "aún la veo buggeada, o frame por frame, no la veo líquida" — el derrame se rehízo entero (corrige la #4 y la #15)
+Daniel: *"la animacion aun la veo buggeada, o frame por frame, no la veo liquida como te he dicho, smooth, que me gustaria"*. Mirado cuadro por cuadro, lo de antes tenía tres problemas: (1) cada fase esperaba a la anterior con promesas y `setTimeout` (vuelo → pausa → derrame → aparece el panel), y cada traspaso eran uno o dos cuadros quietos; (2) el panel aparecía con un `clip-path` en círculo que se anima en el hilo principal (medido en la traza de Chrome: no se compone) y además pintaba el panel recién al aterrizar, justo en el momento más visible; (3) la gota quedaba quieta ENCIMA del panel ya abierto unos 300 ms — eso es lo que se leía como "una bola flotando" y no como líquido.
+Ahora (`js/core/motion.js`, ver el comentario de arriba del archivo):
+- **Un solo reloj.** Vuelo, derrame, aparición del panel, contenido escalonado (`--jv-d` en `shell.css`) y limpieza se agendan en el mismo instante del clic con `delay` (WAAPI). Ningún traspaso en JS en medio del movimiento: si el hilo principal se traba, el compositor sigue.
+- **El cuerpo líquido** (`bloom`/`wilt`) no es un círculo ni un `clip-path`: es la unión de 4 elipses y 2 barras del color del panel que solo se trasladan y escalan (nada se repinta). Puede ser gota → mancha ancha → rectángulo redondeado. El ancho y el alto son dos resortes desfasados (primero se abre a lo ancho, siguiendo el aplaste del aterrizaje, después baja, con rebote) y las esquinas pasan de "todo redondo" a las del panel recién al final: tensión superficial, no geometría. El color del orbe se diluye en el cuerpo en vez de quedar como otra bola. El panel aparece debajo (mismo color) y sigue el mismo resorte.
+- **Cerrar** es lo mismo al revés: el cuerpo tapa el panel, toma aire, se aplasta, se junta en la gota (que se tiñe del orbe) y esa gota vuelve al orbe. Si se cierra con la gota todavía en el aire, vuelve desde donde está. **Navegar / presentar / abrir el chat en otra pantalla** (`App.morph.carry`): se junta igual, salta y se derrama sobre la pantalla nueva como vidrio que se evapora; la pantalla cambia bajo el velo justo cuando la gota toca. **Crear / Notas** (`arrive`, `advanceStep`) usan el mismo cuerpo; entre pasos de Crear la gota queda "estacionada" y el paso siguiente florece de ella.
+- **Más barato**: bajo el velo de Jarvis se apaga el grano de película (`.grain`, capa de pantalla completa con `mix-blend-mode`; medido: el segundo costo más grande) y los orbes de la pantalla de abajo dejan de girar (su `--spin` se repinta en el hilo principal). Medido en el navegador sin GPU, cuadros de ~45-65 ms pasaron a ~20-35 ms en abrir/cerrar/navegar, y con Jarvis abierto y quieto de ~36 a ~18 ms.
+- Arreglo de paso: abrir desde el orbe flotante y cerrar dejaba ese orbe invisible para siempre (su orbe interno no tiene `data-orb`).
+- Probado y descartado: crear la animación del panel con un timer justo antes de que la gota toque (para aliviar el primer cuadro): con el hilo ocupado el timer llegó tarde y quedó un hueco vacío de ~200 ms. No mejoraba nada medible.
+Pruebas nuevas en `tools/test.cjs` (panel opaco y sin animaciones colgadas, cerrar en pleno vuelo y reabrir, nada colgado tras cerrar o navegar, orbe flotante). **Estado: implementado. Confirmar a ojo en el artefacto real** (el sandbox no tiene GPU: la fluidez real solo se ve en un navegador de verdad, y Safari no se pudo probar).
+
 ## 2026-10-16 — Tercera ronda: secciones nuevas (Empieza aquí, Grabar, Teleprompter)
 
 ### 18. Empieza aquí: los primeros pasos, primera del menú hasta completarlos
