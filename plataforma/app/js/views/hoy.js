@@ -54,7 +54,8 @@
     title: "Hoy",
     render() {
       const ph = sel.phrase(), n = sel.allPending().length, prim = ph.cta === "aprobar" || n ? `<a class="btn pri lg2" href="#estudio" data-go="estudio">Empezar a aprobar${n ? `<b>${n}</b>` : ""}</a>` : `<a class="btn pri lg2" href="#crear" data-go="crear">Pedir un video</a>`;
-      return `<div class="hoy">
+      // mientras falten pasos de introduccion, una tarjeta chica arriba de todo lleva a "Empieza aquí" (DECISIONES.md #18)
+      return `<div class="hoy">${App.onboarding ? App.onboarding.hoyCard() : ""}
         <section class="talk">
           <button class="orb" data-orb data-act="jarvis" type="button" aria-label="Hablar con Jarvis" style="width:var(--orb,132px);height:var(--orb,132px)"></button>
           <p class="hi">${esc(greet())}, ${esc(App.config.owner)} ${wave}</p>
